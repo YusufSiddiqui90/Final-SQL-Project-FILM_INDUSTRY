@@ -1,0 +1,5809 @@
+Use films;
+
+/* ------------------------------------
+   PHASE 3 – FULL SQL IMPLEMENTATION
+   ------------------------------------ */
+
+/* -------------------------------
+   1️⃣  VIEWS (5)
+-------------------------------- */
+
+CREATE VIEW view_top_rated_movies AS
+SELECT movie_id, title, rating, box_office, genre
+FROM movies
+WHERE rating >= 8.0
+ORDER BY rating DESC;
+
+CREATE VIEW view_high_budget_blockbusters AS
+SELECT title, budget, box_office, (box_office - budget) AS profit
+FROM movies
+WHERE budget > 100000000
+ORDER BY profit DESC;
+
+CREATE VIEW view_movies_directors AS
+SELECT 
+    m.movie_id,
+    m.title,
+    d.director_name,
+    m.genre,
+    m.rating
+FROM movies m
+JOIN directors d ON m.director_id = d.director_id;
+
+CREATE VIEW view_movie_earnings AS
+SELECT 
+    m.title,
+    SUM(b.revenue) AS total_revenue,
+    COUNT(b.collection_id) AS entry_count
+FROM movies m
+JOIN box_office_collections b 
+ON m.movie_id = b.movie_id
+GROUP BY m.movie_id;
+
+CREATE VIEW view_merch_sales AS
+SELECT 
+    m.title,
+    merch.item_name,
+    merch.category,
+    merch.sold_quantity,
+    merch.available_stock
+FROM movies m
+JOIN merchandise merch 
+ON m.movie_id = merch.movie_id
+ORDER BY sold_quantity DESC;
+
+/* -------------------------------
+   2️⃣  WINDOW FUNCTIONS (5)
+-------------------------------- */
+
+SELECT 
+    title,
+    box_office,
+    RANK() OVER (ORDER BY box_office DESC) AS revenue_rank
+FROM movies;
+
+SELECT 
+    title,
+    rating,
+    DENSE_RANK() OVER (ORDER BY rating DESC) AS rating_rank
+FROM movies;
+
+SELECT 
+    title,
+    release_year,
+    ROW_NUMBER() OVER (ORDER BY release_year) AS release_order
+FROM movies;
+
+SELECT 
+    title,
+    rating,
+    LEAD(rating, 1) OVER (ORDER BY release_year) AS next_movie_rating
+FROM movies;
+
+SELECT 
+    title,
+    rating,
+    LAG(rating, 1) OVER (ORDER BY release_year) AS previous_movie_rating
+FROM movies;
+
+/* ----------------------------------
+   3️⃣  STORED PROCEDURES (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_movie (
+  IN p_title VARCHAR(200),
+  IN p_genre VARCHAR(100),
+  IN p_language VARCHAR(50),
+  IN p_release_year YEAR,
+  IN p_duration INT,
+  IN p_budget DECIMAL(12,2),
+  IN p_box_office DECIMAL(12,2),
+  IN p_rating DECIMAL(3,1),
+  IN p_director INT
+)
+BEGIN
+  INSERT INTO movies 
+  (title, genre, language, release_year, duration_minutes, budget, box_office, rating, director_id)
+  VALUES 
+  (p_title, p_genre, p_language, p_release_year, p_duration, p_budget, p_box_office, p_rating, p_director);
+END$$
+
+
+CREATE PROCEDURE update_movie_rating (
+  IN p_movie_id INT,
+  IN p_new_rating DECIMAL(3,1)
+)
+BEGIN
+  UPDATE movies
+  SET rating = p_new_rating
+  WHERE movie_id = p_movie_id;
+END$$
+
+
+CREATE PROCEDURE get_movies_by_genre (IN p_genre VARCHAR(50))
+BEGIN
+  SELECT * FROM movies WHERE genre = p_genre;
+END$$
+
+
+CREATE PROCEDURE calculate_profit (IN p_movie_id INT)
+BEGIN
+  SELECT 
+      title,
+      (box_office - budget) AS profit
+  FROM movies
+  WHERE movie_id = p_movie_id;
+END$$
+
+
+CREATE PROCEDURE movies_between_years 
+(IN start_year YEAR, IN end_year YEAR)
+BEGIN
+  SELECT * FROM movies 
+  WHERE release_year BETWEEN start_year AND end_year;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   4️⃣  CURSOR (1)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE increase_all_ratings()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE mid INT;
+  
+  DECLARE cur CURSOR FOR 
+  SELECT movie_id FROM movies;
+  
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+  
+  OPEN cur;
+  
+  read_loop: LOOP
+    FETCH cur INTO mid;
+    IF done THEN
+      LEAVE read_loop;
+    END IF;
+    
+    UPDATE movies
+    SET rating = rating + 0.1
+    WHERE movie_id = mid;
+    
+  END LOOP;
+  
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   5️⃣ DCL + TCL
+----------------------------------- */
+
+GRANT SELECT, INSERT ON movies TO 'film_user'@'localhost';
+
+REVOKE INSERT ON movies FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE movies SET rating = 9.5 WHERE movie_id = 1;
+
+SAVEPOINT sp1;
+
+UPDATE movies SET budget = budget + 10000000 WHERE movie_id = 5;
+
+ROLLBACK TO sp1;
+
+COMMIT;
+
+/* ----------------------------------
+   6️⃣  TRIGGERS 
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_insert_movie
+BEFORE INSERT ON movies
+FOR EACH ROW
+BEGIN
+  IF NEW.rating > 10 THEN
+    SET NEW.rating = 10;
+  END IF;
+END$$
+
+
+CREATE TABLE movie_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  movie_id INT,
+  action VARCHAR(50),
+  log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_movie_insert
+AFTER INSERT ON movies
+FOR EACH ROW
+BEGIN
+  INSERT INTO movie_log(movie_id, action)
+  VALUES (NEW.movie_id, 'inserted');
+END$$
+
+
+CREATE TRIGGER trg_before_update_budget
+BEFORE UPDATE ON movies
+FOR EACH ROW
+BEGIN
+  IF NEW.budget <= 0 THEN
+    SET NEW.budget = OLD.budget;
+  END IF;
+END$$
+
+
+CREATE TABLE rating_history (
+  hist_id INT AUTO_INCREMENT PRIMARY KEY,
+  movie_id INT,
+  old_rating DECIMAL(3,1),
+  new_rating DECIMAL(3,1),
+  changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_rating_update
+AFTER UPDATE ON movies
+FOR EACH ROW
+BEGIN
+  IF OLD.rating <> NEW.rating THEN
+    INSERT INTO rating_history(movie_id, old_rating, new_rating)
+    VALUES (OLD.movie_id, OLD.rating, NEW.rating);
+  END IF;
+END$$
+
+
+CREATE TRIGGER trg_prevent_delete_classic
+BEFORE DELETE ON movies
+FOR EACH ROW
+BEGIN
+  IF OLD.release_year < 1980 THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Classic Movies Cannot Be Deleted!';
+  END IF;
+END$$
+
+DELIMITER ;
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+/* -------------------------------
+
+1️⃣ VIEWS (5) 
+-------------------------------- */
+
+CREATE VIEW view_active_actors AS
+SELECT actor_id, full_name, debut_year
+FROM actors
+WHERE active_status = 1;
+
+CREATE VIEW view_female_actors AS
+SELECT actor_id, full_name, awards_won
+FROM actors
+WHERE gender = 'female';
+
+CREATE VIEW view_top_award_actors AS
+SELECT full_name, awards_won
+FROM actors
+WHERE awards_won > 15;
+
+CREATE VIEW view_actor_age AS
+SELECT 
+    full_name,
+    TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) AS age
+FROM actors;
+
+CREATE VIEW view_actor_contact AS
+SELECT full_name, contact_email, phone_number
+FROM actors;
+
+/* -------------------------------
+
+2️⃣ WINDOW FUNCTIONS (5) – Easy
+-------------------------------- */
+
+SELECT full_name, awards_won,
+RANK() OVER (ORDER BY awards_won DESC) AS rank_no
+FROM actors;
+
+SELECT full_name, debut_year,
+ROW_NUMBER() OVER (ORDER BY debut_year) AS debut_position
+FROM actors;
+
+SELECT full_name, awards_won,
+DENSE_RANK() OVER (ORDER BY awards_won DESC) AS award_rank
+FROM actors;
+
+SELECT full_name, awards_won,
+LEAD(awards_won) OVER (ORDER BY awards_won DESC) AS next_value
+FROM actors;
+
+SELECT full_name, awards_won,
+LAG(awards_won) OVER (ORDER BY awards_won DESC) AS previous_value
+FROM actors;
+
+/* ----------------------------------
+
+3️⃣ STORED PROCEDURES (5) 
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_actor (
+ IN p_name VARCHAR(100),
+ IN p_gender VARCHAR(10),
+ IN p_awards INT
+)
+BEGIN
+  INSERT INTO actors(full_name, gender, awards_won)
+  VALUES(p_name, p_gender, p_awards);
+END$$
+
+CREATE PROCEDURE update_awards (
+ IN p_id INT,
+ IN p_new_awards INT
+)
+BEGIN
+  UPDATE actors
+  SET awards_won = p_new_awards
+  WHERE actor_id = p_id;
+END$$
+
+CREATE PROCEDURE get_female_actors()
+BEGIN
+  SELECT * FROM actors WHERE gender='female';
+END$$
+
+CREATE PROCEDURE get_actor_detail(IN p_id INT)
+BEGIN
+  SELECT * FROM actors WHERE actor_id = p_id;
+END$$
+
+CREATE PROCEDURE actors_between_years(IN y1 YEAR, IN y2 YEAR)
+BEGIN
+  SELECT * FROM actors WHERE debut_year BETWEEN y1 AND y2;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+
+4️⃣ CURSOR (1) 
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_one_award()
+BEGIN
+  DECLARE done INT DEFAULT 0;
+  DECLARE aid INT;
+
+  DECLARE cur CURSOR FOR SELECT actor_id FROM actors;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+  OPEN cur;
+
+  loop1: LOOP
+    FETCH cur INTO aid;
+    IF done = 1 THEN
+      LEAVE loop1;
+    END IF;
+
+    UPDATE actors
+    SET awards_won = awards_won + 1
+    WHERE actor_id = aid;
+
+  END LOOP;
+
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+
+5️⃣ DCL + TCL – Easy
+----------------------------------- */
+
+GRANT SELECT ON actors TO 'film_user'@'localhost';
+
+REVOKE SELECT ON actors FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE actors SET awards_won = awards_won + 2 WHERE actor_id = 1;
+
+SAVEPOINT sp1;
+
+UPDATE actors SET active_status = 0 WHERE actor_id = 5;
+
+ROLLBACK TO sp1;
+
+COMMIT;
+
+/* ----------------------------------
+
+6️⃣ TRIGGERS (5) – Easy
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_fix_negative_awards
+BEFORE INSERT ON actors
+FOR EACH ROW
+BEGIN
+  IF NEW.awards_won < 0 THEN
+    SET NEW.awards_won = 0;
+  END IF;
+END$$
+
+
+CREATE TABLE actor_log (
+ log_id INT AUTO_INCREMENT PRIMARY KEY,
+ actor_id INT,
+ action_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_actor_insert
+AFTER INSERT ON actors
+FOR EACH ROW
+BEGIN
+ INSERT INTO actor_log(actor_id) VALUES (NEW.actor_id);
+END$$
+
+
+CREATE TRIGGER trg_check_email
+BEFORE UPDATE ON actors
+FOR EACH ROW
+BEGIN
+  IF NEW.contact_email NOT LIKE '%@%' THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Invalid email!';
+  END IF;
+END$$
+
+
+CREATE TABLE award_change (
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ actor_id INT,
+ old_awards INT,
+ new_awards INT,
+ change_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_award_history
+AFTER UPDATE ON actors
+FOR EACH ROW
+BEGIN
+  IF OLD.awards_won <> NEW.awards_won THEN
+    INSERT INTO award_change(actor_id, old_awards, new_awards)
+    VALUES(OLD.actor_id, OLD.awards_won, NEW.awards_won);
+  END IF;
+END$$
+
+
+CREATE TRIGGER trg_no_delete_top_actor
+BEFORE DELETE ON actors
+FOR EACH ROW
+BEGIN
+  IF OLD.awards_won > 20 THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Top Actor Cannot Be Deleted!';
+  END IF;
+END$$
+
+DELIMITER ;
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+/* ------------------------------------
+   PHASE 3 – FULL SQL IMPLEMENTATION
+   (DIRECTORS TABLE VERSION)
+   ------------------------------------ */
+
+/* -------------------------------
+   1️⃣  VIEWS (5)
+-------------------------------- */
+
+CREATE VIEW view_active_directors AS
+SELECT director_id, full_name, nationality, awards_won
+FROM directors
+WHERE active_status = 1
+ORDER BY full_name;
+
+CREATE VIEW view_top_awarded_directors AS
+SELECT full_name, awards_won, debut_year
+FROM directors
+WHERE awards_won >= 10
+ORDER BY awards_won DESC;
+
+CREATE VIEW view_director_experience AS
+SELECT 
+    director_id,
+    full_name,
+    (YEAR(CURDATE()) - debut_year) AS experience_years,
+    awards_won
+FROM directors
+ORDER BY experience_years DESC;
+
+CREATE VIEW view_directors_by_country AS
+SELECT nationality, COUNT(director_id) AS total_directors
+FROM directors
+GROUP BY nationality;
+
+CREATE VIEW view_female_directors AS
+SELECT director_id, full_name, awards_won
+FROM directors
+WHERE gender = 'female';
+
+
+/* -------------------------------
+   2️⃣  WINDOW FUNCTIONS (5)
+-------------------------------- */
+
+SELECT 
+    full_name,
+    awards_won,
+    RANK() OVER (ORDER BY awards_won DESC) AS award_rank
+FROM directors;
+
+SELECT 
+    full_name,
+    debut_year,
+    DENSE_RANK() OVER (ORDER BY debut_year) AS debut_rank
+FROM directors;
+
+SELECT 
+    full_name,
+    nationality,
+    ROW_NUMBER() OVER (PARTITION BY nationality ORDER BY awards_won DESC) AS country_rank
+FROM directors;
+
+SELECT 
+    full_name,
+    awards_won,
+    LEAD(awards_won, 1) OVER (ORDER BY awards_won DESC) AS next_award_count
+FROM directors;
+
+SELECT 
+    full_name,
+    awards_won,
+    LAG(awards_won, 1) OVER (ORDER BY awards_won DESC) AS previous_award_count
+FROM directors;
+
+
+/* ----------------------------------
+   3️⃣  STORED PROCEDURES (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_director (
+  IN p_name VARCHAR(150),
+  IN p_gender VARCHAR(10),
+  IN p_dob DATE,
+  IN p_country VARCHAR(50),
+  IN p_debut YEAR,
+  IN p_awards INT,
+  IN p_email VARCHAR(150),
+  IN p_phone VARCHAR(20),
+  IN p_status BOOLEAN
+)
+BEGIN
+  INSERT INTO directors
+  (full_name, gender, date_of_birth, nationality, debut_year, awards_won, contact_email, phone_number, active_status)
+  VALUES 
+  (p_name, p_gender, p_dob, p_country, p_debut, p_awards, p_email, p_phone, p_status);
+END$$
+
+
+CREATE PROCEDURE update_director_awards (
+  IN p_director_id INT,
+  IN p_new_awards INT
+)
+BEGIN
+  UPDATE directors
+  SET awards_won = p_new_awards
+  WHERE director_id = p_director_id;
+END$$
+
+
+CREATE PROCEDURE get_directors_by_country(IN p_country VARCHAR(50))
+BEGIN
+  SELECT * FROM directors WHERE nationality = p_country;
+END$$
+
+
+CREATE PROCEDURE get_directors_experience(IN p_min_exp INT)
+BEGIN
+  SELECT 
+      full_name,
+      (YEAR(CURDATE()) - debut_year) AS experience_years
+  FROM directors
+  HAVING experience_years >= p_min_exp;
+END$$
+
+
+CREATE PROCEDURE directors_between_years (IN start_year YEAR, IN end_year YEAR)
+BEGIN
+  SELECT * FROM directors 
+  WHERE debut_year BETWEEN start_year AND end_year;
+END$$
+
+DELIMITER ;
+
+
+/* ----------------------------------
+   4️⃣  CURSOR (1)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE increase_awards_for_all()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE did INT;
+
+  DECLARE cur CURSOR FOR SELECT director_id FROM directors;
+
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+
+  loop_directors: LOOP
+    FETCH cur INTO did;
+
+    IF done THEN
+      LEAVE loop_directors;
+    END IF;
+
+    UPDATE directors
+    SET awards_won = awards_won + 1
+    WHERE director_id = did;
+
+  END LOOP;
+
+  CLOSE cur;
+
+END$$
+
+DELIMITER ;
+
+
+/* ----------------------------------
+   5️⃣ DCL + TCL
+----------------------------------- */
+
+GRANT SELECT, INSERT ON directors TO 'film_user'@'localhost';
+
+REVOKE INSERT ON directors FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE directors SET awards_won = awards_won + 2 WHERE director_id = 1;
+
+SAVEPOINT sp1;
+
+UPDATE directors SET active_status = 0 WHERE director_id = 7;
+
+ROLLBACK TO sp1;
+
+COMMIT;
+
+
+/* ----------------------------------
+   6️⃣  TRIGGERS (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_insert_director
+BEFORE INSERT ON directors
+FOR EACH ROW
+BEGIN
+  IF NEW.awards_won < 0 THEN
+    SET NEW.awards_won = 0;
+  END IF;
+END$$
+
+
+CREATE TABLE director_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  director_id INT,
+  action VARCHAR(50),
+  log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_director_insert
+AFTER INSERT ON directors
+FOR EACH ROW
+BEGIN
+  INSERT INTO director_log(director_id, action)
+  VALUES (NEW.director_id, 'inserted');
+END$$
+
+
+CREATE TRIGGER trg_before_update_awards
+BEFORE UPDATE ON directors
+FOR EACH ROW
+BEGIN
+  IF NEW.awards_won < 0 THEN
+    SET NEW.awards_won = OLD.awards_won;
+  END IF;
+END$$
+
+
+CREATE TABLE director_award_history (
+  hist_id INT AUTO_INCREMENT PRIMARY KEY,
+  director_id INT,
+  old_awards INT,
+  new_awards INT,
+  changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_award_update
+AFTER UPDATE ON directors
+FOR EACH ROW
+BEGIN
+  IF OLD.awards_won <> NEW.awards_won THEN
+    INSERT INTO director_award_history(director_id, old_awards, new_awards)
+    VALUES (OLD.director_id, OLD.awards_won, NEW.awards_won);
+  END IF;
+END$$
+
+
+CREATE TRIGGER trg_prevent_delete_legend
+BEFORE DELETE ON directors
+FOR EACH ROW
+BEGIN
+  IF OLD.awards_won > 20 THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Legend directors cannot be deleted!';
+  END IF;
+END$$
+
+DELIMITER ;
+
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+/* ------------------------------------
+   PHASE 3 – FULL SQL IMPLEMENTATION
+   ------------------------------------ */
+
+/* -------------------------------
+   1️⃣  VIEWS (5)
+-------------------------------- */
+
+CREATE VIEW view_lead_cast AS
+SELECT c.cast_id, m.title, a.full_name, c.role_name, c.screen_time
+FROM cast c
+JOIN movies m ON c.movie_id = m.movie_id
+JOIN actors a ON c.actor_id = a.actor_id
+WHERE c.is_lead = 1;
+
+CREATE VIEW view_cast_payments AS
+SELECT 
+    c.cast_id,
+    a.full_name,
+    m.title,
+    c.contract_amount
+FROM cast c
+JOIN actors a ON c.actor_id = a.actor_id
+JOIN movies m ON c.movie_id = m.movie_id
+ORDER BY c.contract_amount DESC;
+
+CREATE VIEW view_movie_cast_count AS
+SELECT 
+    movie_id,
+    COUNT(cast_id) AS total_cast
+FROM cast
+GROUP BY movie_id;
+
+CREATE VIEW view_award_winning_roles AS
+SELECT 
+    c.cast_id,
+    a.full_name,
+    m.title,
+    c.role_name,
+    c.award_won
+FROM cast c
+JOIN actors a ON c.actor_id = a.actor_id
+JOIN movies m ON c.movie_id = m.movie_id
+WHERE c.award_won <> 'none';
+
+CREATE VIEW view_cast_contracts AS
+SELECT 
+    c.cast_id,
+    a.full_name,
+    m.title,
+    c.contract_start,
+    c.contract_end
+FROM cast c
+JOIN actors a ON c.actor_id = a.actor_id
+JOIN movies m ON c.movie_id = m.movie_id;
+
+/* -------------------------------
+   2️⃣  WINDOW FUNCTIONS (5)
+-------------------------------- */
+
+SELECT 
+    cast_id,
+    actor_id,
+    contract_amount,
+    RANK() OVER (ORDER BY contract_amount DESC) AS payment_rank
+FROM cast;
+
+SELECT 
+    cast_id,
+    screen_time,
+    DENSE_RANK() OVER (ORDER BY screen_time DESC) AS screen_time_rank
+FROM cast;
+
+SELECT 
+    cast_id,
+    movie_id,
+    ROW_NUMBER() OVER (PARTITION BY movie_id ORDER BY screen_time DESC) AS cast_order
+FROM cast;
+
+SELECT 
+    cast_id,
+    role_name,
+    LEAD(role_name) OVER (ORDER BY cast_id) AS next_role
+FROM cast;
+
+SELECT 
+    cast_id,
+    role_name,
+    LAG(role_name) OVER (ORDER BY cast_id) AS previous_role
+FROM cast;
+
+/* ----------------------------------
+   3️⃣  STORED PROCEDURES (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_cast_member (
+  IN p_movie INT,
+  IN p_actor INT,
+  IN p_role VARCHAR(100),
+  IN p_time INT,
+  IN p_lead BOOLEAN,
+  IN p_award VARCHAR(100),
+  IN p_amount DECIMAL(12,2),
+  IN p_start DATE,
+  IN p_end DATE
+)
+BEGIN
+  INSERT INTO cast 
+  (movie_id, actor_id, role_name, screen_time, is_lead, award_won, contract_amount, contract_start, contract_end)
+  VALUES 
+  (p_movie, p_actor, p_role, p_time, p_lead, p_award, p_amount, p_start, p_end);
+END$$
+
+CREATE PROCEDURE update_cast_payment (
+  IN p_cast_id INT,
+  IN p_amount DECIMAL(12,2)
+)
+BEGIN
+  UPDATE cast
+  SET contract_amount = p_amount
+  WHERE cast_id = p_cast_id;
+END$$
+
+CREATE PROCEDURE get_cast_by_movie (IN p_movie INT)
+BEGIN
+  SELECT * FROM cast WHERE movie_id = p_movie;
+END$$
+
+CREATE PROCEDURE get_cast_by_actor (IN p_actor INT)
+BEGIN
+  SELECT * FROM cast WHERE actor_id = p_actor;
+END$$
+
+CREATE PROCEDURE cast_in_period (IN d1 DATE, IN d2 DATE)
+BEGIN
+  SELECT * FROM cast 
+  WHERE contract_start BETWEEN d1 AND d2;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   4️⃣  CURSOR (1)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE increase_contract_10percent()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE cid INT;
+
+  DECLARE cur CURSOR FOR SELECT cast_id FROM cast;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+
+  loop_cursor: LOOP
+    FETCH cur INTO cid;
+    IF done THEN 
+      LEAVE loop_cursor;
+    END IF;
+
+    UPDATE cast
+    SET contract_amount = contract_amount * 1.10
+    WHERE cast_id = cid;
+  END LOOP;
+
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   5️⃣ DCL + TCL
+----------------------------------- */
+
+GRANT SELECT, INSERT ON cast TO 'film_user'@'localhost';
+
+REVOKE INSERT ON cast FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE cast SET screen_time = 160 WHERE cast_id = 1;
+
+SAVEPOINT sp1;
+
+UPDATE cast SET contract_amount = contract_amount + 5000000 
+WHERE cast_id = 5;
+
+ROLLBACK TO sp1;
+
+COMMIT;
+
+/* ----------------------------------
+   6️⃣  TRIGGERS (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_cast_insert
+BEFORE INSERT ON cast
+FOR EACH ROW
+BEGIN
+  IF NEW.contract_amount < 0 THEN
+    SET NEW.contract_amount = 0;
+  END IF;
+END$$
+
+
+CREATE TABLE cast_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  cast_id INT,
+  action VARCHAR(50),
+  log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_cast_insert
+AFTER INSERT ON cast
+FOR EACH ROW
+BEGIN
+  INSERT INTO cast_log (cast_id, action)
+  VALUES (NEW.cast_id, 'inserted');
+END$$
+
+
+CREATE TRIGGER trg_before_cast_update
+BEFORE UPDATE ON cast
+FOR EACH ROW
+BEGIN
+  IF NEW.screen_time <= 0 THEN
+    SET NEW.screen_time = OLD.screen_time;
+  END IF;
+END$$
+
+
+CREATE TABLE cast_payment_history (
+  hist_id INT AUTO_INCREMENT PRIMARY KEY,
+  cast_id INT,
+  old_amount DECIMAL(12,2),
+  new_amount DECIMAL(12,2),
+  changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_contract_update
+AFTER UPDATE ON cast
+FOR EACH ROW
+BEGIN
+  IF OLD.contract_amount <> NEW.contract_amount THEN
+    INSERT INTO cast_payment_history(cast_id, old_amount, new_amount)
+    VALUES (OLD.cast_id, OLD.contract_amount, NEW.contract_amount);
+  END IF;
+END$$
+
+
+CREATE TRIGGER trg_prevent_delete_award_roles
+BEFORE DELETE ON cast
+FOR EACH ROW
+BEGIN
+  IF OLD.award_won <> 'none' THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Award winning roles cannot be deleted!';
+  END IF;
+END$$
+
+DELIMITER ;
+
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+/* ------------------------------------
+   PHASE 3 – FULL SQL IMPLEMENTATION FOR SCRIPTS
+   ------------------------------------ */
+
+/* -------------------------------
+   1️⃣  VIEWS (5)
+-------------------------------- */
+
+CREATE VIEW view_scripts_by_language AS
+SELECT s.script_id, s.title, s.language, s.genre, m.title AS movie_title
+FROM scripts s
+JOIN movies m ON s.movie_id = m.movie_id;
+
+CREATE VIEW view_scripts_pages AS
+SELECT title, pages, version
+FROM scripts
+WHERE pages > 200
+ORDER BY pages DESC;
+
+CREATE VIEW view_scripts_by_writer AS
+SELECT s.script_id, s.title, w.full_name AS writer_name, s.genre
+FROM scripts s
+JOIN writers w ON s.writer_id = w.writer_id;
+
+CREATE VIEW view_scripts_recent AS
+SELECT title, created_date, version
+FROM scripts
+WHERE created_date >= '2015-01-01'
+ORDER BY created_date DESC;
+
+CREATE VIEW view_scripts_approved_by AS
+SELECT title, approved_by, version
+FROM scripts
+WHERE approved_by IS NOT NULL;
+
+/* -------------------------------
+   2️⃣  WINDOW FUNCTIONS (5)
+-------------------------------- */
+
+SELECT 
+    script_id,
+    pages,
+    RANK() OVER (ORDER BY pages DESC) AS pages_rank
+FROM scripts;
+
+SELECT 
+    script_id,
+    created_date,
+    DENSE_RANK() OVER (ORDER BY created_date DESC) AS recent_rank
+FROM scripts;
+
+SELECT 
+    script_id,
+    movie_id,
+    ROW_NUMBER() OVER (PARTITION BY movie_id ORDER BY created_date DESC) AS version_order
+FROM scripts;
+
+SELECT 
+    script_id,
+    version,
+    LEAD(version) OVER (ORDER BY created_date) AS next_version
+FROM scripts;
+
+SELECT 
+    script_id,
+    version,
+    LAG(version) OVER (ORDER BY created_date) AS previous_version
+FROM scripts;
+
+/* ----------------------------------
+   3️⃣  STORED PROCEDURES (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_script (
+  IN p_title VARCHAR(200),
+  IN p_writer INT,
+  IN p_language VARCHAR(50),
+  IN p_genre VARCHAR(100),
+  IN p_pages INT,
+  IN p_created DATE,
+  IN p_approved_by VARCHAR(150),
+  IN p_version VARCHAR(20),
+  IN p_movie INT
+)
+BEGIN
+  INSERT INTO scripts
+  (title, writer_id, language, genre, pages, created_date, approved_by, version, movie_id)
+  VALUES 
+  (p_title, p_writer, p_language, p_genre, p_pages, p_created, p_approved_by, p_version, p_movie);
+END$$
+
+CREATE PROCEDURE update_script_version (
+  IN p_script_id INT,
+  IN p_version VARCHAR(20)
+)
+BEGIN
+  UPDATE scripts
+  SET version = p_version
+  WHERE script_id = p_script_id;
+END$$
+
+CREATE PROCEDURE get_scripts_by_genre (IN p_genre VARCHAR(100))
+BEGIN
+  SELECT * FROM scripts WHERE genre = p_genre;
+END$$
+
+CREATE PROCEDURE get_scripts_by_writer (IN p_writer INT)
+BEGIN
+  SELECT * FROM scripts WHERE writer_id = p_writer;
+END$$
+
+CREATE PROCEDURE scripts_between_dates (IN d1 DATE, IN d2 DATE)
+BEGIN
+  SELECT * FROM scripts
+  WHERE created_date BETWEEN d1 AND d2;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   4️⃣  CURSOR (1)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE increase_pages_10percent()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE sid INT;
+
+  DECLARE cur CURSOR FOR SELECT script_id FROM scripts;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+
+  loop_cursor: LOOP
+    FETCH cur INTO sid;
+    IF done THEN 
+      LEAVE loop_cursor;
+    END IF;
+
+    UPDATE scripts
+    SET pages = pages * 1.10
+    WHERE script_id = sid;
+  END LOOP;
+
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   5️⃣  DCL + TCL
+----------------------------------- */
+
+GRANT SELECT, INSERT ON scripts TO 'film_user'@'localhost';
+
+REVOKE INSERT ON scripts FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE scripts SET pages = 200 WHERE script_id = 1;
+
+SAVEPOINT sp1;
+
+UPDATE scripts SET pages = pages + 20 WHERE script_id = 5;
+
+ROLLBACK TO sp1;
+
+COMMIT;
+
+/* ----------------------------------
+   6️⃣  TRIGGERS (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_scripts_insert
+BEFORE INSERT ON scripts
+FOR EACH ROW
+BEGIN
+  IF NEW.pages < 0 THEN
+    SET NEW.pages = 1;
+  END IF;
+END$$
+
+CREATE TABLE scripts_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  script_id INT,
+  action VARCHAR(50),
+  log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_scripts_insert
+AFTER INSERT ON scripts
+FOR EACH ROW
+BEGIN
+  INSERT INTO scripts_log (script_id, action)
+  VALUES (NEW.script_id, 'inserted');
+END$$
+
+CREATE TRIGGER trg_before_scripts_update
+BEFORE UPDATE ON scripts
+FOR EACH ROW
+BEGIN
+  IF NEW.pages <= 0 THEN
+    SET NEW.pages = OLD.pages;
+  END IF;
+END$$
+
+CREATE TABLE scripts_history (
+  hist_id INT AUTO_INCREMENT PRIMARY KEY,
+  script_id INT,
+  old_pages INT,
+  new_pages INT,
+  changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_scripts_update
+AFTER UPDATE ON scripts
+FOR EACH ROW
+BEGIN
+  IF OLD.pages <> NEW.pages THEN
+    INSERT INTO scripts_history(script_id, old_pages, new_pages)
+    VALUES (OLD.script_id, OLD.pages, NEW.pages);
+  END IF;
+END$$
+
+CREATE TRIGGER trg_prevent_delete_approved
+BEFORE DELETE ON scripts
+FOR EACH ROW
+BEGIN
+  IF OLD.approved_by IS NOT NULL THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Approved scripts cannot be deleted!';
+  END IF;
+END$$
+
+DELIMITER ;
+
+
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+/* ------------------------------------
+   PHASE 3 – FULL SQL IMPLEMENTATION FOR PRODUCERS
+   ------------------------------------ */
+
+/* -------------------------------
+   1️⃣  VIEWS (5)
+-------------------------------- */
+
+CREATE VIEW view_active_producers AS
+SELECT producer_id, full_name, company_name, projects_done
+FROM producers
+WHERE active_status = 1
+ORDER BY projects_done DESC;
+
+CREATE VIEW view_producers_by_city AS
+SELECT full_name, company_name, address
+FROM producers
+WHERE address LIKE 'mumbai%';
+
+CREATE VIEW view_top_producers AS
+SELECT full_name, projects_done, company_name
+FROM producers
+WHERE projects_done > 40
+ORDER BY projects_done DESC;
+
+CREATE VIEW view_producer_contact AS
+SELECT full_name, contact_email, phone_number
+FROM producers;
+
+CREATE VIEW view_producer_nationality AS
+SELECT full_name, nationality, projects_done
+FROM producers
+WHERE nationality = 'indian';
+
+/* -------------------------------
+   2️⃣  WINDOW FUNCTIONS (5)
+-------------------------------- */
+
+SELECT 
+    producer_id,
+    projects_done,
+    RANK() OVER (ORDER BY projects_done DESC) AS project_rank
+FROM producers;
+
+SELECT 
+    producer_id,
+    date_of_birth,
+    DENSE_RANK() OVER (ORDER BY date_of_birth ASC) AS seniority_rank
+FROM producers;
+
+SELECT 
+    producer_id,
+    full_name,
+    ROW_NUMBER() OVER (ORDER BY projects_done DESC) AS row_order
+FROM producers;
+
+SELECT 
+    producer_id,
+    projects_done,
+    LEAD(projects_done) OVER (ORDER BY projects_done DESC) AS next_projects
+FROM producers;
+
+SELECT 
+    producer_id,
+    projects_done,
+    LAG(projects_done) OVER (ORDER BY projects_done DESC) AS previous_projects
+FROM producers;
+
+/* ----------------------------------
+   3️⃣  STORED PROCEDURES (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_producer (
+  IN p_name VARCHAR(150),
+  IN p_company VARCHAR(150),
+  IN p_email VARCHAR(150),
+  IN p_phone VARCHAR(20),
+  IN p_nationality VARCHAR(50),
+  IN p_projects INT,
+  IN p_active BOOLEAN,
+  IN p_dob DATE,
+  IN p_address TEXT
+)
+BEGIN
+  INSERT INTO producers
+  (full_name, company_name, contact_email, phone_number, nationality, projects_done, active_status, date_of_birth, address)
+  VALUES
+  (p_name, p_company, p_email, p_phone, p_nationality, p_projects, p_active, p_dob, p_address);
+END$$
+
+CREATE PROCEDURE update_projects_done (
+  IN p_producer_id INT,
+  IN p_projects INT
+)
+BEGIN
+  UPDATE producers
+  SET projects_done = p_projects
+  WHERE producer_id = p_producer_id;
+END$$
+
+CREATE PROCEDURE get_producer_by_city (IN p_city VARCHAR(100))
+BEGIN
+  SELECT * FROM producers WHERE address LIKE CONCAT(p_city,'%');
+END$$
+
+CREATE PROCEDURE get_producer_by_name (IN p_name VARCHAR(150))
+BEGIN
+  SELECT * FROM producers WHERE full_name = p_name;
+END$$
+
+CREATE PROCEDURE producers_with_projects_range (IN p_min INT, IN p_max INT)
+BEGIN
+  SELECT * FROM producers WHERE projects_done BETWEEN p_min AND p_max;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   4️⃣  CURSOR (1)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE increase_projects_5()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE pid INT;
+
+  DECLARE cur CURSOR FOR SELECT producer_id FROM producers;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+
+  loop_cursor: LOOP
+    FETCH cur INTO pid;
+    IF done THEN
+      LEAVE loop_cursor;
+    END IF;
+
+    UPDATE producers
+    SET projects_done = projects_done + 5
+    WHERE producer_id = pid;
+  END LOOP;
+
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   5️⃣  DCL + TCL
+----------------------------------- */
+
+GRANT SELECT, INSERT ON producers TO 'film_user'@'localhost';
+
+REVOKE INSERT ON producers FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE producers SET projects_done = 20 WHERE producer_id = 1;
+
+SAVEPOINT sp1;
+
+UPDATE producers SET projects_done = projects_done + 10 WHERE producer_id = 5;
+
+ROLLBACK TO sp1;
+
+COMMIT;
+
+/* ----------------------------------
+   6️⃣  TRIGGERS (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_producer_insert
+BEFORE INSERT ON producers
+FOR EACH ROW
+BEGIN
+  IF NEW.projects_done < 0 THEN
+    SET NEW.projects_done = 0;
+  END IF;
+END$$
+
+CREATE TABLE producer_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  producer_id INT,
+  action VARCHAR(50),
+  log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_producer_insert
+AFTER INSERT ON producers
+FOR EACH ROW
+BEGIN
+  INSERT INTO producer_log (producer_id, action)
+  VALUES (NEW.producer_id, 'inserted');
+END$$
+
+CREATE TRIGGER trg_before_producer_update
+BEFORE UPDATE ON producers
+FOR EACH ROW
+BEGIN
+  IF NEW.projects_done < 0 THEN
+    SET NEW.projects_done = OLD.projects_done;
+  END IF;
+END$$
+
+CREATE TABLE producer_history (
+  hist_id INT AUTO_INCREMENT PRIMARY KEY,
+  producer_id INT,
+  old_projects INT,
+  new_projects INT,
+  changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_projects_update
+AFTER UPDATE ON producers
+FOR EACH ROW
+BEGIN
+  IF OLD.projects_done <> NEW.projects_done THEN
+    INSERT INTO producer_history(producer_id, old_projects, new_projects)
+    VALUES (OLD.producer_id, OLD.projects_done, NEW.projects_done);
+  END IF;
+END$$
+
+CREATE TRIGGER trg_prevent_delete_active
+BEFORE DELETE ON producers
+FOR EACH ROW
+BEGIN
+  IF OLD.active_status = 1 THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Active producers cannot be deleted!';
+  END IF;
+END$$
+
+DELIMITER ;
+
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+/* -------------------------------
+   1️⃣  VIEWS (5)
+-------------------------------- */
+
+CREATE VIEW view_active_writers AS
+SELECT writer_id, full_name, awards_won
+FROM writers
+WHERE active_status = 1
+ORDER BY awards_won DESC;
+
+CREATE VIEW view_writers_by_nationality AS
+SELECT full_name, nationality, debut_year
+FROM writers
+WHERE nationality = 'indian';
+
+CREATE VIEW view_top_award_writers AS
+SELECT full_name, awards_won, debut_year
+FROM writers
+WHERE awards_won >= 10
+ORDER BY awards_won DESC;
+
+CREATE VIEW view_writer_contact AS
+SELECT full_name, contact_email, phone_number
+FROM writers;
+
+CREATE VIEW view_writers_debut AS
+SELECT full_name, debut_year, active_status
+FROM writers
+WHERE debut_year >= 2000;
+
+/* -------------------------------
+   2️⃣  WINDOW FUNCTIONS (5)
+-------------------------------- */
+
+SELECT 
+    writer_id,
+    awards_won,
+    RANK() OVER (ORDER BY awards_won DESC) AS awards_rank
+FROM writers;
+
+SELECT 
+    writer_id,
+    debut_year,
+    DENSE_RANK() OVER (ORDER BY debut_year ASC) AS seniority_rank
+FROM writers;
+
+SELECT 
+    writer_id,
+    full_name,
+    ROW_NUMBER() OVER (ORDER BY awards_won DESC) AS row_order
+FROM writers;
+
+SELECT 
+    writer_id,
+    awards_won,
+    LEAD(awards_won) OVER (ORDER BY awards_won DESC) AS next_awards
+FROM writers;
+
+SELECT 
+    writer_id,
+    awards_won,
+    LAG(awards_won) OVER (ORDER BY awards_won DESC) AS previous_awards
+FROM writers;
+
+/* ----------------------------------
+   3️⃣  STORED PROCEDURES (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_writer (
+  IN p_name VARCHAR(150),
+  IN p_dob DATE,
+  IN p_nationality VARCHAR(50),
+  IN p_debut YEAR,
+  IN p_awards INT,
+  IN p_email VARCHAR(150),
+  IN p_phone VARCHAR(20),
+  IN p_active BOOLEAN
+)
+BEGIN
+  INSERT INTO writers
+  (full_name, date_of_birth, nationality, debut_year, awards_won, contact_email, phone_number, active_status)
+  VALUES
+  (p_name, p_dob, p_nationality, p_debut, p_awards, p_email, p_phone, p_active);
+END$$
+
+CREATE PROCEDURE update_writer_awards (
+  IN p_writer_id INT,
+  IN p_awards INT
+)
+BEGIN
+  UPDATE writers
+  SET awards_won = p_awards
+  WHERE writer_id = p_writer_id;
+END$$
+
+CREATE PROCEDURE get_writer_by_nationality (IN p_nationality VARCHAR(50))
+BEGIN
+  SELECT * FROM writers WHERE nationality = p_nationality;
+END$$
+
+CREATE PROCEDURE get_writer_by_name (IN p_name VARCHAR(150))
+BEGIN
+  SELECT * FROM writers WHERE full_name = p_name;
+END$$
+
+CREATE PROCEDURE writers_active_between_years (IN y1 YEAR, IN y2 YEAR)
+BEGIN
+  SELECT * FROM writers WHERE debut_year BETWEEN y1 AND y2;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   4️⃣  CURSOR (1)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE increase_awards_1()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE wid INT;
+
+  DECLARE cur CURSOR FOR SELECT writer_id FROM writers;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+
+  loop_cursor: LOOP
+    FETCH cur INTO wid;
+    IF done THEN
+      LEAVE loop_cursor;
+    END IF;
+
+    UPDATE writers
+    SET awards_won = awards_won + 1
+    WHERE writer_id = wid;
+  END LOOP;
+
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   5️⃣  DCL + TCL
+----------------------------------- */
+
+GRANT SELECT, INSERT ON writers TO 'film_user'@'localhost';
+
+REVOKE INSERT ON writers FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE writers SET awards_won = 10 WHERE writer_id = 1;
+
+SAVEPOINT sp1;
+
+UPDATE writers SET awards_won = awards_won + 5 WHERE writer_id = 5;
+
+ROLLBACK TO sp1;
+
+COMMIT;
+
+/* ----------------------------------
+   6️⃣  TRIGGERS (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_writer_insert
+BEFORE INSERT ON writers
+FOR EACH ROW
+BEGIN
+  IF NEW.awards_won < 0 THEN
+    SET NEW.awards_won = 0;
+  END IF;
+END$$
+
+CREATE TABLE writer_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  writer_id INT,
+  action VARCHAR(50),
+  log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_writer_insert
+AFTER INSERT ON writers
+FOR EACH ROW
+BEGIN
+  INSERT INTO writer_log (writer_id, action)
+  VALUES (NEW.writer_id, 'inserted');
+END$$
+
+CREATE TRIGGER trg_before_writer_update
+BEFORE UPDATE ON writers
+FOR EACH ROW
+BEGIN
+  IF NEW.awards_won < 0 THEN
+    SET NEW.awards_won = OLD.awards_won;
+  END IF;
+END$$
+
+CREATE TABLE writer_history (
+  hist_id INT AUTO_INCREMENT PRIMARY KEY,
+  writer_id INT,
+  old_awards INT,
+  new_awards INT,
+  changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_awards_update
+AFTER UPDATE ON writers
+FOR EACH ROW
+BEGIN
+  IF OLD.awards_won <> NEW.awards_won THEN
+    INSERT INTO writer_history(writer_id, old_awards, new_awards)
+    VALUES (OLD.writer_id, OLD.awards_won, NEW.awards_won);
+  END IF;
+END$$
+
+CREATE TRIGGER trg_prevent_delete_active_writers
+BEFORE DELETE ON writers
+FOR EACH ROW
+BEGIN
+  IF OLD.active_status = 1 THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Active writers cannot be deleted!';
+  END IF;
+END$$
+
+DELIMITER ;
+
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+/* -------------------------------
+   1️⃣  VIEWS (5)
+-------------------------------- */
+
+CREATE VIEW view_lead_roles AS
+SELECT role_id, role_name, importance_level, screen_time
+FROM roles
+WHERE is_lead = 1;
+
+CREATE VIEW view_villain_roles AS
+SELECT role_id, role_name, screen_time, stunt_required
+FROM roles
+WHERE is_villain = 1;
+
+CREATE VIEW view_roles_by_importance AS
+SELECT role_name, importance_level, screen_time
+FROM roles
+ORDER BY importance_level DESC;
+
+CREATE VIEW view_roles_gender_requirement AS
+SELECT role_name, gender_required, age_range
+FROM roles
+WHERE gender_required <> 'any';
+
+CREATE VIEW view_roles_stunt AS
+SELECT role_name, stunt_required, screen_time
+FROM roles
+WHERE stunt_required = 1;
+
+/* -------------------------------
+   2️⃣  WINDOW FUNCTIONS (5)
+-------------------------------- */
+
+SELECT 
+    role_id,
+    screen_time,
+    RANK() OVER (ORDER BY screen_time DESC) AS screen_time_rank
+FROM roles;
+
+SELECT 
+    role_id,
+    importance_level,
+    DENSE_RANK() OVER (ORDER BY importance_level DESC) AS importance_rank
+FROM roles;
+
+SELECT 
+    role_id,
+    role_name,
+    ROW_NUMBER() OVER (ORDER BY screen_time DESC) AS row_order
+FROM roles;
+
+SELECT 
+    role_id,
+    screen_time,
+    LEAD(screen_time) OVER (ORDER BY screen_time DESC) AS next_role_time
+FROM roles;
+
+SELECT 
+    role_id,
+    screen_time,
+    LAG(screen_time) OVER (ORDER BY screen_time DESC) AS previous_role_time
+FROM roles;
+
+/* ----------------------------------
+   3️⃣  STORED PROCEDURES (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_role (
+  IN p_name VARCHAR(100),
+  IN p_desc TEXT,
+  IN p_importance VARCHAR(20),
+  IN p_gender VARCHAR(10),
+  IN p_age_range VARCHAR(20),
+  IN p_lead BOOLEAN,
+  IN p_villain BOOLEAN,
+  IN p_time INT,
+  IN p_stunt BOOLEAN
+)
+BEGIN
+  INSERT INTO roles
+  (role_name, description, importance_level, gender_required, age_range, is_lead, is_villain, screen_time, stunt_required)
+  VALUES
+  (p_name, p_desc, p_importance, p_gender, p_age_range, p_lead, p_villain, p_time, p_stunt);
+END$$
+
+CREATE PROCEDURE update_screen_time (
+  IN p_role_id INT,
+  IN p_time INT
+)
+BEGIN
+  UPDATE roles
+  SET screen_time = p_time
+  WHERE role_id = p_role_id;
+END$$
+
+CREATE PROCEDURE get_roles_by_importance (IN p_importance VARCHAR(20))
+BEGIN
+  SELECT * FROM roles WHERE importance_level = p_importance;
+END$$
+
+CREATE PROCEDURE get_villain_roles()
+BEGIN
+  SELECT * FROM roles WHERE is_villain = 1;
+END$$
+
+CREATE PROCEDURE get_lead_roles()
+BEGIN
+  SELECT * FROM roles WHERE is_lead = 1;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   4️⃣  CURSOR (1)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE increase_screen_time_10()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE rid INT;
+
+  DECLARE cur CURSOR FOR SELECT role_id FROM roles;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+
+  loop_cursor: LOOP
+    FETCH cur INTO rid;
+    IF done THEN
+      LEAVE loop_cursor;
+    END IF;
+
+    UPDATE roles
+    SET screen_time = screen_time + 10
+    WHERE role_id = rid;
+  END LOOP;
+
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   5️⃣  DCL + TCL
+----------------------------------- */
+
+GRANT SELECT, INSERT ON roles TO 'film_user'@'localhost';
+
+REVOKE INSERT ON roles FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE roles SET screen_time = 160 WHERE role_id = 1;
+
+SAVEPOINT sp1;
+
+UPDATE roles SET screen_time = screen_time + 20 WHERE role_id = 3;
+
+ROLLBACK TO sp1;
+
+COMMIT;
+
+/* ----------------------------------
+   6️⃣  TRIGGERS (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_role_insert
+BEFORE INSERT ON roles
+FOR EACH ROW
+BEGIN
+  IF NEW.screen_time < 0 THEN
+    SET NEW.screen_time = 0;
+  END IF;
+END$$
+
+CREATE TABLE role_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  role_id INT,
+  action VARCHAR(50),
+  log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_role_insert
+AFTER INSERT ON roles
+FOR EACH ROW
+BEGIN
+  INSERT INTO role_log (role_id, action)
+  VALUES (NEW.role_id, 'inserted');
+END$$
+
+CREATE TRIGGER trg_before_role_update
+BEFORE UPDATE ON roles
+FOR EACH ROW
+BEGIN
+  IF NEW.screen_time < 0 THEN
+    SET NEW.screen_time = OLD.screen_time;
+  END IF;
+END$$
+
+CREATE TABLE role_history (
+  hist_id INT AUTO_INCREMENT PRIMARY KEY,
+  role_id INT,
+  old_screen_time INT,
+  new_screen_time INT,
+  changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_screen_time_update
+AFTER UPDATE ON roles
+FOR EACH ROW
+BEGIN
+  IF OLD.screen_time <> NEW.screen_time THEN
+    INSERT INTO role_history(role_id, old_screen_time, new_screen_time)
+    VALUES (OLD.role_id, OLD.screen_time, NEW.screen_time);
+  END IF;
+END$$
+
+CREATE TRIGGER trg_prevent_delete_leads
+BEFORE DELETE ON roles
+FOR EACH ROW
+BEGIN
+  IF OLD.is_lead = 1 THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Lead roles cannot be deleted!';
+  END IF;
+END$$
+
+DELIMITER ;
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+/* -------------------------------
+   1️⃣  VIEWS (5)
+-------------------------------- */
+
+CREATE VIEW view_active_writers AS
+SELECT writer_id, full_name, nationality, projects_done
+FROM writers
+WHERE active_status = 1;
+
+CREATE VIEW view_writer_genres AS
+SELECT writer_id, full_name, genres
+FROM writers;
+
+CREATE VIEW view_award_winning_writers AS
+SELECT writer_id, full_name, awards
+FROM writers
+WHERE awards > 0
+ORDER BY awards DESC;
+
+CREATE VIEW view_writer_projects AS
+SELECT writer_id, full_name, projects_done
+FROM writers
+ORDER BY projects_done DESC;
+
+CREATE VIEW view_writers_by_nationality AS
+SELECT nationality, COUNT(writer_id) AS total_writers
+FROM writers
+GROUP BY nationality;
+
+/* -------------------------------
+   2️⃣  WINDOW FUNCTIONS (5)
+-------------------------------- */
+
+SELECT 
+    writer_id,
+    projects_done,
+    RANK() OVER (ORDER BY projects_done DESC) AS project_rank
+FROM writers;
+
+SELECT 
+    writer_id,
+    awards,
+    DENSE_RANK() OVER (ORDER BY awards DESC) AS awards_rank
+FROM writers;
+
+SELECT 
+    writer_id,
+    full_name,
+    ROW_NUMBER() OVER (ORDER BY projects_done DESC) AS row_order
+FROM writers;
+
+SELECT 
+    writer_id,
+    projects_done,
+    LEAD(projects_done) OVER (ORDER BY projects_done DESC) AS next_writer_projects
+FROM writers;
+
+SELECT 
+    writer_id,
+    projects_done,
+    LAG(projects_done) OVER (ORDER BY projects_done DESC) AS previous_writer_projects
+FROM writers;
+
+/* ----------------------------------
+   3️⃣  STORED PROCEDURES (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_writer (
+  IN p_name VARCHAR(150),
+  IN p_nationality VARCHAR(50),
+  IN p_dob DATE,
+  IN p_genres VARCHAR(200),
+  IN p_projects INT,
+  IN p_awards INT,
+  IN p_email VARCHAR(150),
+  IN p_phone VARCHAR(20),
+  IN p_status BOOLEAN
+)
+BEGIN
+  INSERT INTO writers
+  (full_name, nationality, date_of_birth, genres, projects_done, awards, contact_email, phone, active_status)
+  VALUES
+  (p_name, p_nationality, p_dob, p_genres, p_projects, p_awards, p_email, p_phone, p_status);
+END$$
+
+CREATE PROCEDURE update_writer_projects (
+  IN p_writer_id INT,
+  IN p_projects INT
+)
+BEGIN
+  UPDATE writers
+  SET projects_done = p_projects
+  WHERE writer_id = p_writer_id;
+END$$
+
+CREATE PROCEDURE get_writer_by_genre (IN p_genre VARCHAR(50))
+BEGIN
+  SELECT * FROM writers
+  WHERE genres LIKE CONCAT('%', p_genre, '%');
+END$$
+
+CREATE PROCEDURE get_active_writers()
+BEGIN
+  SELECT * FROM writers
+  WHERE active_status = 1;
+END$$
+
+CREATE PROCEDURE get_award_winning_writers()
+BEGIN
+  SELECT * FROM writers
+  WHERE awards > 0;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   4️⃣  CURSOR (1)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE increase_projects_1()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE wid INT;
+
+  DECLARE cur CURSOR FOR SELECT writer_id FROM writers;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+
+  loop_cursor: LOOP
+    FETCH cur INTO wid;
+    IF done THEN
+      LEAVE loop_cursor;
+    END IF;
+
+    UPDATE writers
+    SET projects_done = projects_done + 1
+    WHERE writer_id = wid;
+  END LOOP;
+
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   5️⃣  DCL + TCL
+----------------------------------- */
+
+GRANT SELECT, INSERT ON writers TO 'film_user'@'localhost';
+
+REVOKE INSERT ON writers FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE writers SET projects_done = projects_done + 2 WHERE writer_id = 1;
+
+SAVEPOINT sp1;
+
+UPDATE writers SET awards = awards + 1 WHERE writer_id = 5;
+
+ROLLBACK TO sp1;
+
+COMMIT;
+
+/* ----------------------------------
+   6️⃣  TRIGGERS (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_writer_insert
+BEFORE INSERT ON writers
+FOR EACH ROW
+BEGIN
+  IF NEW.projects_done < 0 THEN
+    SET NEW.projects_done = 0;
+  END IF;
+END$$
+
+CREATE TABLE writer_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  writer_id INT,
+  action VARCHAR(50),
+  log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_writer_insert
+AFTER INSERT ON writers
+FOR EACH ROW
+BEGIN
+  INSERT INTO writer_log(writer_id, action)
+  VALUES (NEW.writer_id, 'inserted');
+END$$
+
+CREATE TRIGGER trg_before_writer_update
+BEFORE UPDATE ON writers
+FOR EACH ROW
+BEGIN
+  IF NEW.projects_done < 0 THEN
+    SET NEW.projects_done = OLD.projects_done;
+  END IF;
+END$$
+
+CREATE TABLE writer_history (
+  hist_id INT AUTO_INCREMENT PRIMARY KEY,
+  writer_id INT,
+  old_projects INT,
+  new_projects INT,
+  changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_projects_update
+AFTER UPDATE ON writers
+FOR EACH ROW
+BEGIN
+  IF OLD.projects_done <> NEW.projects_done THEN
+    INSERT INTO writer_history(writer_id, old_projects, new_projects)
+    VALUES (OLD.writer_id, OLD.projects_done, NEW.projects_done);
+  END IF;
+END$$
+
+CREATE TRIGGER trg_prevent_delete_award_writers
+BEFORE DELETE ON writers
+FOR EACH ROW
+BEGIN
+  IF OLD.awards > 0 THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Award-winning writers cannot be deleted!';
+  END IF;
+END$$
+
+DELIMITER ;
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+/* -------------------------------
+   1️⃣  VIEWS (5)
+-------------------------------- */
+
+CREATE VIEW view_award_winners AS
+SELECT award_id, award_name, recipient_type, recipient_id, movie_id, is_won
+FROM awards
+WHERE is_won = 1;
+
+CREATE VIEW view_movie_awards AS
+SELECT movie_id, COUNT(award_id) AS total_awards
+FROM awards
+WHERE recipient_type = 'movie' AND is_won = 1
+GROUP BY movie_id;
+
+CREATE VIEW view_actor_awards AS
+SELECT recipient_id AS actor_id, COUNT(award_id) AS total_awards
+FROM awards
+WHERE recipient_type = 'actor' AND is_won = 1
+GROUP BY recipient_id;
+
+CREATE VIEW view_director_awards AS
+SELECT recipient_id AS director_id, COUNT(award_id) AS total_awards
+FROM awards
+WHERE recipient_type = 'director' AND is_won = 1
+GROUP BY recipient_id;
+
+CREATE VIEW view_writer_awards AS
+SELECT recipient_id AS writer_id, COUNT(award_id) AS total_awards
+FROM awards
+WHERE recipient_type = 'writer' AND is_won = 1
+GROUP BY recipient_id;
+
+/* -------------------------------
+   2️⃣  WINDOW FUNCTIONS (5)
+-------------------------------- */
+
+SELECT 
+    award_id,
+    year,
+    RANK() OVER (ORDER BY year DESC) AS recent_award_rank
+FROM awards;
+
+SELECT 
+    award_id,
+    movie_id,
+    DENSE_RANK() OVER (ORDER BY movie_id) AS movie_award_rank
+FROM awards;
+
+SELECT 
+    award_id,
+    recipient_id,
+    ROW_NUMBER() OVER (PARTITION BY recipient_type ORDER BY year DESC) AS recipient_award_order
+FROM awards;
+
+SELECT 
+    award_id,
+    year,
+    LEAD(year) OVER (ORDER BY year) AS next_award_year
+FROM awards;
+
+SELECT 
+    award_id,
+    year,
+    LAG(year) OVER (ORDER BY year) AS previous_award_year
+FROM awards;
+
+/* ----------------------------------
+   3️⃣  STORED PROCEDURES (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_award (
+  IN p_name VARCHAR(150),
+  IN p_year YEAR,
+  IN p_category VARCHAR(100),
+  IN p_type VARCHAR(50),
+  IN p_recipient INT,
+  IN p_movie INT,
+  IN p_is_won BOOLEAN,
+  IN p_nom_date DATE,
+  IN p_location VARCHAR(100)
+)
+BEGIN
+  INSERT INTO awards
+  (award_name, year, category, recipient_type, recipient_id, movie_id, is_won, nomination_date, ceremony_location)
+  VALUES
+  (p_name, p_year, p_category, p_type, p_recipient, p_movie, p_is_won, p_nom_date, p_location);
+END$$
+
+CREATE PROCEDURE update_award_status (
+  IN p_award_id INT,
+  IN p_is_won BOOLEAN
+)
+BEGIN
+  UPDATE awards
+  SET is_won = p_is_won
+  WHERE award_id = p_award_id;
+END$$
+
+CREATE PROCEDURE get_awards_by_movie (IN p_movie INT)
+BEGIN
+  SELECT * FROM awards WHERE movie_id = p_movie;
+END$$
+
+CREATE PROCEDURE get_awards_by_recipient (IN p_type VARCHAR(50), IN p_recipient INT)
+BEGIN
+  SELECT * FROM awards
+  WHERE recipient_type = p_type AND recipient_id = p_recipient;
+END$$
+
+CREATE PROCEDURE awards_between_years (IN start_year YEAR, IN end_year YEAR)
+BEGIN
+  SELECT * FROM awards
+  WHERE year BETWEEN start_year AND end_year;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   4️⃣  CURSOR (1)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE mark_all_nominees()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE aid INT;
+
+  DECLARE cur CURSOR FOR SELECT award_id FROM awards;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+
+  loop_cursor: LOOP
+    FETCH cur INTO aid;
+    IF done THEN
+      LEAVE loop_cursor;
+    END IF;
+
+    UPDATE awards
+    SET is_won = 1
+    WHERE award_id = aid;
+  END LOOP;
+
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   5️⃣  DCL + TCL
+----------------------------------- */
+
+GRANT SELECT, INSERT ON awards TO 'film_user'@'localhost';
+
+REVOKE INSERT ON awards FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE awards SET is_won = 0 WHERE award_id = 5;
+
+SAVEPOINT sp1;
+
+UPDATE awards SET ceremony_location = 'London' WHERE award_id = 4;
+
+ROLLBACK TO sp1;
+
+COMMIT;
+
+/* ----------------------------------
+   6️⃣  TRIGGERS (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_award_insert
+BEFORE INSERT ON awards
+FOR EACH ROW
+BEGIN
+  IF NEW.year < 1900 THEN
+    SET NEW.year = 2000;
+  END IF;
+END$$
+
+CREATE TABLE award_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  award_id INT,
+  action VARCHAR(50),
+  log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_award_insert
+AFTER INSERT ON awards
+FOR EACH ROW
+BEGIN
+  INSERT INTO award_log(award_id, action)
+  VALUES (NEW.award_id, 'inserted');
+END$$
+
+CREATE TRIGGER trg_before_award_update
+BEFORE UPDATE ON awards
+FOR EACH ROW
+BEGIN
+  IF NEW.year < 1900 THEN
+    SET NEW.year = OLD.year;
+  END IF;
+END$$
+
+CREATE TABLE award_history (
+  hist_id INT AUTO_INCREMENT PRIMARY KEY,
+  award_id INT,
+  old_status BOOLEAN,
+  new_status BOOLEAN,
+  changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_award_update
+AFTER UPDATE ON awards
+FOR EACH ROW
+BEGIN
+  IF OLD.is_won <> NEW.is_won THEN
+    INSERT INTO award_history(award_id, old_status, new_status)
+    VALUES (OLD.award_id, OLD.is_won, NEW.is_won);
+  END IF;
+END$$
+
+CREATE TRIGGER trg_prevent_delete_won_awards
+BEFORE DELETE ON awards
+FOR EACH ROW
+BEGIN
+  IF OLD.is_won = 1 THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Won awards cannot be deleted!';
+  END IF;
+END$$
+
+DELIMITER ;
+
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+/* -------------------------------
+   1️⃣  VIEWS (5)
+-------------------------------- */
+
+CREATE VIEW view_most_viewed_trailers AS
+SELECT trailer_id, movie_id, views, likes, dislikes, youtube_link
+FROM trailers
+ORDER BY views DESC
+LIMIT 10;
+
+CREATE VIEW view_trailer_engagement AS
+SELECT 
+    trailer_id,
+    movie_id,
+    (likes - dislikes) AS net_likes,
+    (likes + dislikes) AS total_reactions
+FROM trailers;
+
+CREATE VIEW view_trailers_by_language AS
+SELECT language, COUNT(trailer_id) AS total_trailers
+FROM trailers
+GROUP BY language;
+
+CREATE VIEW view_recent_trailers AS
+SELECT trailer_id, movie_id, release_date
+FROM trailers
+WHERE release_date >= '2015-01-01'
+ORDER BY release_date DESC;
+
+CREATE VIEW view_youtube_trailers AS
+SELECT trailer_id, movie_id, youtube_link, published_on
+FROM trailers
+WHERE published_on = 'YouTube';
+
+/* -------------------------------
+   2️⃣  WINDOW FUNCTIONS (5)
+-------------------------------- */
+
+SELECT 
+    trailer_id,
+    views,
+    RANK() OVER (ORDER BY views DESC) AS views_rank
+FROM trailers;
+
+SELECT 
+    trailer_id,
+    likes,
+    DENSE_RANK() OVER (ORDER BY likes DESC) AS likes_rank
+FROM trailers;
+
+SELECT 
+    trailer_id,
+    release_date,
+    ROW_NUMBER() OVER (ORDER BY release_date DESC) AS recent_order
+FROM trailers;
+
+SELECT 
+    trailer_id,
+    views,
+    LEAD(views, 1) OVER (ORDER BY release_date) AS next_trailer_views
+FROM trailers;
+
+SELECT 
+    trailer_id,
+    views,
+    LAG(views, 1) OVER (ORDER BY release_date) AS previous_trailer_views
+FROM trailers;
+
+/* ----------------------------------
+   3️⃣  STORED PROCEDURES (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_trailer (
+  IN p_movie INT,
+  IN p_release DATE,
+  IN p_duration INT,
+  IN p_views BIGINT,
+  IN p_likes BIGINT,
+  IN p_dislikes BIGINT,
+  IN p_platform VARCHAR(50),
+  IN p_link VARCHAR(200),
+  IN p_language VARCHAR(50)
+)
+BEGIN
+  INSERT INTO trailers
+  (movie_id, release_date, duration, views, likes, dislikes, published_on, youtube_link, language)
+  VALUES
+  (p_movie, p_release, p_duration, p_views, p_likes, p_dislikes, p_platform, p_link, p_language);
+END$$
+
+CREATE PROCEDURE update_trailer_views (
+  IN p_trailer_id INT,
+  IN p_views BIGINT
+)
+BEGIN
+  UPDATE trailers
+  SET views = p_views
+  WHERE trailer_id = p_trailer_id;
+END$$
+
+CREATE PROCEDURE get_trailers_by_movie (IN p_movie INT)
+BEGIN
+  SELECT * FROM trailers WHERE movie_id = p_movie;
+END$$
+
+CREATE PROCEDURE get_trailers_by_language (IN p_lang VARCHAR(50))
+BEGIN
+  SELECT * FROM trailers WHERE language = p_lang;
+END$$
+
+CREATE PROCEDURE trailers_between_dates (IN d1 DATE, IN d2 DATE)
+BEGIN
+  SELECT * FROM trailers
+  WHERE release_date BETWEEN d1 AND d2;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   4️⃣  CURSOR (1)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE increase_views_5percent()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE tid INT;
+
+  DECLARE cur CURSOR FOR SELECT trailer_id FROM trailers;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+
+  loop_cursor: LOOP
+    FETCH cur INTO tid;
+    IF done THEN
+      LEAVE loop_cursor;
+    END IF;
+
+    UPDATE trailers
+    SET views = views * 1.05
+    WHERE trailer_id = tid;
+  END LOOP;
+
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   5️⃣  DCL + TCL
+----------------------------------- */
+
+GRANT SELECT, INSERT ON trailers TO 'film_user'@'localhost';
+
+REVOKE INSERT ON trailers FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE trailers SET likes = likes + 10000 WHERE trailer_id = 1;
+
+SAVEPOINT sp1;
+
+UPDATE trailers SET dislikes = dislikes + 5000 WHERE trailer_id = 5;
+
+ROLLBACK TO sp1;
+
+COMMIT;
+
+/* ----------------------------------
+   6️⃣  TRIGGERS (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_trailer_insert
+BEFORE INSERT ON trailers
+FOR EACH ROW
+BEGIN
+  IF NEW.views < 0 THEN
+    SET NEW.views = 0;
+  END IF;
+END$$
+
+CREATE TABLE trailer_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  trailer_id INT,
+  action VARCHAR(50),
+  log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_trailer_insert
+AFTER INSERT ON trailers
+FOR EACH ROW
+BEGIN
+  INSERT INTO trailer_log(trailer_id, action)
+  VALUES (NEW.trailer_id, 'inserted');
+END$$
+
+CREATE TRIGGER trg_before_trailer_update
+BEFORE UPDATE ON trailers
+FOR EACH ROW
+BEGIN
+  IF NEW.views < 0 THEN
+    SET NEW.views = OLD.views;
+  END IF;
+END$$
+
+CREATE TABLE trailer_history (
+  hist_id INT AUTO_INCREMENT PRIMARY KEY,
+  trailer_id INT,
+  old_views BIGINT,
+  new_views BIGINT,
+  changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_trailer_update
+AFTER UPDATE ON trailers
+FOR EACH ROW
+BEGIN
+  IF OLD.views <> NEW.views THEN
+    INSERT INTO trailer_history(trailer_id, old_views, new_views)
+    VALUES (OLD.trailer_id, OLD.views, NEW.views);
+  END IF;
+END$$
+
+CREATE TRIGGER trg_prevent_delete_trailer
+BEFORE DELETE ON trailers
+FOR EACH ROW
+BEGIN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Trailers cannot be deleted!';
+END$$
+
+DELIMITER ;
+
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+/* -------------------------------
+   1️⃣  VIEWS (5)
+-------------------------------- */
+
+CREATE VIEW view_high_rated_reviews AS
+SELECT review_id, movie_id, reviewer_name, rating, review_text
+FROM reviews
+WHERE rating >= 8.0
+ORDER BY rating DESC;
+
+CREATE VIEW view_reviews_platform AS
+SELECT platform, COUNT(review_id) AS total_reviews, AVG(rating) AS avg_rating
+FROM reviews
+GROUP BY platform;
+
+CREATE VIEW view_verified_reviews AS
+SELECT review_id, movie_id, reviewer_name, rating, verified
+FROM reviews
+WHERE verified = 1;
+
+CREATE VIEW view_movie_review_count AS
+SELECT movie_id, COUNT(review_id) AS total_reviews
+FROM reviews
+GROUP BY movie_id;
+
+CREATE VIEW view_review_sentiment AS
+SELECT review_id, movie_id, reviewer_name, sentiment, likes
+FROM reviews
+ORDER BY likes DESC;
+
+/* -------------------------------
+   2️⃣  WINDOW FUNCTIONS (5)
+-------------------------------- */
+
+SELECT 
+    review_id,
+    rating,
+    RANK() OVER (ORDER BY rating DESC) AS rating_rank
+FROM reviews;
+
+SELECT 
+    review_id,
+    likes,
+    DENSE_RANK() OVER (ORDER BY likes DESC) AS likes_rank
+FROM reviews;
+
+SELECT 
+    review_id,
+    review_date,
+    ROW_NUMBER() OVER (ORDER BY review_date DESC) AS recent_order
+FROM reviews;
+
+SELECT 
+    review_id,
+    rating,
+    LEAD(rating,1) OVER (ORDER BY review_date) AS next_review_rating
+FROM reviews;
+
+SELECT 
+    review_id,
+    rating,
+    LAG(rating,1) OVER (ORDER BY review_date) AS previous_review_rating
+FROM reviews;
+
+/* ----------------------------------
+   3️⃣  STORED PROCEDURES (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_review (
+  IN p_movie INT,
+  IN p_reviewer VARCHAR(100),
+  IN p_date DATE,
+  IN p_rating DECIMAL(3,1),
+  IN p_text TEXT,
+  IN p_platform VARCHAR(50),
+  IN p_sentiment VARCHAR(20),
+  IN p_likes INT,
+  IN p_verified BOOLEAN
+)
+BEGIN
+  INSERT INTO reviews
+  (movie_id, reviewer_name, review_date, rating, review_text, platform, sentiment, likes, verified)
+  VALUES
+  (p_movie, p_reviewer, p_date, p_rating, p_text, p_platform, p_sentiment, p_likes, p_verified);
+END$$
+
+CREATE PROCEDURE update_review_rating (
+  IN p_review_id INT,
+  IN p_rating DECIMAL(3,1)
+)
+BEGIN
+  UPDATE reviews
+  SET rating = p_rating
+  WHERE review_id = p_review_id;
+END$$
+
+CREATE PROCEDURE get_reviews_by_movie (IN p_movie INT)
+BEGIN
+  SELECT * FROM reviews WHERE movie_id = p_movie;
+END$$
+
+CREATE PROCEDURE get_reviews_by_platform (IN p_platform VARCHAR(50))
+BEGIN
+  SELECT * FROM reviews WHERE platform = p_platform;
+END$$
+
+CREATE PROCEDURE reviews_between_dates (IN d1 DATE, IN d2 DATE)
+BEGIN
+  SELECT * FROM reviews
+  WHERE review_date BETWEEN d1 AND d2;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   4️⃣  CURSOR (1)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE increase_review_likes_10percent()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE rid INT;
+
+  DECLARE cur CURSOR FOR SELECT review_id FROM reviews;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+
+  loop_cursor: LOOP
+    FETCH cur INTO rid;
+    IF done THEN
+      LEAVE loop_cursor;
+    END IF;
+
+    UPDATE reviews
+    SET likes = likes * 1.10
+    WHERE review_id = rid;
+  END LOOP;
+
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   5️⃣  DCL + TCL
+----------------------------------- */
+
+GRANT SELECT, INSERT ON reviews TO 'film_user'@'localhost';
+
+REVOKE INSERT ON reviews FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE reviews SET likes = likes + 100 WHERE review_id = 1;
+
+SAVEPOINT sp1;
+
+UPDATE reviews SET rating = 9.0 WHERE review_id = 5;
+
+ROLLBACK TO sp1;
+
+COMMIT;
+
+/* ----------------------------------
+   6️⃣  TRIGGERS (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_review_insert
+BEFORE INSERT ON reviews
+FOR EACH ROW
+BEGIN
+  IF NEW.rating < 0 THEN
+    SET NEW.rating = 0;
+  ELSEIF NEW.rating > 10 THEN
+    SET NEW.rating = 10;
+  END IF;
+END$$
+
+CREATE TABLE review_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  review_id INT,
+  action VARCHAR(50),
+  log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_review_insert
+AFTER INSERT ON reviews
+FOR EACH ROW
+BEGIN
+  INSERT INTO review_log(review_id, action)
+  VALUES (NEW.review_id, 'inserted');
+END$$
+
+CREATE TRIGGER trg_before_review_update
+BEFORE UPDATE ON reviews
+FOR EACH ROW
+BEGIN
+  IF NEW.likes < 0 THEN
+    SET NEW.likes = OLD.likes;
+  END IF;
+END$$
+
+CREATE TABLE review_history (
+  hist_id INT AUTO_INCREMENT PRIMARY KEY,
+  review_id INT,
+  old_rating DECIMAL(3,1),
+  new_rating DECIMAL(3,1),
+  changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_review_update
+AFTER UPDATE ON reviews
+FOR EACH ROW
+BEGIN
+  IF OLD.rating <> NEW.rating THEN
+    INSERT INTO review_history(review_id, old_rating, new_rating)
+    VALUES (OLD.review_id, OLD.rating, NEW.rating);
+  END IF;
+END$$
+
+CREATE TRIGGER trg_prevent_delete_review
+BEFORE DELETE ON reviews
+FOR EACH ROW
+BEGIN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Reviews cannot be deleted!';
+END$$
+
+DELIMITER ;
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+/* -------------------------------
+   1️⃣  VIEWS (5)
+-------------------------------- */
+
+CREATE VIEW view_paid_tickets AS
+SELECT ticket_id, showtime_id, seat_number, price, payment_status
+FROM tickets
+WHERE payment_status = 'paid'
+ORDER BY booking_time DESC;
+
+CREATE VIEW view_tickets_by_theater AS
+SELECT theater_id, COUNT(ticket_id) AS total_tickets, SUM(price) AS total_revenue
+FROM tickets
+GROUP BY theater_id;
+
+CREATE VIEW view_customer_tickets AS
+SELECT customer_id, ticket_id, showtime_id, seat_number, price
+FROM tickets
+ORDER BY customer_id;
+
+CREATE VIEW view_screen_sales AS
+SELECT screen_number, COUNT(ticket_id) AS tickets_sold, SUM(price) AS revenue
+FROM tickets
+GROUP BY screen_number;
+
+CREATE VIEW view_booking_source_summary AS
+SELECT booking_source, COUNT(ticket_id) AS total_bookings, SUM(price) AS total_revenue
+FROM tickets
+GROUP BY booking_source;
+
+/* -------------------------------
+   2️⃣  WINDOW FUNCTIONS (5)
+-------------------------------- */
+
+SELECT 
+    ticket_id,
+    price,
+    RANK() OVER (ORDER BY price DESC) AS price_rank
+FROM tickets;
+
+SELECT 
+    ticket_id,
+    booking_time,
+    DENSE_RANK() OVER (ORDER BY booking_time ASC) AS booking_rank
+FROM tickets;
+
+SELECT 
+    ticket_id,
+    showtime_id,
+    ROW_NUMBER() OVER (PARTITION BY showtime_id ORDER BY price DESC) AS seat_order
+FROM tickets;
+
+SELECT 
+    ticket_id,
+    seat_number,
+    LEAD(seat_number) OVER (ORDER BY ticket_id) AS next_seat
+FROM tickets;
+
+SELECT 
+    ticket_id,
+    seat_number,
+    LAG(seat_number) OVER (ORDER BY ticket_id) AS previous_seat
+FROM tickets;
+
+/* ----------------------------------
+   3️⃣  STORED PROCEDURES (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_ticket (
+  IN p_showtime INT,
+  IN p_seat VARCHAR(10),
+  IN p_booking DATETIME,
+  IN p_price DECIMAL(8,2),
+  IN p_status VARCHAR(20),
+  IN p_customer INT,
+  IN p_screen INT,
+  IN p_theater INT,
+  IN p_source VARCHAR(50)
+)
+BEGIN
+  INSERT INTO tickets
+  (showtime_id, seat_number, booking_time, price, payment_status, customer_id, screen_number, theater_id, booking_source)
+  VALUES
+  (p_showtime, p_seat, p_booking, p_price, p_status, p_customer, p_screen, p_theater, p_source);
+END$$
+
+CREATE PROCEDURE update_ticket_price (
+  IN p_ticket_id INT,
+  IN p_price DECIMAL(8,2)
+)
+BEGIN
+  UPDATE tickets
+  SET price = p_price
+  WHERE ticket_id = p_ticket_id;
+END$$
+
+CREATE PROCEDURE get_tickets_by_customer (IN p_customer INT)
+BEGIN
+  SELECT * FROM tickets WHERE customer_id = p_customer;
+END$$
+
+CREATE PROCEDURE get_tickets_by_theater (IN p_theater INT)
+BEGIN
+  SELECT * FROM tickets WHERE theater_id = p_theater;
+END$$
+
+CREATE PROCEDURE tickets_in_period (IN d1 DATETIME, IN d2 DATETIME)
+BEGIN
+  SELECT * FROM tickets
+  WHERE booking_time BETWEEN d1 AND d2;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   4️⃣  CURSOR (1)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE increase_ticket_price_5percent()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE tid INT;
+
+  DECLARE cur CURSOR FOR SELECT ticket_id FROM tickets;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+
+  loop_cursor: LOOP
+    FETCH cur INTO tid;
+    IF done THEN
+      LEAVE loop_cursor;
+    END IF;
+
+    UPDATE tickets
+    SET price = price * 1.05
+    WHERE ticket_id = tid;
+  END LOOP;
+
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   5️⃣  DCL + TCL
+----------------------------------- */
+
+GRANT SELECT, INSERT ON tickets TO 'film_user'@'localhost';
+
+REVOKE INSERT ON tickets FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE tickets SET price = price + 50 WHERE ticket_id = 1;
+
+SAVEPOINT sp1;
+
+UPDATE tickets SET payment_status = 'refunded' WHERE ticket_id = 5;
+
+ROLLBACK TO sp1;
+
+COMMIT;
+
+/* ----------------------------------
+   6️⃣  TRIGGERS (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_ticket_insert
+BEFORE INSERT ON tickets
+FOR EACH ROW
+BEGIN
+  IF NEW.price < 0 THEN
+    SET NEW.price = 0;
+  END IF;
+END$$
+
+CREATE TABLE ticket_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  ticket_id INT,
+  action VARCHAR(50),
+  log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_ticket_insert
+AFTER INSERT ON tickets
+FOR EACH ROW
+BEGIN
+  INSERT INTO ticket_log(ticket_id, action)
+  VALUES (NEW.ticket_id, 'inserted');
+END$$
+
+CREATE TRIGGER trg_before_ticket_update
+BEFORE UPDATE ON tickets
+FOR EACH ROW
+BEGIN
+  IF NEW.price < 0 THEN
+    SET NEW.price = OLD.price;
+  END IF;
+END$$
+
+CREATE TABLE ticket_price_history (
+  hist_id INT AUTO_INCREMENT PRIMARY KEY,
+  ticket_id INT,
+  old_price DECIMAL(8,2),
+  new_price DECIMAL(8,2),
+  changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_ticket_update
+AFTER UPDATE ON tickets
+FOR EACH ROW
+BEGIN
+  IF OLD.price <> NEW.price THEN
+    INSERT INTO ticket_price_history(ticket_id, old_price, new_price)
+    VALUES (OLD.ticket_id, OLD.price, NEW.price);
+  END IF;
+END$$
+
+CREATE TRIGGER trg_prevent_delete_ticket
+BEFORE DELETE ON tickets
+FOR EACH ROW
+BEGIN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Tickets cannot be deleted!';
+END$$
+
+DELIMITER ;
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+/* -------------------------------
+   1️⃣  VIEWS (5)
+-------------------------------- */
+
+CREATE VIEW view_showtime_schedule AS
+SELECT s.showtime_id, m.title, t.name AS theater_name, s.screen_number, s.start_time, s.end_time, s.date
+FROM showtimes s
+JOIN movies m ON s.movie_id = m.movie_id
+JOIN theaters t ON s.theater_id = t.theater_id;
+
+CREATE VIEW view_premiere_showtimes AS
+SELECT s.showtime_id, m.title, s.date, s.start_time, s.end_time
+FROM showtimes s
+JOIN movies m ON s.movie_id = m.movie_id
+WHERE s.is_premiere = 1;
+
+CREATE VIEW view_showtimes_by_theater AS
+SELECT t.name AS theater_name, COUNT(s.showtime_id) AS total_showtimes
+FROM showtimes s
+JOIN theaters t ON s.theater_id = t.theater_id
+GROUP BY t.name;
+
+CREATE VIEW view_showtimes_by_movie AS
+SELECT m.title, COUNT(s.showtime_id) AS total_showtimes
+FROM showtimes s
+JOIN movies m ON s.movie_id = m.movie_id
+GROUP BY m.title;
+
+CREATE VIEW view_showtimes_formats AS
+SELECT format, COUNT(showtime_id) AS total_shows
+FROM showtimes
+GROUP BY format;
+
+/* -------------------------------
+   2️⃣  WINDOW FUNCTIONS (5)
+-------------------------------- */
+
+SELECT 
+    showtime_id,
+    start_time,
+    ROW_NUMBER() OVER (PARTITION BY theater_id ORDER BY start_time) AS show_order_in_theater
+FROM showtimes;
+
+SELECT 
+    showtime_id,
+    end_time,
+    RANK() OVER (ORDER BY end_time) AS rank_by_end_time
+FROM showtimes;
+
+SELECT 
+    showtime_id,
+    date,
+    DENSE_RANK() OVER (ORDER BY date) AS rank_by_date
+FROM showtimes;
+
+SELECT 
+    showtime_id,
+    movie_id,
+    LEAD(start_time) OVER (ORDER BY showtime_id) AS next_show_start
+FROM showtimes;
+
+SELECT 
+    showtime_id,
+    movie_id,
+    LAG(end_time) OVER (ORDER BY showtime_id) AS previous_show_end
+FROM showtimes;
+
+/* ----------------------------------
+   3️⃣  STORED PROCEDURES (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_showtime (
+  IN p_movie INT,
+  IN p_theater INT,
+  IN p_screen INT,
+  IN p_start TIME,
+  IN p_end TIME,
+  IN p_date DATE,
+  IN p_format VARCHAR(20),
+  IN p_language VARCHAR(20),
+  IN p_premiere BOOLEAN
+)
+BEGIN
+  INSERT INTO showtimes 
+  (movie_id, theater_id, screen_number, start_time, end_time, date, format, language, is_premiere)
+  VALUES
+  (p_movie, p_theater, p_screen, p_start, p_end, p_date, p_format, p_language, p_premiere);
+END$$
+
+CREATE PROCEDURE update_showtime_time (
+  IN p_showtime_id INT,
+  IN p_start TIME,
+  IN p_end TIME
+)
+BEGIN
+  UPDATE showtimes
+  SET start_time = p_start,
+      end_time = p_end
+  WHERE showtime_id = p_showtime_id;
+END$$
+
+CREATE PROCEDURE get_showtimes_by_movie (IN p_movie INT)
+BEGIN
+  SELECT * FROM showtimes WHERE movie_id = p_movie;
+END$$
+
+CREATE PROCEDURE get_showtimes_by_theater (IN p_theater INT)
+BEGIN
+  SELECT * FROM showtimes WHERE theater_id = p_theater;
+END$$
+
+CREATE PROCEDURE showtimes_in_date_range (IN d1 DATE, IN d2 DATE)
+BEGIN
+  SELECT * FROM showtimes 
+  WHERE date BETWEEN d1 AND d2;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   4️⃣  CURSOR (1)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE adjust_showtimes_1hr_later()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE sid INT;
+
+  DECLARE cur CURSOR FOR SELECT showtime_id FROM showtimes;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+
+  loop_cursor: LOOP
+    FETCH cur INTO sid;
+    IF done THEN
+      LEAVE loop_cursor;
+    END IF;
+
+    UPDATE showtimes
+    SET start_time = ADDTIME(start_time, '01:00:00'),
+        end_time = ADDTIME(end_time, '01:00:00')
+    WHERE showtime_id = sid;
+  END LOOP;
+
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   5️⃣  DCL + TCL
+----------------------------------- */
+
+GRANT SELECT, INSERT ON showtimes TO 'film_user'@'localhost';
+
+REVOKE INSERT ON showtimes FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE showtimes SET screen_number = 5 WHERE showtime_id = 1;
+
+SAVEPOINT sp1;
+
+UPDATE showtimes SET date = '2023-12-31' WHERE showtime_id = 5;
+
+ROLLBACK TO sp1;
+
+COMMIT;
+
+/* ----------------------------------
+   6️⃣  TRIGGERS (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_showtime_insert
+BEFORE INSERT ON showtimes
+FOR EACH ROW
+BEGIN
+  IF NEW.start_time >= NEW.end_time THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Start time must be before end time!';
+  END IF;
+END$$
+
+CREATE TABLE showtime_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  showtime_id INT,
+  action VARCHAR(50),
+  log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_showtime_insert
+AFTER INSERT ON showtimes
+FOR EACH ROW
+BEGIN
+  INSERT INTO showtime_log(showtime_id, action)
+  VALUES (NEW.showtime_id, 'inserted');
+END$$
+
+CREATE TRIGGER trg_before_showtime_update
+BEFORE UPDATE ON showtimes
+FOR EACH ROW
+BEGIN
+  IF NEW.start_time >= NEW.end_time THEN
+    SET NEW.start_time = OLD.start_time;
+    SET NEW.end_time = OLD.end_time;
+  END IF;
+END$$
+
+CREATE TABLE showtime_change_history (
+  hist_id INT AUTO_INCREMENT PRIMARY KEY,
+  showtime_id INT,
+  old_start TIME,
+  new_start TIME,
+  old_end TIME,
+  new_end TIME,
+  changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_showtime_update
+AFTER UPDATE ON showtimes
+FOR EACH ROW
+BEGIN
+  IF OLD.start_time <> NEW.start_time OR OLD.end_time <> NEW.end_time THEN
+    INSERT INTO showtime_change_history(showtime_id, old_start, new_start, old_end, new_end)
+    VALUES (OLD.showtime_id, OLD.start_time, NEW.start_time, OLD.end_time, NEW.end_time);
+  END IF;
+END$$
+
+CREATE TRIGGER trg_prevent_delete_showtime
+BEFORE DELETE ON showtimes
+FOR EACH ROW
+BEGIN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Showtimes cannot be deleted!';
+END$$
+
+DELIMITER ;
+
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+/* -------------------------------
+   1️⃣  VIEWS (5)
+-------------------------------- */
+
+CREATE VIEW view_music_tracks AS
+SELECT m.track_id, mo.title AS movie_title, m.title AS track_title, m.singer, m.composer, m.genre, m.release_date
+FROM music m
+JOIN movies mo ON m.movie_id = mo.movie_id;
+
+CREATE VIEW view_music_by_genre AS
+SELECT genre, COUNT(track_id) AS total_tracks
+FROM music
+GROUP BY genre;
+
+CREATE VIEW view_music_platform AS
+SELECT platform, COUNT(track_id) AS total_tracks
+FROM music
+GROUP BY platform;
+
+CREATE VIEW view_singer_tracks AS
+SELECT singer, COUNT(track_id) AS tracks_count
+FROM music
+GROUP BY singer
+ORDER BY tracks_count DESC;
+
+CREATE VIEW view_composer_tracks AS
+SELECT composer, COUNT(track_id) AS tracks_count
+FROM music
+GROUP BY composer
+ORDER BY tracks_count DESC;
+
+/* -------------------------------
+   2️⃣  WINDOW FUNCTIONS (5)
+-------------------------------- */
+
+SELECT 
+    track_id,
+    duration,
+    RANK() OVER (ORDER BY duration DESC) AS duration_rank
+FROM music;
+
+SELECT 
+    track_id,
+    release_date,
+    DENSE_RANK() OVER (ORDER BY release_date) AS release_rank
+FROM music;
+
+SELECT 
+    track_id,
+    movie_id,
+    ROW_NUMBER() OVER (PARTITION BY movie_id ORDER BY duration DESC) AS track_order_in_movie
+FROM music;
+
+SELECT 
+    track_id,
+    title,
+    LEAD(title) OVER (ORDER BY track_id) AS next_track
+FROM music;
+
+SELECT 
+    track_id,
+    title,
+    LAG(title) OVER (ORDER BY track_id) AS previous_track
+FROM music;
+
+/* ----------------------------------
+   3️⃣  STORED PROCEDURES (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_music_track (
+  IN p_movie INT,
+  IN p_title VARCHAR(150),
+  IN p_duration INT,
+  IN p_singer VARCHAR(100),
+  IN p_composer VARCHAR(100),
+  IN p_lyricist VARCHAR(100),
+  IN p_genre VARCHAR(50),
+  IN p_release DATE,
+  IN p_platform VARCHAR(100)
+)
+BEGIN
+  INSERT INTO music
+  (movie_id, title, duration, singer, composer, lyricist, genre, release_date, platform)
+  VALUES
+  (p_movie, p_title, p_duration, p_singer, p_composer, p_lyricist, p_genre, p_release, p_platform);
+END$$
+
+CREATE PROCEDURE update_music_duration (
+  IN p_track_id INT,
+  IN p_duration INT
+)
+BEGIN
+  UPDATE music
+  SET duration = p_duration
+  WHERE track_id = p_track_id;
+END$$
+
+CREATE PROCEDURE get_tracks_by_movie (IN p_movie INT)
+BEGIN
+  SELECT * FROM music WHERE movie_id = p_movie;
+END$$
+
+CREATE PROCEDURE get_tracks_by_singer (IN p_singer VARCHAR(100))
+BEGIN
+  SELECT * FROM music WHERE singer = p_singer;
+END$$
+
+CREATE PROCEDURE tracks_in_genre (IN p_genre VARCHAR(50))
+BEGIN
+  SELECT * FROM music WHERE genre = p_genre;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   4️⃣  CURSOR (1)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE increase_duration_10percent()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE tid INT;
+
+  DECLARE cur CURSOR FOR SELECT track_id FROM music;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+
+  loop_cursor: LOOP
+    FETCH cur INTO tid;
+    IF done THEN
+      LEAVE loop_cursor;
+    END IF;
+
+    UPDATE music
+    SET duration = CEIL(duration * 1.10)
+    WHERE track_id = tid;
+  END LOOP;
+
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   5️⃣  DCL + TCL
+----------------------------------- */
+
+GRANT SELECT, INSERT ON music TO 'film_user'@'localhost';
+
+REVOKE INSERT ON music FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE music SET duration = 200 WHERE track_id = 1;
+
+SAVEPOINT sp1;
+
+UPDATE music SET duration = 250 WHERE track_id = 5;
+
+ROLLBACK TO sp1;
+
+COMMIT;
+
+/* ----------------------------------
+   6️⃣  TRIGGERS (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_music_insert
+BEFORE INSERT ON music
+FOR EACH ROW
+BEGIN
+  IF NEW.duration <= 0 THEN
+    SET NEW.duration = 180;
+  END IF;
+END$$
+
+CREATE TABLE music_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  track_id INT,
+  action VARCHAR(50),
+  log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_music_insert
+AFTER INSERT ON music
+FOR EACH ROW
+BEGIN
+  INSERT INTO music_log(track_id, action)
+  VALUES (NEW.track_id, 'inserted');
+END$$
+
+CREATE TRIGGER trg_before_music_update
+BEFORE UPDATE ON music
+FOR EACH ROW
+BEGIN
+  IF NEW.duration <= 0 THEN
+    SET NEW.duration = OLD.duration;
+  END IF;
+END$$
+
+CREATE TABLE music_duration_history (
+  hist_id INT AUTO_INCREMENT PRIMARY KEY,
+  track_id INT,
+  old_duration INT,
+  new_duration INT,
+  changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_music_update
+AFTER UPDATE ON music
+FOR EACH ROW
+BEGIN
+  IF OLD.duration <> NEW.duration THEN
+    INSERT INTO music_duration_history(track_id, old_duration, new_duration)
+    VALUES (OLD.track_id, OLD.duration, NEW.duration);
+  END IF;
+END$$
+
+CREATE TRIGGER trg_prevent_delete_music
+BEFORE DELETE ON music
+FOR EACH ROW
+BEGIN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Music tracks cannot be deleted!';
+END$$
+
+DELIMITER ;
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+/* -------------------------------
+   1️⃣  VIEWS (5)
+-------------------------------- */
+
+CREATE VIEW view_active_singers AS
+SELECT singer_id, full_name, nationality, genre, debut_year
+FROM singers
+WHERE active_status = 1;
+
+CREATE VIEW view_singer_awards AS
+SELECT full_name, awards
+FROM singers
+ORDER BY awards DESC;
+
+CREATE VIEW view_singers_by_genre AS
+SELECT genre, COUNT(singer_id) AS total_singers
+FROM singers
+GROUP BY genre;
+
+CREATE VIEW view_singer_age AS
+SELECT full_name, date_of_birth, YEAR(CURDATE()) - YEAR(date_of_birth) AS age
+FROM singers;
+
+CREATE VIEW view_gender_distribution AS
+SELECT gender, COUNT(singer_id) AS total
+FROM singers
+GROUP BY gender;
+
+/* -------------------------------
+   2️⃣  WINDOW FUNCTIONS (5)
+-------------------------------- */
+
+SELECT 
+    singer_id,
+    awards,
+    RANK() OVER (ORDER BY awards DESC) AS awards_rank
+FROM singers;
+
+SELECT 
+    singer_id,
+    debut_year,
+    DENSE_RANK() OVER (ORDER BY debut_year) AS debut_rank
+FROM singers;
+
+SELECT 
+    singer_id,
+    full_name,
+    ROW_NUMBER() OVER (PARTITION BY gender ORDER BY awards DESC) AS rank_in_gender
+FROM singers;
+
+SELECT 
+    singer_id,
+    full_name,
+    LEAD(full_name) OVER (ORDER BY singer_id) AS next_singer
+FROM singers;
+
+SELECT 
+    singer_id,
+    full_name,
+    LAG(full_name) OVER (ORDER BY singer_id) AS previous_singer
+FROM singers;
+
+/* ----------------------------------
+   3️⃣  STORED PROCEDURES (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_singer (
+  IN p_full_name VARCHAR(100),
+  IN p_nationality VARCHAR(50),
+  IN p_dob DATE,
+  IN p_gender VARCHAR(10),
+  IN p_email VARCHAR(150),
+  IN p_genre VARCHAR(50),
+  IN p_awards INT,
+  IN p_debut YEAR,
+  IN p_status BOOLEAN
+)
+BEGIN
+  INSERT INTO singers
+  (full_name, nationality, date_of_birth, gender, contact_email, genre, awards, debut_year, active_status)
+  VALUES
+  (p_full_name, p_nationality, p_dob, p_gender, p_email, p_genre, p_awards, p_debut, p_status);
+END$$
+
+CREATE PROCEDURE update_singer_awards (
+  IN p_singer_id INT,
+  IN p_awards INT
+)
+BEGIN
+  UPDATE singers
+  SET awards = p_awards
+  WHERE singer_id = p_singer_id;
+END$$
+
+CREATE PROCEDURE get_singers_by_genre (IN p_genre VARCHAR(50))
+BEGIN
+  SELECT * FROM singers WHERE genre = p_genre;
+END$$
+
+CREATE PROCEDURE get_active_singers()
+BEGIN
+  SELECT * FROM singers WHERE active_status = 1;
+END$$
+
+CREATE PROCEDURE get_singer_by_id (IN p_id INT)
+BEGIN
+  SELECT * FROM singers WHERE singer_id = p_id;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   4️⃣  CURSOR (1)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE increase_awards_10percent()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE sid INT;
+
+  DECLARE cur CURSOR FOR SELECT singer_id FROM singers;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+
+  loop_cursor: LOOP
+    FETCH cur INTO sid;
+    IF done THEN
+      LEAVE loop_cursor;
+    END IF;
+
+    UPDATE singers
+    SET awards = CEIL(awards * 1.10)
+    WHERE singer_id = sid;
+  END LOOP;
+
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   5️⃣  DCL + TCL
+----------------------------------- */
+
+GRANT SELECT, INSERT ON singers TO 'film_user'@'localhost';
+
+REVOKE INSERT ON singers FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE singers SET awards = 50 WHERE singer_id = 1;
+
+SAVEPOINT sp1;
+
+UPDATE singers SET awards = 60 WHERE singer_id = 5;
+
+ROLLBACK TO sp1;
+
+COMMIT;
+
+/* ----------------------------------
+   6️⃣  TRIGGERS (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_singer_insert
+BEFORE INSERT ON singers
+FOR EACH ROW
+BEGIN
+  IF NEW.awards < 0 THEN
+    SET NEW.awards = 0;
+  END IF;
+END$$
+
+CREATE TABLE singer_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  singer_id INT,
+  action VARCHAR(50),
+  log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_singer_insert
+AFTER INSERT ON singers
+FOR EACH ROW
+BEGIN
+  INSERT INTO singer_log(singer_id, action)
+  VALUES (NEW.singer_id, 'inserted');
+END$$
+
+CREATE TRIGGER trg_before_singer_update
+BEFORE UPDATE ON singers
+FOR EACH ROW
+BEGIN
+  IF NEW.awards < 0 THEN
+    SET NEW.awards = OLD.awards;
+  END IF;
+END$$
+
+CREATE TABLE singer_awards_history (
+  hist_id INT AUTO_INCREMENT PRIMARY KEY,
+  singer_id INT,
+  old_awards INT,
+  new_awards INT,
+  changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_singer_update
+AFTER UPDATE ON singers
+FOR EACH ROW
+BEGIN
+  IF OLD.awards <> NEW.awards THEN
+    INSERT INTO singer_awards_history(singer_id, old_awards, new_awards)
+    VALUES (OLD.singer_id, OLD.awards, NEW.awards);
+  END IF;
+END$$
+
+CREATE TRIGGER trg_prevent_delete_singer
+BEFORE DELETE ON singers
+FOR EACH ROW
+BEGIN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Singers cannot be deleted!';
+END$$
+
+DELIMITER ;
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+/* -------------------------------
+   1️⃣  VIEWS (5)
+-------------------------------- */
+
+CREATE VIEW view_high_rated_soundtracks AS
+SELECT soundtrack_id, movie_id, album_name, rating
+FROM soundtracks
+WHERE rating >= 8.0;
+
+CREATE VIEW view_composer_soundtrack_count AS
+SELECT composer_id, COUNT(soundtrack_id) AS total_albums
+FROM soundtracks
+GROUP BY composer_id;
+
+CREATE VIEW view_soundtracks_by_language AS
+SELECT language, COUNT(soundtrack_id) AS total_soundtracks
+FROM soundtracks
+GROUP BY language;
+
+CREATE VIEW view_soundtrack_platform AS
+SELECT platform, COUNT(soundtrack_id) AS total
+FROM soundtracks
+GROUP BY platform;
+
+CREATE VIEW view_recent_soundtracks AS
+SELECT soundtrack_id, album_name, release_date
+FROM soundtracks
+WHERE release_date >= '2015-01-01';
+
+/* -------------------------------
+   2️⃣  WINDOW FUNCTIONS (5)
+-------------------------------- */
+
+SELECT 
+    soundtrack_id,
+    rating,
+    RANK() OVER (ORDER BY rating DESC) AS rating_rank
+FROM soundtracks;
+
+SELECT 
+    soundtrack_id,
+    total_tracks,
+    DENSE_RANK() OVER (ORDER BY total_tracks DESC) AS track_count_rank
+FROM soundtracks;
+
+SELECT 
+    soundtrack_id,
+    album_name,
+    ROW_NUMBER() OVER (PARTITION BY language ORDER BY rating DESC) AS language_rank
+FROM soundtracks;
+
+SELECT 
+    soundtrack_id,
+    album_name,
+    LEAD(album_name) OVER (ORDER BY soundtrack_id) AS next_album
+FROM soundtracks;
+
+SELECT 
+    soundtrack_id,
+    album_name,
+    LAG(album_name) OVER (ORDER BY soundtrack_id) AS previous_album
+FROM soundtracks;
+
+/* ----------------------------------
+   3️⃣  STORED PROCEDURES (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_soundtrack (
+  IN p_movie INT,
+  IN p_composer INT,
+  IN p_total_tracks INT,
+  IN p_release DATE,
+  IN p_label VARCHAR(100),
+  IN p_album VARCHAR(100),
+  IN p_language VARCHAR(50),
+  IN p_rating DECIMAL(3,1),
+  IN p_platform VARCHAR(100)
+)
+BEGIN
+  INSERT INTO soundtracks
+  (movie_id, composer_id, total_tracks, release_date, label_name, album_name, language, rating, platform)
+  VALUES
+  (p_movie, p_composer, p_total_tracks, p_release, p_label, p_album, p_language, p_rating, p_platform);
+END$$
+
+CREATE PROCEDURE update_soundtrack_rating (
+  IN p_soundtrack_id INT,
+  IN p_rating DECIMAL(3,1)
+)
+BEGIN
+  UPDATE soundtracks
+  SET rating = p_rating
+  WHERE soundtrack_id = p_soundtrack_id;
+END$$
+
+CREATE PROCEDURE get_soundtracks_by_composer (IN p_composer INT)
+BEGIN
+  SELECT * FROM soundtracks WHERE composer_id = p_composer;
+END$$
+
+CREATE PROCEDURE get_soundtracks_by_language (IN p_language VARCHAR(50))
+BEGIN
+  SELECT * FROM soundtracks WHERE language = p_language;
+END$$
+
+CREATE PROCEDURE get_high_rated_soundtracks()
+BEGIN
+  SELECT * FROM soundtracks WHERE rating >= 8.0;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   4️⃣  CURSOR (1)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE increase_rating_5percent()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE sid INT;
+
+  DECLARE cur CURSOR FOR SELECT soundtrack_id FROM soundtracks;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+
+  loop_cursor: LOOP
+    FETCH cur INTO sid;
+    IF done THEN
+      LEAVE loop_cursor;
+    END IF;
+
+    UPDATE soundtracks
+    SET rating = LEAST(rating * 1.05, 10.0)
+    WHERE soundtrack_id = sid;
+  END LOOP;
+
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   5️⃣  DCL + TCL
+----------------------------------- */
+
+GRANT SELECT, INSERT ON soundtracks TO 'film_user'@'localhost';
+
+REVOKE INSERT ON soundtracks FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE soundtracks SET rating = 9.0 WHERE soundtrack_id = 1;
+
+SAVEPOINT sp1;
+
+UPDATE soundtracks SET rating = 9.5 WHERE soundtrack_id = 5;
+
+ROLLBACK TO sp1;
+
+COMMIT;
+
+/* ----------------------------------
+   6️⃣  TRIGGERS (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_soundtrack_insert
+BEFORE INSERT ON soundtracks
+FOR EACH ROW
+BEGIN
+  IF NEW.rating < 0 THEN
+    SET NEW.rating = 0;
+  END IF;
+END$$
+
+CREATE TABLE soundtrack_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  soundtrack_id INT,
+  action VARCHAR(50),
+  log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_soundtrack_insert
+AFTER INSERT ON soundtracks
+FOR EACH ROW
+BEGIN
+  INSERT INTO soundtrack_log(soundtrack_id, action)
+  VALUES (NEW.soundtrack_id, 'inserted');
+END$$
+
+CREATE TRIGGER trg_before_soundtrack_update
+BEFORE UPDATE ON soundtracks
+FOR EACH ROW
+BEGIN
+  IF NEW.rating < 0 THEN
+    SET NEW.rating = OLD.rating;
+  END IF;
+END$$
+
+CREATE TABLE soundtrack_rating_history (
+  hist_id INT AUTO_INCREMENT PRIMARY KEY,
+  soundtrack_id INT,
+  old_rating DECIMAL(3,1),
+  new_rating DECIMAL(3,1),
+  changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_soundtrack_update
+AFTER UPDATE ON soundtracks
+FOR EACH ROW
+BEGIN
+  IF OLD.rating <> NEW.rating THEN
+    INSERT INTO soundtrack_rating_history(soundtrack_id, old_rating, new_rating)
+    VALUES (OLD.soundtrack_id, OLD.rating, NEW.rating);
+  END IF;
+END$$
+
+CREATE TRIGGER trg_prevent_delete_soundtrack
+BEFORE DELETE ON soundtracks
+FOR EACH ROW
+BEGIN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Soundtracks cannot be deleted!';
+END$$
+
+DELIMITER ;
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+/* -------------------------------
+   1️⃣  VIEWS (5)
+-------------------------------- */
+
+CREATE VIEW view_high_sub_fee_platforms AS
+SELECT platform_id, name, subscription_fee
+FROM streaming_platforms
+WHERE subscription_fee >= 300;
+
+CREATE VIEW view_platforms_by_country AS
+SELECT country, COUNT(platform_id) AS total_platforms
+FROM streaming_platforms
+GROUP BY country;
+
+CREATE VIEW view_app_available_platforms AS
+SELECT platform_id, name, app_available
+FROM streaming_platforms
+WHERE app_available = 1;
+
+CREATE VIEW view_platforms_monthly_views AS
+SELECT name, monthly_views
+FROM streaming_platforms
+ORDER BY monthly_views DESC;
+
+CREATE VIEW view_recent_platforms AS
+SELECT platform_id, name, founded_year
+FROM streaming_platforms
+WHERE founded_year >= 2015;
+
+/* -------------------------------
+   2️⃣  WINDOW FUNCTIONS (5)
+-------------------------------- */
+
+SELECT 
+    platform_id,
+    monthly_views,
+    RANK() OVER (ORDER BY monthly_views DESC) AS views_rank
+FROM streaming_platforms;
+
+SELECT 
+    platform_id,
+    subscription_fee,
+    DENSE_RANK() OVER (ORDER BY subscription_fee DESC) AS fee_rank
+FROM streaming_platforms;
+
+SELECT 
+    platform_id,
+    name,
+    ROW_NUMBER() OVER (PARTITION BY country ORDER BY monthly_views DESC) AS country_rank
+FROM streaming_platforms;
+
+SELECT 
+    platform_id,
+    name,
+    LEAD(name) OVER (ORDER BY platform_id) AS next_platform
+FROM streaming_platforms;
+
+SELECT 
+    platform_id,
+    name,
+    LAG(name) OVER (ORDER BY platform_id) AS previous_platform
+FROM streaming_platforms;
+
+/* ----------------------------------
+   3️⃣  STORED PROCEDURES (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_streaming_platform (
+  IN p_name VARCHAR(100),
+  IN p_website VARCHAR(150),
+  IN p_country VARCHAR(50),
+  IN p_monthly_views BIGINT,
+  IN p_app_available BOOLEAN,
+  IN p_subscription_fee DECIMAL(6,2),
+  IN p_founded_year YEAR,
+  IN p_contact_email VARCHAR(150),
+  IN p_active_status BOOLEAN
+)
+BEGIN
+  INSERT INTO streaming_platforms
+  (name, website, country, monthly_views, app_available, subscription_fee, founded_year, contact_email, active_status)
+  VALUES
+  (p_name, p_website, p_country, p_monthly_views, p_app_available, p_subscription_fee, p_founded_year, p_contact_email, p_active_status);
+END$$
+
+CREATE PROCEDURE update_subscription_fee (
+  IN p_platform_id INT,
+  IN p_fee DECIMAL(6,2)
+)
+BEGIN
+  UPDATE streaming_platforms
+  SET subscription_fee = p_fee
+  WHERE platform_id = p_platform_id;
+END$$
+
+CREATE PROCEDURE get_platforms_by_country (IN p_country VARCHAR(50))
+BEGIN
+  SELECT * FROM streaming_platforms WHERE country = p_country;
+END$$
+
+CREATE PROCEDURE get_high_view_platforms()
+BEGIN
+  SELECT * FROM streaming_platforms WHERE monthly_views >= 50000000;
+END$$
+
+CREATE PROCEDURE get_active_platforms()
+BEGIN
+  SELECT * FROM streaming_platforms WHERE active_status = 1;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   4️⃣  CURSOR (1)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE increase_views_10percent()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE pid INT;
+
+  DECLARE cur CURSOR FOR SELECT platform_id FROM streaming_platforms;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+
+  loop_cursor: LOOP
+    FETCH cur INTO pid;
+    IF done THEN
+      LEAVE loop_cursor;
+    END IF;
+
+    UPDATE streaming_platforms
+    SET monthly_views = monthly_views * 1.10
+    WHERE platform_id = pid;
+  END LOOP;
+
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   5️⃣  DCL + TCL
+----------------------------------- */
+
+GRANT SELECT, INSERT ON streaming_platforms TO 'film_user'@'localhost';
+
+REVOKE INSERT ON streaming_platforms FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE streaming_platforms SET subscription_fee = 599 WHERE platform_id = 1;
+
+SAVEPOINT sp1;
+
+UPDATE streaming_platforms SET monthly_views = monthly_views + 1000000 WHERE platform_id = 5;
+
+ROLLBACK TO sp1;
+
+COMMIT;
+
+/* ----------------------------------
+   6️⃣  TRIGGERS (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_platform_insert
+BEFORE INSERT ON streaming_platforms
+FOR EACH ROW
+BEGIN
+  IF NEW.subscription_fee < 0 THEN
+    SET NEW.subscription_fee = 0;
+  END IF;
+END$$
+
+CREATE TABLE platform_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  platform_id INT,
+  action VARCHAR(50),
+  log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_platform_insert
+AFTER INSERT ON streaming_platforms
+FOR EACH ROW
+BEGIN
+  INSERT INTO platform_log(platform_id, action)
+  VALUES (NEW.platform_id, 'inserted');
+END$$
+
+CREATE TRIGGER trg_before_platform_update
+BEFORE UPDATE ON streaming_platforms
+FOR EACH ROW
+BEGIN
+  IF NEW.subscription_fee < 0 THEN
+    SET NEW.subscription_fee = OLD.subscription_fee;
+  END IF;
+END$$
+
+CREATE TABLE platform_fee_history (
+  hist_id INT AUTO_INCREMENT PRIMARY KEY,
+  platform_id INT,
+  old_fee DECIMAL(6,2),
+  new_fee DECIMAL(6,2),
+  changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_fee_update
+AFTER UPDATE ON streaming_platforms
+FOR EACH ROW
+BEGIN
+  IF OLD.subscription_fee <> NEW.subscription_fee THEN
+    INSERT INTO platform_fee_history(platform_id, old_fee, new_fee)
+    VALUES (OLD.platform_id, OLD.subscription_fee, NEW.subscription_fee);
+  END IF;
+END$$
+
+CREATE TRIGGER trg_prevent_delete_platform
+BEFORE DELETE ON streaming_platforms
+FOR EACH ROW
+BEGIN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Streaming platforms cannot be deleted!';
+END$$
+
+DELIMITER ;
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+/* -------------------------------
+   1️⃣  VIEWS (5)
+-------------------------------- */
+
+CREATE VIEW view_movies_hd_4k AS
+SELECT availability_id, movie_id, platform_id, format, resolution
+FROM movie_availability
+WHERE resolution IN ('1080p','2160p');
+
+CREATE VIEW view_movies_by_platform AS
+SELECT platform_id, COUNT(availability_id) AS total_movies
+FROM movie_availability
+GROUP BY platform_id;
+
+CREATE VIEW view_high_rated_movies AS
+SELECT movie_id, rating
+FROM movie_availability
+WHERE rating >= 8.0
+ORDER BY rating DESC;
+
+CREATE VIEW view_movie_language AS
+SELECT movie_id, language, COUNT(*) AS count_per_language
+FROM movie_availability
+GROUP BY language;
+
+CREATE VIEW view_active_movies AS
+SELECT availability_id, movie_id, expiry_date
+FROM movie_availability
+WHERE expiry_date >= CURDATE();
+
+/* -------------------------------
+   2️⃣  WINDOW FUNCTIONS (5)
+-------------------------------- */
+
+SELECT 
+    availability_id,
+    views,
+    RANK() OVER (ORDER BY views DESC) AS views_rank
+FROM movie_availability;
+
+SELECT 
+    availability_id,
+    rating,
+    DENSE_RANK() OVER (ORDER BY rating DESC) AS rating_rank
+FROM movie_availability;
+
+SELECT 
+    availability_id,
+    movie_id,
+    ROW_NUMBER() OVER (PARTITION BY platform_id ORDER BY release_date DESC) AS release_order
+FROM movie_availability;
+
+SELECT 
+    availability_id,
+    movie_id,
+    LEAD(movie_id) OVER (ORDER BY availability_id) AS next_movie
+FROM movie_availability;
+
+SELECT 
+    availability_id,
+    movie_id,
+    LAG(movie_id) OVER (ORDER BY availability_id) AS previous_movie
+FROM movie_availability;
+
+/* ----------------------------------
+   3️⃣  STORED PROCEDURES (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_movie_availability (
+  IN p_movie INT,
+  IN p_platform INT,
+  IN p_release DATE,
+  IN p_expiry DATE,
+  IN p_language VARCHAR(50),
+  IN p_format VARCHAR(20),
+  IN p_resolution VARCHAR(20),
+  IN p_views BIGINT,
+  IN p_rating DECIMAL(3,1)
+)
+BEGIN
+  INSERT INTO movie_availability
+  (movie_id, platform_id, release_date, expiry_date, language, format, resolution, views, rating)
+  VALUES
+  (p_movie, p_platform, p_release, p_expiry, p_language, p_format, p_resolution, p_views, p_rating);
+END$$
+
+CREATE PROCEDURE update_movie_views (
+  IN p_availability_id INT,
+  IN p_views BIGINT
+)
+BEGIN
+  UPDATE movie_availability
+  SET views = p_views
+  WHERE availability_id = p_availability_id;
+END$$
+
+CREATE PROCEDURE get_movies_by_platform (IN p_platform INT)
+BEGIN
+  SELECT * FROM movie_availability WHERE platform_id = p_platform;
+END$$
+
+CREATE PROCEDURE get_high_rated_movies()
+BEGIN
+  SELECT * FROM movie_availability WHERE rating >= 8.0;
+END$$
+
+CREATE PROCEDURE get_movies_in_period (IN d1 DATE, IN d2 DATE)
+BEGIN
+  SELECT * FROM movie_availability WHERE release_date BETWEEN d1 AND d2;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   4️⃣  CURSOR (1)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE increase_views_5percent()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE aid INT;
+
+  DECLARE cur CURSOR FOR SELECT availability_id FROM movie_availability;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+
+  loop_cursor: LOOP
+    FETCH cur INTO aid;
+    IF done THEN
+      LEAVE loop_cursor;
+    END IF;
+
+    UPDATE movie_availability
+    SET views = views * 1.05
+    WHERE availability_id = aid;
+  END LOOP;
+
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   5️⃣  DCL + TCL
+----------------------------------- */
+
+GRANT SELECT, INSERT ON movie_availability TO 'film_user'@'localhost';
+
+REVOKE INSERT ON movie_availability FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE movie_availability SET rating = 9.0 WHERE availability_id = 1;
+
+SAVEPOINT sp1;
+
+UPDATE movie_availability SET views = views + 100000 WHERE availability_id = 5;
+
+ROLLBACK TO sp1;
+
+COMMIT;
+
+/* ----------------------------------
+   6️⃣  TRIGGERS (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_availability_insert
+BEFORE INSERT ON movie_availability
+FOR EACH ROW
+BEGIN
+  IF NEW.views < 0 THEN
+    SET NEW.views = 0;
+  END IF;
+END$$
+
+CREATE TABLE movie_availability_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  availability_id INT,
+  action VARCHAR(50),
+  log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_availability_insert
+AFTER INSERT ON movie_availability
+FOR EACH ROW
+BEGIN
+  INSERT INTO movie_availability_log(availability_id, action)
+  VALUES (NEW.availability_id, 'inserted');
+END$$
+
+CREATE TRIGGER trg_before_availability_update
+BEFORE UPDATE ON movie_availability
+FOR EACH ROW
+BEGIN
+  IF NEW.views < 0 THEN
+    SET NEW.views = OLD.views;
+  END IF;
+END$$
+
+CREATE TABLE movie_views_history (
+  hist_id INT AUTO_INCREMENT PRIMARY KEY,
+  availability_id INT,
+  old_views BIGINT,
+  new_views BIGINT,
+  changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_views_update
+AFTER UPDATE ON movie_availability
+FOR EACH ROW
+BEGIN
+  IF OLD.views <> NEW.views THEN
+    INSERT INTO movie_views_history(availability_id, old_views, new_views)
+    VALUES (OLD.availability_id, OLD.views, NEW.views);
+  END IF;
+END$$
+
+CREATE TRIGGER trg_prevent_delete_movie
+BEFORE DELETE ON movie_availability
+FOR EACH ROW
+BEGIN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Movie availability records cannot be deleted!';
+END$$
+
+DELIMITER ;
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+/* -------------------------------
+   1️⃣  VIEWS (5)
+-------------------------------- */
+
+CREATE VIEW view_top_grossing AS
+SELECT movie_id, SUM(revenue) AS total_revenue
+FROM box_office_collections
+GROUP BY movie_id
+ORDER BY total_revenue DESC;
+
+CREATE VIEW view_collections_by_region AS
+SELECT region, SUM(revenue) AS region_revenue
+FROM box_office_collections
+GROUP BY region;
+
+CREATE VIEW view_movie_daily_collections AS
+SELECT movie_id, date, revenue
+FROM box_office_collections
+ORDER BY date;
+
+CREATE VIEW view_high_ticket_sales AS
+SELECT movie_id, tickets_sold
+FROM box_office_collections
+WHERE tickets_sold > 1000000;
+
+CREATE VIEW view_platform_revenue AS
+SELECT platform, SUM(revenue) AS total_platform_revenue
+FROM box_office_collections
+GROUP BY platform;
+
+/* -------------------------------
+   2️⃣  WINDOW FUNCTIONS (5)
+-------------------------------- */
+
+SELECT 
+    collection_id,
+    revenue,
+    RANK() OVER (ORDER BY revenue DESC) AS revenue_rank
+FROM box_office_collections;
+
+SELECT 
+    collection_id,
+    tickets_sold,
+    DENSE_RANK() OVER (ORDER BY tickets_sold DESC) AS tickets_rank
+FROM box_office_collections;
+
+SELECT 
+    collection_id,
+    movie_id,
+    ROW_NUMBER() OVER (PARTITION BY region ORDER BY revenue DESC) AS region_rank
+FROM box_office_collections;
+
+SELECT 
+    collection_id,
+    revenue,
+    LEAD(revenue) OVER (ORDER BY collection_id) AS next_revenue
+FROM box_office_collections;
+
+SELECT 
+    collection_id,
+    revenue,
+    LAG(revenue) OVER (ORDER BY collection_id) AS previous_revenue
+FROM box_office_collections;
+
+/* ----------------------------------
+   3️⃣  STORED PROCEDURES (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_box_office_record (
+  IN p_movie INT,
+  IN p_date DATE,
+  IN p_region VARCHAR(50),
+  IN p_tickets INT,
+  IN p_revenue DECIMAL(12,2),
+  IN p_currency VARCHAR(10),
+  IN p_platform VARCHAR(50),
+  IN p_show_count INT,
+  IN p_source VARCHAR(100)
+)
+BEGIN
+  INSERT INTO box_office_collections
+  (movie_id, date, region, tickets_sold, revenue, currency, platform, show_count, source)
+  VALUES
+  (p_movie, p_date, p_region, p_tickets, p_revenue, p_currency, p_platform, p_show_count, p_source);
+END$$
+
+CREATE PROCEDURE update_box_office_revenue (
+  IN p_collection_id INT,
+  IN p_revenue DECIMAL(12,2)
+)
+BEGIN
+  UPDATE box_office_collections
+  SET revenue = p_revenue
+  WHERE collection_id = p_collection_id;
+END$$
+
+CREATE PROCEDURE get_collections_by_movie (IN p_movie INT)
+BEGIN
+  SELECT * FROM box_office_collections WHERE movie_id = p_movie;
+END$$
+
+CREATE PROCEDURE get_collections_by_region (IN p_region VARCHAR(50))
+BEGIN
+  SELECT * FROM box_office_collections WHERE region = p_region;
+END$$
+
+CREATE PROCEDURE get_top_collections (IN top_n INT)
+BEGIN
+  SELECT * FROM box_office_collections
+  ORDER BY revenue DESC
+  LIMIT top_n;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   4️⃣  CURSOR (1)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE increase_revenue_10percent()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE cid INT;
+
+  DECLARE cur CURSOR FOR SELECT collection_id FROM box_office_collections;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+
+  loop_cursor: LOOP
+    FETCH cur INTO cid;
+    IF done THEN
+      LEAVE loop_cursor;
+    END IF;
+
+    UPDATE box_office_collections
+    SET revenue = revenue * 1.10
+    WHERE collection_id = cid;
+  END LOOP;
+
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   5️⃣  DCL + TCL
+----------------------------------- */
+
+GRANT SELECT, INSERT ON box_office_collections TO 'film_user'@'localhost';
+
+REVOKE INSERT ON box_office_collections FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE box_office_collections SET tickets_sold = tickets_sold + 10000 WHERE collection_id = 1;
+
+SAVEPOINT sp1;
+
+UPDATE box_office_collections SET revenue = revenue + 5000000 WHERE collection_id = 5;
+
+ROLLBACK TO sp1;
+
+COMMIT;
+
+/* ----------------------------------
+   6️⃣  TRIGGERS (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_collection_insert
+BEFORE INSERT ON box_office_collections
+FOR EACH ROW
+BEGIN
+  IF NEW.revenue < 0 THEN
+    SET NEW.revenue = 0;
+  END IF;
+END$$
+
+CREATE TABLE box_office_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  collection_id INT,
+  action VARCHAR(50),
+  log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_collection_insert
+AFTER INSERT ON box_office_collections
+FOR EACH ROW
+BEGIN
+  INSERT INTO box_office_log(collection_id, action)
+  VALUES (NEW.collection_id, 'inserted');
+END$$
+
+CREATE TRIGGER trg_before_collection_update
+BEFORE UPDATE ON box_office_collections
+FOR EACH ROW
+BEGIN
+  IF NEW.revenue < 0 THEN
+    SET NEW.revenue = OLD.revenue;
+  END IF;
+END$$
+
+CREATE TABLE box_office_history (
+  hist_id INT AUTO_INCREMENT PRIMARY KEY,
+  collection_id INT,
+  old_revenue DECIMAL(12,2),
+  new_revenue DECIMAL(12,2),
+  changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_revenue_update
+AFTER UPDATE ON box_office_collections
+FOR EACH ROW
+BEGIN
+  IF OLD.revenue <> NEW.revenue THEN
+    INSERT INTO box_office_history(collection_id, old_revenue, new_revenue)
+    VALUES (OLD.collection_id, OLD.revenue, NEW.revenue);
+  END IF;
+END$$
+
+CREATE TRIGGER trg_prevent_delete_collection
+BEFORE DELETE ON box_office_collections
+FOR EACH ROW
+BEGIN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Box office collection records cannot be deleted!';
+END$$
+
+DELIMITER ;
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+/* -------------------------------
+   1️⃣  VIEWS (5)
+-------------------------------- */
+
+CREATE VIEW view_merchandise_stock AS
+SELECT movie_id, item_name, available_stock
+FROM merchandise;
+
+CREATE VIEW view_merchandise_sales AS
+SELECT movie_id, item_name, sold_quantity
+FROM merchandise;
+
+CREATE VIEW view_merchandise_rating AS
+SELECT movie_id, item_name, rating
+FROM merchandise
+ORDER BY rating DESC;
+
+CREATE VIEW view_total_stock_per_movie AS
+SELECT movie_id, SUM(available_stock) AS total_stock
+FROM merchandise
+GROUP BY movie_id;
+
+CREATE VIEW view_total_sold_per_movie AS
+SELECT movie_id, SUM(sold_quantity) AS total_sold
+FROM merchandise
+GROUP BY movie_id;
+
+/* -------------------------------
+   2️⃣  WINDOW FUNCTIONS (5)
+-------------------------------- */
+
+SELECT 
+    item_id,
+    price,
+    RANK() OVER (ORDER BY price DESC) AS price_rank
+FROM merchandise;
+
+SELECT 
+    item_id,
+    sold_quantity,
+    DENSE_RANK() OVER (ORDER BY sold_quantity DESC) AS sold_rank
+FROM merchandise;
+
+SELECT 
+    item_id,
+    movie_id,
+    ROW_NUMBER() OVER (PARTITION BY category ORDER BY sold_quantity DESC) AS category_rank
+FROM merchandise;
+
+SELECT 
+    item_id,
+    available_stock,
+    LEAD(available_stock) OVER (ORDER BY item_id) AS next_stock
+FROM merchandise;
+
+SELECT 
+    item_id,
+    available_stock,
+    LAG(available_stock) OVER (ORDER BY item_id) AS previous_stock
+FROM merchandise;
+
+/* ----------------------------------
+   3️⃣  STORED PROCEDURES (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_merchandise_item (
+  IN p_movie INT,
+  IN p_name VARCHAR(100),
+  IN p_category VARCHAR(50),
+  IN p_price DECIMAL(8,2),
+  IN p_stock INT,
+  IN p_sold INT,
+  IN p_vendor VARCHAR(100),
+  IN p_launch DATE,
+  IN p_rating DECIMAL(3,1)
+)
+BEGIN
+  INSERT INTO merchandise
+  (movie_id, item_name, category, price, available_stock, sold_quantity, vendor, launch_date, rating)
+  VALUES
+  (p_movie, p_name, p_category, p_price, p_stock, p_sold, p_vendor, p_launch, p_rating);
+END$$
+
+CREATE PROCEDURE update_merchandise_stock (
+  IN p_item INT,
+  IN p_stock INT
+)
+BEGIN
+  UPDATE merchandise
+  SET available_stock = p_stock
+  WHERE item_id = p_item;
+END$$
+
+CREATE PROCEDURE get_merchandise_by_movie (IN p_movie INT)
+BEGIN
+  SELECT * FROM merchandise WHERE movie_id = p_movie;
+END$$
+
+CREATE PROCEDURE get_merchandise_by_vendor (IN p_vendor VARCHAR(100))
+BEGIN
+  SELECT * FROM merchandise WHERE vendor = p_vendor;
+END$$
+
+CREATE PROCEDURE get_top_rated_merchandise (IN top_n INT)
+BEGIN
+  SELECT * FROM merchandise
+  ORDER BY rating DESC
+  LIMIT top_n;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   4️⃣  CURSOR (1)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE restock_merchandise_20percent()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE mid INT;
+
+  DECLARE cur CURSOR FOR SELECT item_id FROM merchandise;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+
+  loop_cursor: LOOP
+    FETCH cur INTO mid;
+    IF done THEN
+      LEAVE loop_cursor;
+    END IF;
+
+    UPDATE merchandise
+    SET available_stock = available_stock * 1.20
+    WHERE item_id = mid;
+  END LOOP;
+
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   5️⃣  DCL + TCL
+----------------------------------- */
+
+GRANT SELECT, INSERT ON merchandise TO 'film_user'@'localhost';
+REVOKE INSERT ON merchandise FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE merchandise SET sold_quantity = sold_quantity + 10 WHERE item_id = 1;
+SAVEPOINT sp1;
+
+UPDATE merchandise SET price = price + 50 WHERE item_id = 5;
+ROLLBACK TO sp1;
+
+COMMIT;
+
+/* ----------------------------------
+   6️⃣  TRIGGERS (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_merchandise_insert
+BEFORE INSERT ON merchandise
+FOR EACH ROW
+BEGIN
+  IF NEW.price < 0 THEN
+    SET NEW.price = 0;
+  END IF;
+END$$
+
+CREATE TABLE merchandise_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  item_id INT,
+  action VARCHAR(50),
+  log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_merchandise_insert
+AFTER INSERT ON merchandise
+FOR EACH ROW
+BEGIN
+  INSERT INTO merchandise_log(item_id, action)
+  VALUES (NEW.item_id, 'inserted');
+END$$
+
+CREATE TRIGGER trg_before_merchandise_update
+BEFORE UPDATE ON merchandise
+FOR EACH ROW
+BEGIN
+  IF NEW.price < 0 THEN
+    SET NEW.price = OLD.price;
+  END IF;
+END$$
+
+CREATE TABLE merchandise_history (
+  hist_id INT AUTO_INCREMENT PRIMARY KEY,
+  item_id INT,
+  old_stock INT,
+  new_stock INT,
+  changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_stock_update
+AFTER UPDATE ON merchandise
+FOR EACH ROW
+BEGIN
+  IF OLD.available_stock <> NEW.available_stock THEN
+    INSERT INTO merchandise_history(item_id, old_stock, new_stock)
+    VALUES (OLD.item_id, OLD.available_stock, NEW.available_stock);
+  END IF;
+END$$
+
+CREATE TRIGGER trg_prevent_delete_merchandise
+BEFORE DELETE ON merchandise
+FOR EACH ROW
+BEGIN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Merchandise records cannot be deleted!';
+END$$
+
+DELIMITER ;
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+/* -------------------------------
+   1️⃣  VIEWS (5)
+-------------------------------- */
+
+CREATE VIEW view_promotions_active AS
+SELECT movie_id, campaign_name, platform, status
+FROM promotions
+WHERE status = 'Active';
+
+CREATE VIEW view_promotions_budget AS
+SELECT movie_id, campaign_name, budget
+FROM promotions
+ORDER BY budget DESC;
+
+CREATE VIEW view_promotions_reach AS
+SELECT movie_id, campaign_name, reach
+FROM promotions
+ORDER BY reach DESC;
+
+CREATE VIEW view_promotions_impressions AS
+SELECT movie_id, campaign_name, impressions
+FROM promotions
+ORDER BY impressions DESC;
+
+CREATE VIEW view_promotions_summary AS
+SELECT movie_id, COUNT(*) AS total_campaigns, SUM(budget) AS total_budget
+FROM promotions
+GROUP BY movie_id;
+
+/* -------------------------------
+   2️⃣  WINDOW FUNCTIONS (5)
+-------------------------------- */
+
+SELECT 
+    promo_id,
+    budget,
+    RANK() OVER (ORDER BY budget DESC) AS budget_rank
+FROM promotions;
+
+SELECT 
+    promo_id,
+    reach,
+    DENSE_RANK() OVER (ORDER BY reach DESC) AS reach_rank
+FROM promotions;
+
+SELECT 
+    promo_id,
+    impressions,
+    ROW_NUMBER() OVER (PARTITION BY platform ORDER BY impressions DESC) AS platform_rank
+FROM promotions;
+
+SELECT 
+    promo_id,
+    budget,
+    LEAD(budget) OVER (ORDER BY promo_id) AS next_budget
+FROM promotions;
+
+SELECT 
+    promo_id,
+    budget,
+    LAG(budget) OVER (ORDER BY promo_id) AS previous_budget
+FROM promotions;
+
+/* ----------------------------------
+   3️⃣  STORED PROCEDURES (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_promotion_item (
+  IN p_movie INT,
+  IN p_platform VARCHAR(50),
+  IN p_campaign VARCHAR(100),
+  IN p_start DATE,
+  IN p_end DATE,
+  IN p_budget DECIMAL(12,2),
+  IN p_reach BIGINT,
+  IN p_impressions BIGINT,
+  IN p_status VARCHAR(50)
+)
+BEGIN
+  INSERT INTO promotions
+  (movie_id, platform, campaign_name, start_date, end_date, budget, reach, impressions, status)
+  VALUES
+  (p_movie, p_platform, p_campaign, p_start, p_end, p_budget, p_reach, p_impressions, p_status);
+END$$
+
+CREATE PROCEDURE update_promotion_status (
+  IN p_promo INT,
+  IN p_status VARCHAR(50)
+)
+BEGIN
+  UPDATE promotions
+  SET status = p_status
+  WHERE promo_id = p_promo;
+END$$
+
+CREATE PROCEDURE get_promotions_by_movie (IN p_movie INT)
+BEGIN
+  SELECT * FROM promotions WHERE movie_id = p_movie;
+END$$
+
+CREATE PROCEDURE get_promotions_by_platform (IN p_platform VARCHAR(50))
+BEGIN
+  SELECT * FROM promotions WHERE platform = p_platform;
+END$$
+
+CREATE PROCEDURE get_top_budget_promotions (IN top_n INT)
+BEGIN
+  SELECT * FROM promotions
+  ORDER BY budget DESC
+  LIMIT top_n;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   4️⃣  CURSOR (1)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE increase_promotions_budget_10percent()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE pid INT;
+
+  DECLARE cur CURSOR FOR SELECT promo_id FROM promotions;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+
+  loop_cursor: LOOP
+    FETCH cur INTO pid;
+    IF done THEN
+      LEAVE loop_cursor;
+    END IF;
+
+    UPDATE promotions
+    SET budget = budget * 1.10
+    WHERE promo_id = pid;
+  END LOOP;
+
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   5️⃣  DCL + TCL
+----------------------------------- */
+
+GRANT SELECT, INSERT ON promotions TO 'film_user'@'localhost';
+REVOKE INSERT ON promotions FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE promotions SET reach = reach + 10000 WHERE promo_id = 1;
+SAVEPOINT sp1;
+
+UPDATE promotions SET impressions = impressions + 50000 WHERE promo_id = 5;
+ROLLBACK TO sp1;
+
+COMMIT;
+
+/* ----------------------------------
+   6️⃣  TRIGGERS (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_promotions_insert
+BEFORE INSERT ON promotions
+FOR EACH ROW
+BEGIN
+  IF NEW.budget < 0 THEN
+    SET NEW.budget = 0;
+  END IF;
+END$$
+
+CREATE TABLE promotions_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  promo_id INT,
+  action VARCHAR(50),
+  log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_promotions_insert
+AFTER INSERT ON promotions
+FOR EACH ROW
+BEGIN
+  INSERT INTO promotions_log(promo_id, action)
+  VALUES (NEW.promo_id, 'inserted');
+END$$
+
+CREATE TRIGGER trg_before_promotions_update
+BEFORE UPDATE ON promotions
+FOR EACH ROW
+BEGIN
+  IF NEW.budget < 0 THEN
+    SET NEW.budget = OLD.budget;
+  END IF;
+END$$
+
+CREATE TABLE promotions_history (
+  hist_id INT AUTO_INCREMENT PRIMARY KEY,
+  promo_id INT,
+  old_budget DECIMAL(12,2),
+  new_budget DECIMAL(12,2),
+  changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_budget_update
+AFTER UPDATE ON promotions
+FOR EACH ROW
+BEGIN
+  IF OLD.budget <> NEW.budget THEN
+    INSERT INTO promotions_history(promo_id, old_budget, new_budget)
+    VALUES (OLD.promo_id, OLD.budget, NEW.budget);
+  END IF;
+END$$
+
+CREATE TRIGGER trg_prevent_delete_promotions
+BEFORE DELETE ON promotions
+FOR EACH ROW
+BEGIN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Promotion records cannot be deleted!';
+END$$
+
+DELIMITER ;
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+/* -------------------------------
+   1️⃣  VIEWS (5)
+-------------------------------- */
+
+CREATE VIEW view_crew_availability AS
+SELECT movie_id, full_name, role, availability
+FROM crew_members
+WHERE availability = 1;
+
+CREATE VIEW view_crew_department AS
+SELECT movie_id, full_name, department
+FROM crew_members
+ORDER BY department;
+
+CREATE VIEW view_crew_experience AS
+SELECT movie_id, full_name, experience_years
+FROM crew_members
+ORDER BY experience_years DESC;
+
+CREATE VIEW view_crew_awards AS
+SELECT movie_id, full_name, awards
+FROM crew_members
+ORDER BY awards DESC;
+
+CREATE VIEW view_total_crew_per_movie AS
+SELECT movie_id, COUNT(*) AS total_crew
+FROM crew_members
+GROUP BY movie_id;
+
+/* -------------------------------
+   2️⃣  WINDOW FUNCTIONS (5)
+-------------------------------- */
+
+SELECT 
+    crew_id,
+    experience_years,
+    RANK() OVER (ORDER BY experience_years DESC) AS experience_rank
+FROM crew_members;
+
+SELECT 
+    crew_id,
+    awards,
+    DENSE_RANK() OVER (ORDER BY awards DESC) AS awards_rank
+FROM crew_members;
+
+SELECT 
+    crew_id,
+    movie_id,
+    ROW_NUMBER() OVER (PARTITION BY department ORDER BY experience_years DESC) AS dept_rank
+FROM crew_members;
+
+SELECT 
+    crew_id,
+    experience_years,
+    LEAD(experience_years) OVER (ORDER BY crew_id) AS next_experience
+FROM crew_members;
+
+SELECT 
+    crew_id,
+    experience_years,
+    LAG(experience_years) OVER (ORDER BY crew_id) AS previous_experience
+FROM crew_members;
+
+/* ----------------------------------
+   3️⃣  STORED PROCEDURES (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_crew_member (
+  IN p_movie INT,
+  IN p_name VARCHAR(150),
+  IN p_role VARCHAR(100),
+  IN p_dept VARCHAR(50),
+  IN p_contact VARCHAR(50),
+  IN p_nationality VARCHAR(50),
+  IN p_exp INT,
+  IN p_awards INT,
+  IN p_avail BOOLEAN
+)
+BEGIN
+  INSERT INTO crew_members
+  (movie_id, full_name, role, department, contact, nationality, experience_years, awards, availability)
+  VALUES
+  (p_movie, p_name, p_role, p_dept, p_contact, p_nationality, p_exp, p_awards, p_avail);
+END$$
+
+CREATE PROCEDURE update_crew_availability (
+  IN p_crew INT,
+  IN p_avail BOOLEAN
+)
+BEGIN
+  UPDATE crew_members
+  SET availability = p_avail
+  WHERE crew_id = p_crew;
+END$$
+
+CREATE PROCEDURE get_crew_by_movie (IN p_movie INT)
+BEGIN
+  SELECT * FROM crew_members WHERE movie_id = p_movie;
+END$$
+
+CREATE PROCEDURE get_crew_by_department (IN p_dept VARCHAR(50))
+BEGIN
+  SELECT * FROM crew_members WHERE department = p_dept;
+END$$
+
+CREATE PROCEDURE get_top_awarded_crew (IN top_n INT)
+BEGIN
+  SELECT * FROM crew_members
+  ORDER BY awards DESC
+  LIMIT top_n;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   4️⃣  CURSOR (1)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE increase_experience_by_1year()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE cid INT;
+
+  DECLARE cur CURSOR FOR SELECT crew_id FROM crew_members;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+
+  loop_cursor: LOOP
+    FETCH cur INTO cid;
+    IF done THEN
+      LEAVE loop_cursor;
+    END IF;
+
+    UPDATE crew_members
+    SET experience_years = experience_years + 1
+    WHERE crew_id = cid;
+  END LOOP;
+
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   5️⃣  DCL + TCL
+----------------------------------- */
+
+GRANT SELECT, INSERT ON crew_members TO 'film_user'@'localhost';
+REVOKE INSERT ON crew_members FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE crew_members SET awards = awards + 1 WHERE crew_id = 1;
+SAVEPOINT sp1;
+
+UPDATE crew_members SET experience_years = experience_years + 2 WHERE crew_id = 5;
+ROLLBACK TO sp1;
+
+COMMIT;
+
+/* ----------------------------------
+   6️⃣  TRIGGERS (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_crew_insert
+BEFORE INSERT ON crew_members
+FOR EACH ROW
+BEGIN
+  IF NEW.experience_years < 0 THEN
+    SET NEW.experience_years = 0;
+  END IF;
+END$$
+
+CREATE TABLE crew_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  crew_id INT,
+  action VARCHAR(50),
+  log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_crew_insert
+AFTER INSERT ON crew_members
+FOR EACH ROW
+BEGIN
+  INSERT INTO crew_log(crew_id, action)
+  VALUES (NEW.crew_id, 'inserted');
+END$$
+
+CREATE TRIGGER trg_before_crew_update
+BEFORE UPDATE ON crew_members
+FOR EACH ROW
+BEGIN
+  IF NEW.experience_years < 0 THEN
+    SET NEW.experience_years = OLD.experience_years;
+  END IF;
+END$$
+
+CREATE TABLE crew_history (
+  hist_id INT AUTO_INCREMENT PRIMARY KEY,
+  crew_id INT,
+  old_experience INT,
+  new_experience INT,
+  changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_experience_update
+AFTER UPDATE ON crew_members
+FOR EACH ROW
+BEGIN
+  IF OLD.experience_years <> NEW.experience_years THEN
+    INSERT INTO crew_history(crew_id, old_experience, new_experience)
+    VALUES (OLD.crew_id, OLD.experience_years, NEW.experience_years);
+  END IF;
+END$$
+
+CREATE TRIGGER trg_prevent_delete_crew
+BEFORE DELETE ON crew_members
+FOR EACH ROW
+BEGIN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Crew member records cannot be deleted!';
+END$$
+
+DELIMITER ;
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+/* -------------------------------
+   1️⃣  VIEWS (5)
+-------------------------------- */
+
+CREATE VIEW view_movie_popularity AS
+SELECT movie_id, views, likes, dislikes
+FROM movie_statistics;
+
+CREATE VIEW view_movie_reviews AS
+SELECT movie_id, reviews_count, average_rating
+FROM movie_statistics
+ORDER BY average_rating DESC;
+
+CREATE VIEW view_movie_social_mentions AS
+SELECT movie_id, social_mentions
+FROM movie_statistics
+ORDER BY social_mentions DESC;
+
+CREATE VIEW view_movie_trending AS
+SELECT movie_id, trending_rank, last_updated
+FROM movie_statistics
+ORDER BY trending_rank ASC;
+
+CREATE VIEW view_movie_engagement AS
+SELECT movie_id, (likes + dislikes + reviews_count) AS total_engagement
+FROM movie_statistics;
+
+/* -------------------------------
+   2️⃣  WINDOW FUNCTIONS (5)
+-------------------------------- */
+
+SELECT 
+    stat_id,
+    views,
+    RANK() OVER (ORDER BY views DESC) AS views_rank
+FROM movie_statistics;
+
+SELECT 
+    stat_id,
+    likes,
+    DENSE_RANK() OVER (ORDER BY likes DESC) AS likes_rank
+FROM movie_statistics;
+
+SELECT 
+    stat_id,
+    movie_id,
+    ROW_NUMBER() OVER (PARTITION BY trending_rank ORDER BY views DESC) AS trending_view_rank
+FROM movie_statistics;
+
+SELECT 
+    stat_id,
+    reviews_count,
+    LEAD(reviews_count) OVER (ORDER BY stat_id) AS next_review_count
+FROM movie_statistics;
+
+SELECT 
+    stat_id,
+    reviews_count,
+    LAG(reviews_count) OVER (ORDER BY stat_id) AS previous_review_count
+FROM movie_statistics;
+
+/* ----------------------------------
+   3️⃣  STORED PROCEDURES (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE add_movie_stat (
+  IN p_movie INT,
+  IN p_views BIGINT,
+  IN p_likes BIGINT,
+  IN p_dislikes BIGINT,
+  IN p_reviews INT,
+  IN p_avg_rating DECIMAL(3,1),
+  IN p_mentions BIGINT,
+  IN p_trend INT,
+  IN p_last DATE
+)
+BEGIN
+  INSERT INTO movie_statistics
+  (movie_id, views, likes, dislikes, reviews_count, average_rating, social_mentions, trending_rank, last_updated)
+  VALUES
+  (p_movie, p_views, p_likes, p_dislikes, p_reviews, p_avg_rating, p_mentions, p_trend, p_last);
+END$$
+
+CREATE PROCEDURE update_movie_views (
+  IN p_stat INT,
+  IN p_views BIGINT
+)
+BEGIN
+  UPDATE movie_statistics
+  SET views = p_views
+  WHERE stat_id = p_stat;
+END$$
+
+CREATE PROCEDURE get_movie_stats_by_movie (IN p_movie INT)
+BEGIN
+  SELECT * FROM movie_statistics WHERE movie_id = p_movie;
+END$$
+
+CREATE PROCEDURE get_top_trending_movies (IN top_n INT)
+BEGIN
+  SELECT * FROM movie_statistics
+  ORDER BY trending_rank ASC
+  LIMIT top_n;
+END$$
+
+CREATE PROCEDURE get_movies_by_rating (IN min_rating DECIMAL(3,1))
+BEGIN
+  SELECT * FROM movie_statistics
+  WHERE average_rating >= min_rating
+  ORDER BY average_rating DESC;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   4️⃣  CURSOR (1)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE PROCEDURE increase_views_10percent()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE sid INT;
+
+  DECLARE cur CURSOR FOR SELECT stat_id FROM movie_statistics;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+
+  loop_cursor: LOOP
+    FETCH cur INTO sid;
+    IF done THEN
+      LEAVE loop_cursor;
+    END IF;
+
+    UPDATE movie_statistics
+    SET views = views * 1.10
+    WHERE stat_id = sid;
+  END LOOP;
+
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+/* ----------------------------------
+   5️⃣  DCL + TCL
+----------------------------------- */
+
+GRANT SELECT, INSERT ON movie_statistics TO 'film_user'@'localhost';
+REVOKE INSERT ON movie_statistics FROM 'film_user'@'localhost';
+
+START TRANSACTION;
+
+UPDATE movie_statistics SET likes = likes + 1000 WHERE stat_id = 1;
+SAVEPOINT sp1;
+
+UPDATE movie_statistics SET dislikes = dislikes + 500 WHERE stat_id = 5;
+ROLLBACK TO sp1;
+
+COMMIT;
+
+/* ----------------------------------
+   6️⃣  TRIGGERS (5)
+----------------------------------- */
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_movie_stat_insert
+BEFORE INSERT ON movie_statistics
+FOR EACH ROW
+BEGIN
+  IF NEW.views < 0 THEN
+    SET NEW.views = 0;
+  END IF;
+END$$
+
+CREATE TABLE movie_statistics_log (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  stat_id INT,
+  action VARCHAR(50),
+  log_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_movie_stat_insert
+AFTER INSERT ON movie_statistics
+FOR EACH ROW
+BEGIN
+  INSERT INTO movie_statistics_log(stat_id, action)
+  VALUES (NEW.stat_id, 'inserted');
+END$$
+
+CREATE TRIGGER trg_before_movie_stat_update
+BEFORE UPDATE ON movie_statistics
+FOR EACH ROW
+BEGIN
+  IF NEW.views < 0 THEN
+    SET NEW.views = OLD.views;
+  END IF;
+END$$
+
+CREATE TABLE movie_statistics_history (
+  hist_id INT AUTO_INCREMENT PRIMARY KEY,
+  stat_id INT,
+  old_views BIGINT,
+  new_views BIGINT,
+  changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trg_after_views_update
+AFTER UPDATE ON movie_statistics
+FOR EACH ROW
+BEGIN
+  IF OLD.views <> NEW.views THEN
+    INSERT INTO movie_statistics_history(stat_id, old_views, new_views)
+    VALUES (OLD.stat_id, OLD.views, NEW.views);
+  END IF;
+END$$
+
+CREATE TRIGGER trg_prevent_delete_movie_stat
+BEFORE DELETE ON movie_statistics
+FOR EACH ROW
+BEGIN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Movie statistics records cannot be deleted!';
+END$$
+
+DELIMITER ;
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
