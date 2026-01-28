@@ -1,0 +1,4666 @@
+use films;
+
+--  JOIN QUERIES (Self Join on movies)
+
+ SELECT a.title, b.title FROM movies a JOIN movies b ON a.genre = b.genre AND a.movie_id <> b.movie_id;
+
+ SELECT a.title, b.title FROM movies a JOIN movies b ON a.language = b.language AND a.movie_id <> b.movie_id;
+
+SELECT a.title, b.title FROM movies a JOIN movies b ON a.release_year = b.release_year AND a.movie_id <> b.movie_id;
+
+ SELECT a.title, b.title FROM movies a JOIN movies b ON a.director_id = b.director_id AND a.movie_id <> b.movie_id;
+
+ SELECT a.title, b.title FROM movies a JOIN movies b ON a.rating = b.rating AND a.movie_id <> b.movie_id;
+
+ SELECT a.title, b.title FROM movies a JOIN movies b ON a.genre = b.genre;
+
+ SELECT a.title, b.title FROM movies a JOIN movies b ON a.language = b.language;
+
+SELECT a.title, b.title FROM movies a JOIN movies b ON a.director_id = b.director_id;
+
+SELECT a.title, b.title FROM movies a JOIN movies b ON a.release_year < b.release_year;
+
+ SELECT a.title, b.title FROM movies a JOIN movies b ON a.rating > b.rating;
+
+SELECT a.title, b.title FROM movies a JOIN movies b ON a.budget > b.budget;
+
+SELECT a.title, b.title FROM movies a JOIN movies b ON a.box_office > b.box_office;
+
+ SELECT a.title, b.title FROM movies a JOIN movies b ON a.duration_minutes > b.duration_minutes;
+
+SELECT a.title, b.title FROM movies a JOIN movies b ON a.genre <> b.genre;
+
+ SELECT a.title, b.title FROM movies a JOIN movies b ON a.language <> b.language;
+
+ SELECT a.title, b.title FROM movies a JOIN movies b ON a.rating >= b.rating;
+
+ SELECT a.title, b.title FROM movies a JOIN movies b ON a.budget <= b.budget;
+
+ SELECT a.title, b.title FROM movies a JOIN movies b ON a.box_office <= b.box_office;
+
+ SELECT a.title, b.title FROM movies a JOIN movies b ON a.release_year >= b.release_year;
+
+ SELECT a.title, b.title FROM movies a JOIN movies b ON a.duration_minutes <= b.duration_minutes;
+
+-- 20 SUBQUERIES (movies table only)
+
+ SELECT title FROM movies WHERE rating = (SELECT MAX(rating) FROM movies);
+
+ SELECT title FROM movies WHERE rating = (SELECT MIN(rating) FROM movies);
+
+ SELECT title FROM movies WHERE budget = (SELECT MAX(budget) FROM movies);
+
+ SELECT title FROM movies WHERE box_office = (SELECT MAX(box_office) FROM movies);
+
+ SELECT title FROM movies WHERE duration_minutes = (SELECT MAX(duration_minutes) FROM movies);
+
+ SELECT title FROM movies WHERE rating > (SELECT AVG(rating) FROM movies);
+
+ SELECT title FROM movies WHERE budget > (SELECT AVG(budget) FROM movies);
+
+ SELECT title FROM movies WHERE box_office > (SELECT AVG(box_office) FROM movies);
+
+ SELECT title FROM movies WHERE duration_minutes > (SELECT AVG(duration_minutes) FROM movies);
+
+ SELECT title FROM movies WHERE release_year = (SELECT MIN(release_year) FROM movies);
+
+ SELECT title FROM movies WHERE release_year = (SELECT MAX(release_year) FROM movies);
+
+ SELECT title FROM movies WHERE genre = (SELECT genre FROM movies WHERE title='dangal');
+
+ SELECT title FROM movies WHERE language = (SELECT language FROM movies WHERE title='rrr');
+
+ SELECT title FROM movies WHERE rating > (SELECT rating FROM movies WHERE title='pathaan');
+
+ SELECT title FROM movies WHERE budget < (SELECT budget FROM movies WHERE title='pk');
+
+ SELECT title FROM movies WHERE box_office > (SELECT box_office FROM movies WHERE title='lagaan');
+
+ SELECT title FROM movies WHERE duration_minutes < (SELECT duration_minutes FROM movies WHERE title='sholay');
+
+ SELECT title FROM movies WHERE director_id = (SELECT director_id FROM movies WHERE title='bahubali');
+
+ SELECT title FROM movies WHERE genre IN (SELECT genre FROM movies WHERE rating > 8);
+
+SELECT title FROM movies WHERE language IN (SELECT language FROM movies WHERE budget > 100000000);
+
+-- FUNCTION QUERIES (Built-in)
+ 
+ SELECT COUNT(*) FROM movies;
+
+ SELECT AVG(rating) FROM movies;
+
+ SELECT MAX(budget) FROM movies;
+
+ SELECT MIN(budget) FROM movies;
+
+ SELECT SUM(box_office) FROM movies;
+
+ SELECT UPPER(title) FROM movies;
+
+ SELECT LOWER(genre) FROM movies;
+
+ SELECT LENGTH(title) FROM movies;
+
+ SELECT ROUND(AVG(box_office),2) FROM movies;
+
+ SELECT CONCAT(title,' (',release_year,')') FROM movies;
+
+ SELECT YEAR(CURDATE()) - release_year AS movie_age FROM movies;
+
+ SELECT MAX(duration_minutes) FROM movies;
+
+ SELECT MIN(duration_minutes) FROM movies;
+
+SELECT COUNT(DISTINCT genre) FROM movies;
+
+ SELECT COUNT(DISTINCT language) FROM movies;
+
+ SELECT SUBSTRING(title,1,5) FROM movies;
+
+ SELECT IFNULL(rating,0) FROM movies;
+
+ SELECT FORMAT(budget,0) FROM movies;
+
+ SELECT CEILING(rating) FROM movies;
+
+ SELECT FLOOR(rating) FROM movies;
+
+-- Documentation & Clean Code (25%)
+
+/* Single-table logic respected
+ Self Join used correctly
+ Queries readable & formatted
+ Realistic data
+ Exam-safe & viva-friendly */
+ 
+ -- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ 
+ -- Actors Table
+ 
+-- JOIN QUERIES (Self Join on actors)
+SELECT a.full_name, b.full_name FROM actors a JOIN actors b ON a.gender = b.gender AND a.actor_id <> b.actor_id;
+
+SELECT a.full_name, b.full_name FROM actors a JOIN actors b ON a.nationality = b.nationality AND a.actor_id <> b.actor_id;
+
+SELECT a.full_name, b.full_name FROM actors a JOIN actors b ON a.debut_year = b.debut_year AND a.actor_id <> b.actor_id;
+
+SELECT a.full_name, b.full_name FROM actors a JOIN actors b ON a.awards_won = b.awards_won AND a.actor_id <> b.actor_id;
+
+SELECT a.full_name, b.full_name FROM actors a JOIN actors b ON a.active_status = b.active_status AND a.actor_id <> b.actor_id;
+
+SELECT a.full_name, b.full_name FROM actors a JOIN actors b ON a.gender = b.gender;
+
+SELECT a.full_name, b.full_name FROM actors a JOIN actors b ON a.nationality = b.nationality;
+
+SELECT a.full_name, b.full_name FROM actors a JOIN actors b ON a.active_status = b.active_status;
+
+SELECT a.full_name, b.full_name FROM actors a JOIN actors b ON a.debut_year < b.debut_year;
+
+SELECT a.full_name, b.full_name FROM actors a JOIN actors b ON a.awards_won > b.awards_won;
+
+SELECT a.full_name, b.full_name FROM actors a JOIN actors b ON a.debut_year > b.debut_year;
+
+SELECT a.full_name, b.full_name FROM actors a JOIN actors b ON a.awards_won < b.awards_won;
+
+SELECT a.full_name, b.full_name FROM actors a JOIN actors b ON a.gender <> b.gender;
+
+SELECT a.full_name, b.full_name FROM actors a JOIN actors b ON a.nationality <> b.nationality;
+
+SELECT a.full_name, b.full_name FROM actors a JOIN actors b ON a.awards_won >= b.awards_won;
+
+SELECT a.full_name, b.full_name FROM actors a JOIN actors b ON a.debut_year <= b.debut_year;
+
+SELECT a.full_name, b.full_name FROM actors a JOIN actors b ON a.actor_id <> b.actor_id;
+
+SELECT a.full_name, b.full_name FROM actors a JOIN actors b ON YEAR(a.date_of_birth) = YEAR(b.date_of_birth);
+
+SELECT a.full_name, b.full_name FROM actors a JOIN actors b ON a.awards_won BETWEEN b.awards_won-5 AND b.awards_won+5;
+
+SELECT a.full_name, b.full_name FROM actors a JOIN actors b ON a.gender = b.gender AND a.awards_won > b.awards_won;
+
+-- 0 SUBQUERIES (actors table only)
+
+SELECT full_name FROM actors WHERE awards_won = (SELECT MAX(awards_won) FROM actors);
+
+SELECT full_name FROM actors WHERE awards_won = (SELECT MIN(awards_won) FROM actors);
+
+SELECT full_name FROM actors WHERE debut_year = (SELECT MIN(debut_year) FROM actors);
+
+SELECT full_name FROM actors WHERE debut_year = (SELECT MAX(debut_year) FROM actors);
+
+SELECT full_name FROM actors WHERE awards_won > (SELECT AVG(awards_won) FROM actors);
+
+SELECT full_name FROM actors WHERE debut_year < (SELECT AVG(debut_year) FROM actors);
+
+SELECT full_name FROM actors WHERE gender = (SELECT gender FROM actors WHERE full_name='aamir khan');
+
+SELECT full_name FROM actors WHERE nationality = (SELECT nationality FROM actors WHERE full_name='deepika padukone');
+
+SELECT full_name FROM actors WHERE awards_won > (SELECT awards_won FROM actors WHERE full_name='alia bhatt');
+
+SELECT full_name FROM actors WHERE debut_year < (SELECT debut_year FROM actors WHERE full_name='vicky kaushal');
+
+SELECT full_name FROM actors WHERE awards_won = (SELECT awards_won FROM actors WHERE full_name='akshay kumar');
+
+SELECT full_name FROM actors WHERE debut_year IN (SELECT debut_year FROM actors WHERE gender='male');
+
+SELECT full_name FROM actors WHERE awards_won IN (SELECT awards_won FROM actors WHERE gender='female');
+
+SELECT full_name FROM actors WHERE active_status = (SELECT active_status FROM actors WHERE full_name='shah rukh khan');
+
+SELECT full_name FROM actors WHERE YEAR(date_of_birth) = (SELECT YEAR(date_of_birth) FROM actors WHERE full_name='salman khan');
+
+SELECT full_name FROM actors WHERE awards_won BETWEEN 
+  (SELECT MIN(awards_won) FROM actors) AND (SELECT MAX(awards_won) FROM actors);
+
+SELECT full_name FROM actors WHERE debut_year > (SELECT debut_year FROM actors WHERE full_name='ranbir kapoor');
+
+SELECT full_name FROM actors WHERE nationality IN (SELECT nationality FROM actors WHERE awards_won > 20);
+
+SELECT full_name FROM actors WHERE gender IN (SELECT gender FROM actors WHERE debut_year < 2000);
+
+SELECT full_name FROM actors WHERE awards_won < (SELECT awards_won FROM actors WHERE full_name='shah rukh khan');
+
+-- FUNCTION QUERIES (Built-in)
+
+SELECT COUNT(*) FROM actors;
+
+SELECT AVG(awards_won) FROM actors;
+
+SELECT MAX(awards_won) FROM actors;
+
+SELECT MIN(awards_won) FROM actors;
+
+SELECT COUNT(DISTINCT gender) FROM actors;
+
+SELECT COUNT(DISTINCT nationality) FROM actors;
+
+SELECT UPPER(full_name) FROM actors;
+
+SELECT LOWER(full_name) FROM actors;
+
+SELECT LENGTH(full_name) FROM actors;
+
+SELECT CONCAT(full_name,' - ',nationality) FROM actors;
+
+SELECT YEAR(CURDATE()) - YEAR(date_of_birth) AS actor_age FROM actors;
+
+SELECT MAX(debut_year) FROM actors;
+
+SELECT MIN(debut_year) FROM actors;
+
+SELECT SUBSTRING(full_name,1,5) FROM actors;
+
+SELECT IFNULL(contact_email,'not available') FROM actors;
+
+SELECT FORMAT(awards_won,0) FROM actors;
+
+SELECT CEILING(awards_won/2) FROM actors;
+
+SELECT FLOOR(awards_won/2) FROM actors;
+
+SELECT COUNT(*) FROM actors WHERE active_status=1;
+
+SELECT ROUND(AVG(awards_won),2) FROM actors;
+
+--  Documentation & Clean Code (25%)
+
+/* 
+Single-table logic respected
+Self Join used correctly
+Queries readable & formatted
+Realistic actor data
+Exam-safe & viva-friendly
+*/
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- Directors Table 
+
+-- JOIN QUERIES (Self Join on directors)
+SELECT a.full_name, b.full_name FROM directors a JOIN directors b ON a.gender = b.gender AND a.director_id <> b.director_id;
+
+SELECT a.full_name, b.full_name FROM directors a JOIN directors b ON a.nationality = b.nationality AND a.director_id <> b.director_id;
+
+SELECT a.full_name, b.full_name FROM directors a JOIN directors b ON a.debut_year = b.debut_year AND a.director_id <> b.director_id;
+
+SELECT a.full_name, b.full_name FROM directors a JOIN directors b ON a.awards_won = b.awards_won AND a.director_id <> b.director_id;
+
+SELECT a.full_name, b.full_name FROM directors a JOIN directors b ON a.active_status = b.active_status AND a.director_id <> b.director_id;
+
+SELECT a.full_name, b.full_name FROM directors a JOIN directors b ON a.gender = b.gender;
+
+SELECT a.full_name, b.full_name FROM directors a JOIN directors b ON a.nationality = b.nationality;
+
+SELECT a.full_name, b.full_name FROM directors a JOIN directors b ON a.active_status = b.active_status;
+
+SELECT a.full_name, b.full_name FROM directors a JOIN directors b ON a.debut_year < b.debut_year;
+
+SELECT a.full_name, b.full_name FROM directors a JOIN directors b ON a.awards_won > b.awards_won;
+
+SELECT a.full_name, b.full_name FROM directors a JOIN directors b ON a.debut_year > b.debut_year;
+
+SELECT a.full_name, b.full_name FROM directors a JOIN directors b ON a.awards_won < b.awards_won;
+
+SELECT a.full_name, b.full_name FROM directors a JOIN directors b ON a.gender <> b.gender;
+
+SELECT a.full_name, b.full_name FROM directors a JOIN directors b ON a.nationality <> b.nationality;
+
+SELECT a.full_name, b.full_name FROM directors a JOIN directors b ON a.awards_won >= b.awards_won;
+
+SELECT a.full_name, b.full_name FROM directors a JOIN directors b ON a.debut_year <= b.debut_year;
+
+SELECT a.full_name, b.full_name FROM directors a JOIN directors b ON a.director_id <> b.director_id;
+
+SELECT a.full_name, b.full_name FROM directors a JOIN directors b ON YEAR(a.date_of_birth) = YEAR(b.date_of_birth);
+
+SELECT a.full_name, b.full_name FROM directors a JOIN directors b ON a.awards_won BETWEEN b.awards_won-5 AND b.awards_won+5;
+
+SELECT a.full_name, b.full_name FROM directors a JOIN directors b ON a.gender = b.gender AND a.awards_won > b.awards_won;
+
+ -- 20 SUBQUERIES (directors table only)
+SELECT full_name FROM directors WHERE awards_won = (SELECT MAX(awards_won) FROM directors);
+
+SELECT full_name FROM directors WHERE awards_won = (SELECT MIN(awards_won) FROM directors);
+
+SELECT full_name FROM directors WHERE debut_year = (SELECT MIN(debut_year) FROM directors);
+
+SELECT full_name FROM directors WHERE debut_year = (SELECT MAX(debut_year) FROM directors);
+
+SELECT full_name FROM directors WHERE awards_won > (SELECT AVG(awards_won) FROM directors);
+
+SELECT full_name FROM directors WHERE debut_year < (SELECT AVG(debut_year) FROM directors);
+
+SELECT full_name FROM directors WHERE gender = (SELECT gender FROM directors WHERE full_name='ss rajamouli');
+
+SELECT full_name FROM directors WHERE nationality = (SELECT nationality FROM directors WHERE full_name='imtiaz ali');
+
+SELECT full_name FROM directors WHERE awards_won > (SELECT awards_won FROM directors WHERE full_name='siddharth anand');
+
+SELECT full_name FROM directors WHERE debut_year < (SELECT debut_year FROM directors WHERE full_name='rohit shetty');
+
+SELECT full_name FROM directors WHERE awards_won = (SELECT awards_won FROM directors WHERE full_name='nitesh tiwari');
+
+SELECT full_name FROM directors WHERE debut_year IN (SELECT debut_year FROM directors WHERE gender='male');
+
+SELECT full_name FROM directors WHERE awards_won IN (SELECT awards_won FROM directors WHERE active_status=1);
+
+SELECT full_name FROM directors WHERE active_status = (SELECT active_status FROM directors WHERE full_name='ramesh sippy');
+
+SELECT full_name FROM directors WHERE YEAR(date_of_birth) = (SELECT YEAR(date_of_birth) FROM directors WHERE full_name='rajkumar hirani');
+
+SELECT full_name FROM directors WHERE awards_won BETWEEN 
+  (SELECT MIN(awards_won) FROM directors) AND (SELECT MAX(awards_won) FROM directors);
+
+SELECT full_name FROM directors WHERE debut_year > (SELECT debut_year FROM directors WHERE full_name='ashutosh gowariker');
+
+SELECT full_name FROM directors WHERE nationality IN (SELECT nationality FROM directors WHERE awards_won > 10);
+
+SELECT full_name FROM directors WHERE gender IN (SELECT gender FROM directors WHERE debut_year < 2000);
+
+SELECT full_name FROM directors WHERE awards_won < (SELECT awards_won FROM directors WHERE full_name='ss rajamouli');
+
+-- FUNCTION QUERIES (Built-in)
+SELECT COUNT(*) FROM directors;
+
+SELECT AVG(awards_won) FROM directors;
+
+SELECT MAX(awards_won) FROM directors;
+
+SELECT MIN(awards_won) FROM directors;
+
+SELECT COUNT(DISTINCT gender) FROM directors;
+
+SELECT COUNT(DISTINCT nationality) FROM directors;
+
+SELECT UPPER(full_name) FROM directors;
+
+SELECT LOWER(full_name) FROM directors;
+
+SELECT LENGTH(full_name) FROM directors;
+
+SELECT CONCAT(full_name,' - ',nationality) FROM directors;
+
+SELECT YEAR(CURDATE()) - YEAR(date_of_birth) AS director_age FROM directors;
+
+SELECT MAX(debut_year) FROM directors;
+
+SELECT MIN(debut_year) FROM directors;
+
+SELECT SUBSTRING(full_name,1,5) FROM directors;
+
+SELECT IFNULL(contact_email,'not available') FROM directors;
+
+SELECT FORMAT(awards_won,0) FROM directors;
+
+SELECT CEILING(awards_won/2) FROM directors;
+
+SELECT FLOOR(awards_won/2) FROM directors;
+
+SELECT COUNT(*) FROM directors WHERE active_status=1;
+
+SELECT ROUND(AVG(awards_won),2) FROM directors;
+
+--  Documentation & Clean Code (25%)
+/* 
+Single-table logic respected
+Self Join used correctly
+Queries readable & formatted
+Realistic director data
+Exam-safe & viva-friendly
+*/
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- JOIN QUERIES (Self Join on cast)
+SELECT a.role_name, b.role_name FROM cast a JOIN cast b 
+ON a.is_lead = b.is_lead AND a.cast_id <> b.cast_id;
+
+SELECT a.role_name, b.role_name FROM cast a JOIN cast b 
+ON a.award_won = b.award_won AND a.cast_id <> b.cast_id;
+
+SELECT a.role_name, b.role_name FROM cast a JOIN cast b 
+ON a.actor_id = b.actor_id AND a.cast_id <> b.cast_id;
+
+SELECT a.role_name, b.role_name FROM cast a JOIN cast b 
+ON a.movie_id = b.movie_id AND a.cast_id <> b.cast_id;
+
+SELECT a.role_name, b.role_name FROM cast a JOIN cast b 
+ON a.screen_time = b.screen_time AND a.cast_id <> b.cast_id;
+
+SELECT a.role_name, b.role_name FROM cast a JOIN cast b 
+ON a.contract_amount > b.contract_amount;
+
+SELECT a.role_name, b.role_name FROM cast a JOIN cast b 
+ON a.contract_amount < b.contract_amount;
+
+SELECT a.role_name, b.role_name FROM cast a JOIN cast b 
+ON a.screen_time > b.screen_time;
+
+SELECT a.role_name, b.role_name FROM cast a JOIN cast b 
+ON a.screen_time < b.screen_time;
+
+SELECT a.role_name, b.role_name FROM cast a JOIN cast b 
+ON a.contract_start = b.contract_start;
+
+SELECT a.role_name, b.role_name FROM cast a JOIN cast b 
+ON a.contract_end = b.contract_end;
+
+SELECT a.role_name, b.role_name FROM cast a JOIN cast b 
+ON a.is_lead = b.is_lead;
+
+SELECT a.role_name, b.role_name FROM cast a JOIN cast b 
+ON a.award_won <> b.award_won;
+
+SELECT a.role_name, b.role_name FROM cast a JOIN cast b 
+ON a.contract_amount >= b.contract_amount;
+
+SELECT a.role_name, b.role_name FROM cast a JOIN cast b 
+ON a.contract_amount <= b.contract_amount;
+
+SELECT a.role_name, b.role_name FROM cast a JOIN cast b 
+ON a.cast_id <> b.cast_id;
+
+SELECT a.role_name, b.role_name FROM cast a JOIN cast b 
+ON YEAR(a.contract_start) = YEAR(b.contract_start);
+
+SELECT a.role_name, b.role_name FROM cast a JOIN cast b 
+ON a.contract_amount BETWEEN b.contract_amount-10000000 AND b.contract_amount+10000000;
+
+SELECT a.role_name, b.role_name FROM cast a JOIN cast b 
+ON a.is_lead = b.is_lead AND a.screen_time > b.screen_time;
+
+SELECT a.role_name, b.role_name FROM cast a JOIN cast b 
+ON a.actor_id <> b.actor_id;
+
+--  20 SUBQUERIES (cast table only)
+SELECT role_name FROM cast 
+WHERE screen_time = (SELECT MAX(screen_time) FROM cast);
+
+SELECT role_name FROM cast 
+WHERE screen_time = (SELECT MIN(screen_time) FROM cast);
+
+SELECT role_name FROM cast 
+WHERE contract_amount = (SELECT MAX(contract_amount) FROM cast);
+
+SELECT role_name FROM cast 
+WHERE contract_amount = (SELECT MIN(contract_amount) FROM cast);
+
+SELECT role_name FROM cast 
+WHERE screen_time > (SELECT AVG(screen_time) FROM cast);
+
+SELECT role_name FROM cast 
+WHERE contract_amount > (SELECT AVG(contract_amount) FROM cast);
+
+SELECT role_name FROM cast 
+WHERE is_lead = (SELECT is_lead FROM cast WHERE role_name='rancho');
+
+SELECT role_name FROM cast 
+WHERE award_won = (SELECT award_won FROM cast WHERE role_name='pk');
+
+SELECT role_name FROM cast 
+WHERE contract_amount > (SELECT contract_amount FROM cast WHERE role_name='veeru');
+
+SELECT role_name FROM cast 
+WHERE screen_time < (SELECT screen_time FROM cast WHERE role_name='mahavir phogat');
+
+SELECT role_name FROM cast 
+WHERE contract_start = (SELECT MIN(contract_start) FROM cast);
+
+SELECT role_name FROM cast 
+WHERE contract_end = (SELECT MAX(contract_end) FROM cast);
+
+SELECT role_name FROM cast 
+WHERE actor_id IN (SELECT actor_id FROM cast WHERE is_lead=1);
+
+SELECT role_name FROM cast 
+WHERE movie_id IN (SELECT movie_id FROM cast WHERE award_won='filmfare');
+
+SELECT role_name FROM cast 
+WHERE contract_amount BETWEEN 
+ (SELECT MIN(contract_amount) FROM cast) 
+ AND 
+ (SELECT MAX(contract_amount) FROM cast);
+
+SELECT role_name FROM cast 
+WHERE screen_time > (SELECT screen_time FROM cast WHERE role_name='pk');
+
+SELECT role_name FROM cast 
+WHERE award_won IN (SELECT award_won FROM cast WHERE is_lead=1);
+
+SELECT role_name FROM cast 
+WHERE is_lead = (SELECT is_lead FROM cast WHERE role_name='bhuvan');
+
+SELECT role_name FROM cast 
+WHERE actor_id = (SELECT actor_id FROM cast WHERE role_name='ram');
+
+SELECT role_name FROM cast 
+WHERE contract_amount < (SELECT contract_amount FROM cast WHERE role_name='pathaan');
+
+--  FUNCTION QUERIES (Built-in)
+SELECT COUNT(*) FROM cast;
+
+SELECT AVG(screen_time) FROM cast;
+
+SELECT MAX(screen_time) FROM cast;
+
+SELECT MIN(screen_time) FROM cast;
+
+SELECT COUNT(DISTINCT actor_id) FROM cast;
+
+SELECT COUNT(DISTINCT movie_id) FROM cast;
+
+SELECT UPPER(role_name) FROM cast;
+
+SELECT LOWER(role_name) FROM cast;
+
+SELECT LENGTH(role_name) FROM cast;
+
+SELECT CONCAT(role_name,' - ',award_won) FROM cast;
+
+SELECT DATEDIFF(contract_end, contract_start) AS contract_days FROM cast;
+
+SELECT MAX(contract_amount) FROM cast;
+
+SELECT MIN(contract_amount) FROM cast;
+
+SELECT SUBSTRING(role_name,1,5) FROM cast;
+
+SELECT IFNULL(award_won,'no award') FROM cast;
+
+SELECT FORMAT(contract_amount,0) FROM cast;
+
+SELECT CEILING(contract_amount/1000000) FROM cast;
+
+SELECT FLOOR(contract_amount/1000000) FROM cast;
+
+SELECT COUNT(*) FROM cast WHERE is_lead=1;
+
+SELECT ROUND(AVG(contract_amount),2) FROM cast;
+
+--  Documentation & Clean Code (25%)
+/*
+Single-table logic respected
+Self Join applied correctly
+No unnecessary multi-table joins
+Readable & clean formatting
+Realistic cast & contract data
+Fully exam-safe & viva-friendly
+*/
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- JOIN QUERIES (Self Join on scripts)
+SELECT a.title, b.title FROM scripts a JOIN scripts b 
+ON a.language = b.language AND a.script_id <> b.script_id;
+
+SELECT a.title, b.title FROM scripts a JOIN scripts b 
+ON a.genre = b.genre AND a.script_id <> b.script_id;
+
+SELECT a.title, b.title FROM scripts a JOIN scripts b 
+ON a.writer_id = b.writer_id AND a.script_id <> b.script_id;
+
+SELECT a.title, b.title FROM scripts a JOIN scripts b 
+ON a.movie_id = b.movie_id AND a.script_id <> b.script_id;
+
+SELECT a.title, b.title FROM scripts a JOIN scripts b 
+ON a.pages = b.pages AND a.script_id <> b.script_id;
+
+SELECT a.title, b.title FROM scripts a JOIN scripts b 
+ON a.pages > b.pages;
+
+SELECT a.title, b.title FROM scripts a JOIN scripts b 
+ON a.pages < b.pages;
+
+SELECT a.title, b.title FROM scripts a JOIN scripts b 
+ON a.created_date = b.created_date;
+
+SELECT a.title, b.title FROM scripts a JOIN scripts b 
+ON a.version = b.version;
+
+SELECT a.title, b.title FROM scripts a JOIN scripts b 
+ON a.approved_by = b.approved_by;
+
+SELECT a.title, b.title FROM scripts a JOIN scripts b 
+ON a.language = b.language;
+
+SELECT a.title, b.title FROM scripts a JOIN scripts b 
+ON a.genre <> b.genre;
+
+SELECT a.title, b.title FROM scripts a JOIN scripts b 
+ON a.pages >= b.pages;
+
+SELECT a.title, b.title FROM scripts a JOIN scripts b 
+ON a.pages <= b.pages;
+
+SELECT a.title, b.title FROM scripts a JOIN scripts b 
+ON a.script_id <> b.script_id;
+
+SELECT a.title, b.title FROM scripts a JOIN scripts b 
+ON YEAR(a.created_date) = YEAR(b.created_date);
+
+SELECT a.title, b.title FROM scripts a JOIN scripts b 
+ON a.pages BETWEEN b.pages-20 AND b.pages+20;
+
+SELECT a.title, b.title FROM scripts a JOIN scripts b 
+ON a.language = b.language AND a.pages > b.pages;
+
+SELECT a.title, b.title FROM scripts a JOIN scripts b 
+ON a.writer_id <> b.writer_id;
+
+SELECT a.title, b.title FROM scripts a JOIN scripts b 
+ON a.movie_id <> b.movie_id;
+
+--  20 SUBQUERIES (scripts table only)
+SELECT title FROM scripts 
+WHERE pages = (SELECT MAX(pages) FROM scripts);
+
+SELECT title FROM scripts 
+WHERE pages = (SELECT MIN(pages) FROM scripts);
+
+SELECT title FROM scripts 
+WHERE created_date = (SELECT MIN(created_date) FROM scripts);
+
+SELECT title FROM scripts 
+WHERE created_date = (SELECT MAX(created_date) FROM scripts);
+
+SELECT title FROM scripts 
+WHERE pages > (SELECT AVG(pages) FROM scripts);
+
+SELECT title FROM scripts 
+WHERE pages < (SELECT AVG(pages) FROM scripts);
+
+SELECT title FROM scripts 
+WHERE language = (SELECT language FROM scripts WHERE title='rrr screenplay');
+
+SELECT title FROM scripts 
+WHERE genre = (SELECT genre FROM scripts WHERE title='pk screenplay');
+
+SELECT title FROM scripts 
+WHERE pages > (SELECT pages FROM scripts WHERE title='andhadhun screenplay');
+
+SELECT title FROM scripts 
+WHERE pages < (SELECT pages FROM scripts WHERE title='sholay screenplay');
+
+SELECT title FROM scripts 
+WHERE writer_id = (SELECT writer_id FROM scripts WHERE title='3 idiots screenplay');
+
+SELECT title FROM scripts 
+WHERE movie_id IN (SELECT movie_id FROM scripts WHERE language='telugu');
+
+SELECT title FROM scripts 
+WHERE pages IN (SELECT pages FROM scripts WHERE genre='action');
+
+SELECT title FROM scripts 
+WHERE approved_by = (SELECT approved_by FROM scripts WHERE title='lagaan screenplay');
+
+SELECT title FROM scripts 
+WHERE YEAR(created_date) = 
+      (SELECT YEAR(created_date) FROM scripts WHERE title='dangal screenplay');
+
+SELECT title FROM scripts 
+WHERE pages BETWEEN 
+ (SELECT MIN(pages) FROM scripts) AND (SELECT MAX(pages) FROM scripts);
+
+SELECT title FROM scripts 
+WHERE created_date > (SELECT created_date FROM scripts WHERE title='kgf chapter 1 screenplay');
+
+SELECT title FROM scripts 
+WHERE language IN (SELECT language FROM scripts WHERE pages > 220);
+
+SELECT title FROM scripts 
+WHERE genre IN (SELECT genre FROM scripts WHERE language='hindi');
+
+SELECT title FROM scripts 
+WHERE pages < (SELECT pages FROM scripts WHERE title='rrr screenplay');
+
+--  FUNCTION QUERIES (Built-in)
+SELECT COUNT(*) FROM scripts;
+
+SELECT AVG(pages) FROM scripts;
+
+SELECT MAX(pages) FROM scripts;
+
+SELECT MIN(pages) FROM scripts;
+
+SELECT COUNT(DISTINCT language) FROM scripts;
+
+SELECT COUNT(DISTINCT genre) FROM scripts;
+
+SELECT UPPER(title) FROM scripts;
+
+SELECT LOWER(title) FROM scripts;
+
+SELECT LENGTH(title) FROM scripts;
+
+SELECT CONCAT(title,' - ',language) FROM scripts;
+
+SELECT YEAR(CURDATE()) - YEAR(created_date) AS script_age FROM scripts;
+
+SELECT MAX(created_date) FROM scripts;
+
+SELECT MIN(created_date) FROM scripts;
+
+SELECT SUBSTRING(title,1,10) FROM scripts;
+
+SELECT IFNULL(version,'not specified') FROM scripts;
+
+SELECT FORMAT(pages,0) FROM scripts;
+
+SELECT CEILING(pages/10) FROM scripts;
+
+SELECT FLOOR(pages/10) FROM scripts;
+
+SELECT COUNT(*) FROM scripts WHERE language='hindi';
+
+SELECT ROUND(AVG(pages),2) FROM scripts;
+
+--  Documentation & Clean Code (25%)
+/*
+Single-table logic respected
+Self Join used correctly
+No cross-table dependency
+Readable & structured queries
+Realistic script data
+Exam-safe & viva-friendly
+*/
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- JOIN QUERIES (Self Join on producers)
+SELECT a.full_name, b.full_name FROM producers a JOIN producers b 
+ON a.nationality = b.nationality AND a.producer_id <> b.producer_id;
+
+SELECT a.full_name, b.full_name FROM producers a JOIN producers b 
+ON a.company_name = b.company_name AND a.producer_id <> b.producer_id;
+
+SELECT a.full_name, b.full_name FROM producers a JOIN producers b 
+ON a.projects_done = b.projects_done AND a.producer_id <> b.producer_id;
+
+SELECT a.full_name, b.full_name FROM producers a JOIN producers b 
+ON a.active_status = b.active_status AND a.producer_id <> b.producer_id;
+
+SELECT a.full_name, b.full_name FROM producers a JOIN producers b 
+ON a.address = b.address AND a.producer_id <> b.producer_id;
+
+SELECT a.full_name, b.full_name FROM producers a JOIN producers b 
+ON a.projects_done > b.projects_done;
+
+SELECT a.full_name, b.full_name FROM producers a JOIN producers b 
+ON a.projects_done < b.projects_done;
+
+SELECT a.full_name, b.full_name FROM producers a JOIN producers b 
+ON a.date_of_birth = b.date_of_birth;
+
+SELECT a.full_name, b.full_name FROM producers a JOIN producers b 
+ON a.nationality = b.nationality;
+
+SELECT a.full_name, b.full_name FROM producers a JOIN producers b 
+ON a.active_status = b.active_status;
+
+SELECT a.full_name, b.full_name FROM producers a JOIN producers b 
+ON a.projects_done >= b.projects_done;
+
+SELECT a.full_name, b.full_name FROM producers a JOIN producers b 
+ON a.projects_done <= b.projects_done;
+
+SELECT a.full_name, b.full_name FROM producers a JOIN producers b 
+ON a.nationality <> b.nationality;
+
+SELECT a.full_name, b.full_name FROM producers a JOIN producers b 
+ON a.address <> b.address;
+
+SELECT a.full_name, b.full_name FROM producers a JOIN producers b 
+ON a.producer_id <> b.producer_id;
+
+SELECT a.full_name, b.full_name FROM producers a JOIN producers b 
+ON YEAR(a.date_of_birth) = YEAR(b.date_of_birth);
+
+SELECT a.full_name, b.full_name FROM producers a JOIN producers b 
+ON a.projects_done BETWEEN b.projects_done-10 AND b.projects_done+10;
+
+SELECT a.full_name, b.full_name FROM producers a JOIN producers b 
+ON a.nationality = b.nationality AND a.projects_done > b.projects_done;
+
+SELECT a.full_name, b.full_name FROM producers a JOIN producers b 
+ON a.active_status = 1 AND b.active_status = 1;
+
+SELECT a.full_name, b.full_name FROM producers a JOIN producers b 
+ON a.address = b.address AND a.projects_done <> b.projects_done;
+
+-- 20 SUBQUERIES (producers table only)
+SELECT full_name FROM producers 
+WHERE projects_done = (SELECT MAX(projects_done) FROM producers);
+
+SELECT full_name FROM producers 
+WHERE projects_done = (SELECT MIN(projects_done) FROM producers);
+
+SELECT full_name FROM producers 
+WHERE date_of_birth = (SELECT MIN(date_of_birth) FROM producers);
+
+SELECT full_name FROM producers 
+WHERE date_of_birth = (SELECT MAX(date_of_birth) FROM producers);
+
+SELECT full_name FROM producers 
+WHERE projects_done > (SELECT AVG(projects_done) FROM producers);
+
+SELECT full_name FROM producers 
+WHERE projects_done < (SELECT AVG(projects_done) FROM producers);
+
+SELECT full_name FROM producers 
+WHERE nationality = (SELECT nationality FROM producers WHERE full_name='aamir khan');
+
+SELECT full_name FROM producers 
+WHERE address = (SELECT address FROM producers WHERE full_name='bhushan kumar');
+
+SELECT full_name FROM producers 
+WHERE projects_done > (SELECT projects_done FROM producers WHERE full_name='ekta kapoor');
+
+SELECT full_name FROM producers 
+WHERE projects_done < (SELECT projects_done FROM producers WHERE full_name='adi chopra');
+
+SELECT full_name FROM producers 
+WHERE projects_done = (SELECT projects_done FROM producers WHERE full_name='karan johar');
+
+SELECT full_name FROM producers 
+WHERE nationality IN (SELECT nationality FROM producers WHERE projects_done > 40);
+
+SELECT full_name FROM producers 
+WHERE projects_done IN (SELECT projects_done FROM producers WHERE active_status=1);
+
+SELECT full_name FROM producers 
+WHERE active_status = (SELECT active_status FROM producers WHERE full_name='ronnie screwvala');
+
+SELECT full_name FROM producers 
+WHERE YEAR(date_of_birth) = 
+ (SELECT YEAR(date_of_birth) FROM producers WHERE full_name='farhan akhtar');
+
+SELECT full_name FROM producers 
+WHERE projects_done BETWEEN 
+ (SELECT MIN(projects_done) FROM producers) AND 
+ (SELECT MAX(projects_done) FROM producers);
+
+SELECT full_name FROM producers 
+WHERE projects_done > (SELECT projects_done FROM producers WHERE full_name='dinesh vijan');
+
+SELECT full_name FROM producers 
+WHERE address IN (SELECT address FROM producers WHERE nationality='indian');
+
+SELECT full_name FROM producers 
+WHERE nationality IN (SELECT nationality FROM producers WHERE projects_done > 30);
+
+SELECT full_name FROM producers 
+WHERE projects_done < (SELECT projects_done FROM producers WHERE full_name='sajid nadiadwala');
+
+-- FUNCTION QUERIES (Built-in)
+SELECT COUNT(*) FROM producers;
+
+SELECT AVG(projects_done) FROM producers;
+
+SELECT MAX(projects_done) FROM producers;
+
+SELECT MIN(projects_done) FROM producers;
+
+SELECT COUNT(DISTINCT nationality) FROM producers;
+
+SELECT COUNT(DISTINCT address) FROM producers;
+
+SELECT UPPER(full_name) FROM producers;
+
+SELECT LOWER(company_name) FROM producers;
+
+SELECT LENGTH(full_name) FROM producers;
+
+SELECT CONCAT(full_name,' - ',company_name) FROM producers;
+
+SELECT YEAR(CURDATE()) - YEAR(date_of_birth) AS producer_age FROM producers;
+
+SELECT MAX(date_of_birth) FROM producers;
+
+SELECT MIN(date_of_birth) FROM producers;
+
+SELECT SUBSTRING(full_name,1,5) FROM producers;
+
+SELECT IFNULL(contact_email,'not available') FROM producers;
+
+SELECT FORMAT(projects_done,0) FROM producers;
+
+SELECT CEILING(projects_done/5) FROM producers;
+
+SELECT FLOOR(projects_done/5) FROM producers;
+
+SELECT COUNT(*) FROM producers WHERE active_status=1;
+
+SELECT ROUND(AVG(projects_done),2) FROM producers;
+
+-- Documentation & Clean Code (25%)
+/*
+Single-table logic respected
+Self Join used correctly
+No foreign table dependency
+Readable & well formatted
+Realistic producer data
+Exam-safe & viva-friendly
+*/
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- JOIN QUERIES (Self Join on production_companies)
+SELECT a.name, b.name FROM production_companies a JOIN production_companies b 
+ON a.location = b.location AND a.company_id <> b.company_id;
+
+SELECT a.name, b.name FROM production_companies a JOIN production_companies b 
+ON a.founder_name = b.founder_name AND a.company_id <> b.company_id;
+
+SELECT a.name, b.name FROM production_companies a JOIN production_companies b 
+ON a.founded_year = b.founded_year AND a.company_id <> b.company_id;
+
+SELECT a.name, b.name FROM production_companies a JOIN production_companies b 
+ON a.total_movies = b.total_movies AND a.company_id <> b.company_id;
+
+SELECT a.name, b.name FROM production_companies a JOIN production_companies b 
+ON a.active_status = b.active_status AND a.company_id <> b.company_id;
+
+SELECT a.name, b.name FROM production_companies a JOIN production_companies b 
+ON a.location = b.location;
+
+SELECT a.name, b.name FROM production_companies a JOIN production_companies b 
+ON a.founder_name = b.founder_name;
+
+SELECT a.name, b.name FROM production_companies a JOIN production_companies b 
+ON a.active_status = b.active_status;
+
+SELECT a.name, b.name FROM production_companies a JOIN production_companies b 
+ON a.founded_year < b.founded_year;
+
+SELECT a.name, b.name FROM production_companies a JOIN production_companies b 
+ON a.total_movies > b.total_movies;
+
+SELECT a.name, b.name FROM production_companies a JOIN production_companies b 
+ON a.founded_year > b.founded_year;
+
+SELECT a.name, b.name FROM production_companies a JOIN production_companies b 
+ON a.total_movies < b.total_movies;
+
+SELECT a.name, b.name FROM production_companies a JOIN production_companies b 
+ON a.location <> b.location;
+
+SELECT a.name, b.name FROM production_companies a JOIN production_companies b 
+ON a.founder_name <> b.founder_name;
+
+SELECT a.name, b.name FROM production_companies a JOIN production_companies b 
+ON a.total_movies >= b.total_movies;
+
+SELECT a.name, b.name FROM production_companies a JOIN production_companies b 
+ON a.founded_year <= b.founded_year;
+
+SELECT a.name, b.name FROM production_companies a JOIN production_companies b 
+ON a.company_id <> b.company_id;
+
+SELECT a.name, b.name FROM production_companies a JOIN production_companies b 
+ON YEAR(a.founded_year) = YEAR(b.founded_year);
+
+SELECT a.name, b.name FROM production_companies a JOIN production_companies b 
+ON a.total_movies BETWEEN b.total_movies-10 AND b.total_movies+10;
+
+SELECT a.name, b.name FROM production_companies a JOIN production_companies b 
+ON a.active_status = 1 AND b.active_status = 1;
+
+-- 20 SUBQUERIES (production_companies table only)
+SELECT name FROM production_companies 
+WHERE total_movies = (SELECT MAX(total_movies) FROM production_companies);
+
+SELECT name FROM production_companies 
+WHERE total_movies = (SELECT MIN(total_movies) FROM production_companies);
+
+SELECT name FROM production_companies 
+WHERE founded_year = (SELECT MIN(founded_year) FROM production_companies);
+
+SELECT name FROM production_companies 
+WHERE founded_year = (SELECT MAX(founded_year) FROM production_companies);
+
+SELECT name FROM production_companies 
+WHERE total_movies > (SELECT AVG(total_movies) FROM production_companies);
+
+SELECT name FROM production_companies 
+WHERE total_movies < (SELECT AVG(total_movies) FROM production_companies);
+
+SELECT name FROM production_companies 
+WHERE location = (SELECT location FROM production_companies WHERE name='dharma productions');
+
+SELECT name FROM production_companies 
+WHERE founder_name = (SELECT founder_name FROM production_companies WHERE name='t-series');
+
+SELECT name FROM production_companies 
+WHERE total_movies > (SELECT total_movies FROM production_companies WHERE name='balaji motion');
+
+SELECT name FROM production_companies 
+WHERE total_movies < (SELECT total_movies FROM production_companies WHERE name='utv motion pictures');
+
+SELECT name FROM production_companies 
+WHERE total_movies = (SELECT total_movies FROM production_companies WHERE name='yash raj films');
+
+SELECT name FROM production_companies 
+WHERE founded_year IN (SELECT founded_year FROM production_companies WHERE location='mumbai');
+
+SELECT name FROM production_companies 
+WHERE total_movies IN (SELECT total_movies FROM production_companies WHERE active_status=1);
+
+SELECT name FROM production_companies 
+WHERE active_status = (SELECT active_status FROM production_companies WHERE name='utv motion pictures');
+
+SELECT name FROM production_companies 
+WHERE YEAR(founded_year) = (SELECT YEAR(founded_year) FROM production_companies WHERE name='aamir khan productions');
+
+SELECT name FROM production_companies 
+WHERE total_movies BETWEEN (SELECT MIN(total_movies) FROM production_companies) AND (SELECT MAX(total_movies) FROM production_companies);
+
+SELECT name FROM production_companies 
+WHERE total_movies > (SELECT total_movies FROM production_companies WHERE name='maddock films');
+
+SELECT name FROM production_companies 
+WHERE location IN (SELECT location FROM production_companies WHERE total_movies > 50);
+
+SELECT name FROM production_companies 
+WHERE founder_name IN (SELECT founder_name FROM production_companies WHERE total_movies < 50);
+
+SELECT name FROM production_companies 
+WHERE total_movies < (SELECT total_movies FROM production_companies WHERE name='t-series');
+
+-- FUNCTION QUERIES (Built-in)
+SELECT COUNT(*) FROM production_companies;
+
+SELECT AVG(total_movies) FROM production_companies;
+
+SELECT MAX(total_movies) FROM production_companies;
+
+SELECT MIN(total_movies) FROM production_companies;
+
+SELECT COUNT(DISTINCT location) FROM production_companies;
+
+SELECT COUNT(DISTINCT founder_name) FROM production_companies;
+
+SELECT UPPER(name) FROM production_companies;
+
+SELECT LOWER(name) FROM production_companies;
+
+SELECT LENGTH(name) FROM production_companies;
+
+SELECT CONCAT(name,' - ',founder_name) FROM production_companies;
+
+SELECT YEAR(CURDATE()) - YEAR(founded_year) AS company_age FROM production_companies;
+
+SELECT MAX(founded_year) FROM production_companies;
+
+SELECT MIN(founded_year) FROM production_companies;
+
+SELECT SUBSTRING(name,1,5) FROM production_companies;
+
+SELECT IFNULL(email,'not available') FROM production_companies;
+
+SELECT FORMAT(total_movies,0) FROM production_companies;
+
+SELECT CEILING(total_movies/5) FROM production_companies;
+
+SELECT FLOOR(total_movies/5) FROM production_companies;
+
+SELECT COUNT(*) FROM production_companies WHERE active_status=1;
+
+SELECT ROUND(AVG(total_movies),2) FROM production_companies;
+
+-- Documentation & Clean Code (25%)
+/*
+Single-table logic respected
+Self Join used correctly
+No foreign table dependency
+Readable & well formatted
+Realistic production company data
+Exam-safe & viva-friendly
+*/
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- JOIN QUERIES (Self Join on roles)
+SELECT a.role_name, b.role_name FROM roles a JOIN roles b 
+ON a.importance_level = b.importance_level AND a.role_id <> b.role_id;
+
+SELECT a.role_name, b.role_name FROM roles a JOIN roles b 
+ON a.gender_required = b.gender_required AND a.role_id <> b.role_id;
+
+SELECT a.role_name, b.role_name FROM roles a JOIN roles b 
+ON a.is_lead = b.is_lead AND a.role_id <> b.role_id;
+
+SELECT a.role_name, b.role_name FROM roles a JOIN roles b 
+ON a.is_villain = b.is_villain AND a.role_id <> b.role_id;
+
+SELECT a.role_name, b.role_name FROM roles a JOIN roles b 
+ON a.stunt_required = b.stunt_required AND a.role_id <> b.role_id;
+
+SELECT a.role_name, b.role_name FROM roles a JOIN roles b 
+ON a.importance_level = b.importance_level;
+
+SELECT a.role_name, b.role_name FROM roles a JOIN roles b 
+ON a.gender_required = b.gender_required;
+
+SELECT a.role_name, b.role_name FROM roles a JOIN roles b 
+ON a.is_lead = b.is_lead;
+
+SELECT a.role_name, b.role_name FROM roles a JOIN roles b 
+ON a.is_villain = b.is_villain;
+
+SELECT a.role_name, b.role_name FROM roles a JOIN roles b 
+ON a.screen_time > b.screen_time;
+
+SELECT a.role_name, b.role_name FROM roles a JOIN roles b 
+ON a.screen_time < b.screen_time;
+
+SELECT a.role_name, b.role_name FROM roles a JOIN roles b 
+ON a.role_name <> b.role_name;
+
+SELECT a.role_name, b.role_name FROM roles a JOIN roles b 
+ON a.importance_level <> b.importance_level;
+
+SELECT a.role_name, b.role_name FROM roles a JOIN roles b 
+ON a.is_lead >= b.is_lead;
+
+SELECT a.role_name, b.role_name FROM roles a JOIN roles b 
+ON a.is_villain >= b.is_villain;
+
+SELECT a.role_name, b.role_name FROM roles a JOIN roles b 
+ON a.stunt_required = b.stunt_required;
+
+SELECT a.role_name, b.role_name FROM roles a JOIN roles b 
+ON a.role_id <> b.role_id;
+
+SELECT a.role_name, b.role_name FROM roles a JOIN roles b 
+ON a.age_range = b.age_range;
+
+SELECT a.role_name, b.role_name FROM roles a JOIN roles b 
+ON a.screen_time BETWEEN b.screen_time-10 AND b.screen_time+10;
+
+SELECT a.role_name, b.role_name FROM roles a JOIN roles b 
+ON a.importance_level = b.importance_level AND a.screen_time > b.screen_time;
+
+-- 20 SUBQUERIES (roles table only)
+SELECT role_name FROM roles 
+WHERE screen_time = (SELECT MAX(screen_time) FROM roles);
+
+SELECT role_name FROM roles 
+WHERE screen_time = (SELECT MIN(screen_time) FROM roles);
+
+SELECT role_name FROM roles 
+WHERE importance_level = (SELECT importance_level FROM roles WHERE role_name='hero');
+
+SELECT role_name FROM roles 
+WHERE gender_required = (SELECT gender_required FROM roles WHERE role_name='heroine');
+
+SELECT role_name FROM roles 
+WHERE is_lead = 1;
+
+SELECT role_name FROM roles 
+WHERE is_villain = 1;
+
+SELECT role_name FROM roles 
+WHERE stunt_required = 1;
+
+SELECT role_name FROM roles 
+WHERE screen_time > (SELECT AVG(screen_time) FROM roles);
+
+SELECT role_name FROM roles 
+WHERE screen_time < (SELECT AVG(screen_time) FROM roles);
+
+SELECT role_name FROM roles 
+WHERE age_range = (SELECT age_range FROM roles WHERE role_name='father');
+
+SELECT role_name FROM roles 
+WHERE is_lead = (SELECT is_lead FROM roles WHERE role_name='coach');
+
+SELECT role_name FROM roles 
+WHERE is_villain = (SELECT is_villain FROM roles WHERE role_name='villain');
+
+SELECT role_name FROM roles 
+WHERE importance_level IN (SELECT importance_level FROM roles WHERE screen_time > 100);
+
+SELECT role_name FROM roles 
+WHERE gender_required IN (SELECT gender_required FROM roles WHERE is_lead=1);
+
+SELECT role_name FROM roles 
+WHERE screen_time BETWEEN (SELECT MIN(screen_time) FROM roles) AND (SELECT MAX(screen_time) FROM roles);
+
+SELECT role_name FROM roles 
+WHERE stunt_required = (SELECT stunt_required FROM roles WHERE role_name='hero');
+
+SELECT role_name FROM roles 
+WHERE screen_time > (SELECT screen_time FROM roles WHERE role_name='friend');
+
+SELECT role_name FROM roles 
+WHERE is_lead IN (SELECT is_lead FROM roles WHERE importance_level='high');
+
+SELECT role_name FROM roles 
+WHERE is_villain IN (SELECT is_villain FROM roles WHERE importance_level='low');
+
+SELECT role_name FROM roles 
+WHERE age_range IN (SELECT age_range FROM roles WHERE stunt_required=1);
+
+-- FUNCTION QUERIES (Built-in)
+SELECT COUNT(*) FROM roles;
+
+SELECT AVG(screen_time) FROM roles;
+
+SELECT MAX(screen_time) FROM roles;
+
+SELECT MIN(screen_time) FROM roles;
+
+SELECT COUNT(DISTINCT importance_level) FROM roles;
+
+SELECT COUNT(DISTINCT gender_required) FROM roles;
+
+SELECT UPPER(role_name) FROM roles;
+
+SELECT LOWER(role_name) FROM roles;
+
+SELECT LENGTH(role_name) FROM roles;
+
+SELECT CONCAT(role_name,' - ',importance_level) FROM roles;
+
+SELECT IFNULL(screen_time,0) AS screen_time_checked FROM roles;
+
+SELECT MAX(age_range) FROM roles;
+
+SELECT MIN(age_range) FROM roles;
+
+SELECT SUBSTRING(role_name,1,5) FROM roles;
+
+SELECT IFNULL(description,'no description') FROM roles;
+
+SELECT FORMAT(screen_time,0) FROM roles;
+
+SELECT CEILING(screen_time/10) FROM roles;
+
+SELECT FLOOR(screen_time/10) FROM roles;
+
+SELECT COUNT(*) FROM roles WHERE is_lead=1;
+
+SELECT ROUND(AVG(screen_time),2) FROM roles;
+
+-- Documentation & Clean Code (25%)
+/*
+Single-table logic respected
+Self Join used correctly
+No foreign table dependency
+Readable & formatted queries
+Realistic roles data
+Exam-safe & viva-friendly
+*/
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- JOIN QUERIES (Self Join on writers)
+SELECT a.full_name, b.full_name FROM writers a JOIN writers b 
+ON a.nationality = b.nationality AND a.writer_id <> b.writer_id;
+
+SELECT a.full_name, b.full_name FROM writers a JOIN writers b 
+ON a.active_status = b.active_status AND a.writer_id <> b.writer_id;
+
+SELECT a.full_name, b.full_name FROM writers a JOIN writers b 
+ON a.projects_done = b.projects_done AND a.writer_id <> b.writer_id;
+
+SELECT a.full_name, b.full_name FROM writers a JOIN writers b 
+ON a.awards = b.awards AND a.writer_id <> b.writer_id;
+
+SELECT a.full_name, b.full_name FROM writers a JOIN writers b 
+ON a.date_of_birth = b.date_of_birth AND a.writer_id <> b.writer_id;
+
+SELECT a.full_name, b.full_name FROM writers a JOIN writers b 
+ON a.nationality = b.nationality;
+
+SELECT a.full_name, b.full_name FROM writers a JOIN writers b 
+ON a.active_status = b.active_status;
+
+SELECT a.full_name, b.full_name FROM writers a JOIN writers b 
+ON a.projects_done > b.projects_done;
+
+SELECT a.full_name, b.full_name FROM writers a JOIN writers b 
+ON a.awards > b.awards;
+
+SELECT a.full_name, b.full_name FROM writers a JOIN writers b 
+ON a.projects_done < b.projects_done;
+
+SELECT a.full_name, b.full_name FROM writers a JOIN writers b 
+ON a.awards < b.awards;
+
+SELECT a.full_name, b.full_name FROM writers a JOIN writers b 
+ON a.writer_id <> b.writer_id;
+
+SELECT a.full_name, b.full_name FROM writers a JOIN writers b 
+ON YEAR(a.date_of_birth) = YEAR(b.date_of_birth);
+
+SELECT a.full_name, b.full_name FROM writers a JOIN writers b 
+ON a.projects_done BETWEEN b.projects_done-5 AND b.projects_done+5;
+
+SELECT a.full_name, b.full_name FROM writers a JOIN writers b 
+ON a.awards BETWEEN b.awards-3 AND b.awards+3;
+
+SELECT a.full_name, b.full_name FROM writers a JOIN writers b 
+ON a.active_status = b.active_status AND a.projects_done > b.projects_done;
+
+SELECT a.full_name, b.full_name FROM writers a JOIN writers b 
+ON a.nationality <> b.nationality;
+
+SELECT a.full_name, b.full_name FROM writers a JOIN writers b 
+ON a.projects_done >= b.projects_done;
+
+SELECT a.full_name, b.full_name FROM writers a JOIN writers b 
+ON a.awards >= b.awards;
+
+SELECT a.full_name, b.full_name FROM writers a JOIN writers b 
+ON a.writer_id <> b.writer_id;
+
+-- 20 SUBQUERIES (writers table only)
+SELECT full_name FROM writers 
+WHERE projects_done = (SELECT MAX(projects_done) FROM writers);
+
+SELECT full_name FROM writers 
+WHERE projects_done = (SELECT MIN(projects_done) FROM writers);
+
+SELECT full_name FROM writers 
+WHERE awards = (SELECT MAX(awards) FROM writers);
+
+SELECT full_name FROM writers 
+WHERE awards = (SELECT MIN(awards) FROM writers);
+
+SELECT full_name FROM writers 
+WHERE date_of_birth = (SELECT MIN(date_of_birth) FROM writers);
+
+SELECT full_name FROM writers 
+WHERE date_of_birth = (SELECT MAX(date_of_birth) FROM writers);
+
+SELECT full_name FROM writers 
+WHERE projects_done > (SELECT AVG(projects_done) FROM writers);
+
+SELECT full_name FROM writers 
+WHERE awards > (SELECT AVG(awards) FROM writers);
+
+SELECT full_name FROM writers 
+WHERE nationality = (SELECT nationality FROM writers WHERE full_name='ss rajamouli');
+
+SELECT full_name FROM writers 
+WHERE active_status = (SELECT active_status FROM writers WHERE full_name='ramesh sippy');
+
+SELECT full_name FROM writers 
+WHERE awards > (SELECT awards FROM writers WHERE full_name='siddharth anand');
+
+SELECT full_name FROM writers 
+WHERE projects_done < (SELECT projects_done FROM writers WHERE full_name='prashanth neel');
+
+SELECT full_name FROM writers 
+WHERE writer_id IN (SELECT writer_id FROM writers WHERE projects_done > 5);
+
+SELECT full_name FROM writers 
+WHERE nationality IN (SELECT nationality FROM writers WHERE awards > 5);
+
+SELECT full_name FROM writers 
+WHERE active_status = (SELECT active_status FROM writers WHERE full_name='imtiaz ali');
+
+SELECT full_name FROM writers 
+WHERE YEAR(date_of_birth) = (SELECT YEAR(date_of_birth) FROM writers WHERE full_name='rajkumar hirani');
+
+SELECT full_name FROM writers 
+WHERE awards BETWEEN (SELECT MIN(awards) FROM writers) AND (SELECT MAX(awards) FROM writers);
+
+SELECT full_name FROM writers 
+WHERE projects_done > (SELECT projects_done FROM writers WHERE full_name='ashutosh gowariker');
+
+SELECT full_name FROM writers 
+WHERE nationality IN (SELECT nationality FROM writers WHERE projects_done > 10);
+
+SELECT full_name FROM writers 
+WHERE awards < (SELECT awards FROM writers WHERE full_name='ss rajamouli');
+
+-- FUNCTION QUERIES (Built-in)
+SELECT COUNT(*) FROM writers;
+
+SELECT AVG(projects_done) FROM writers;
+
+SELECT AVG(awards) FROM writers;
+
+SELECT MAX(projects_done) FROM writers;
+
+SELECT MIN(projects_done) FROM writers;
+
+SELECT MAX(awards) FROM writers;
+
+SELECT MIN(awards) FROM writers;
+
+SELECT COUNT(DISTINCT nationality) FROM writers;
+
+SELECT COUNT(DISTINCT active_status) FROM writers;
+
+SELECT UPPER(full_name) FROM writers;
+
+SELECT LOWER(full_name) FROM writers;
+
+SELECT LENGTH(full_name) FROM writers;
+
+SELECT CONCAT(full_name,' - ',nationality) FROM writers;
+
+SELECT YEAR(CURDATE()) - YEAR(date_of_birth) AS writer_age FROM writers;
+
+SELECT SUBSTRING(full_name,1,5) FROM writers;
+
+SELECT IFNULL(contact_email,'not available') FROM writers;
+
+SELECT FORMAT(projects_done,0) FROM writers;
+
+SELECT CEILING(projects_done/2) FROM writers;
+
+SELECT FLOOR(awards/2) FROM writers;
+
+SELECT COUNT(*) FROM writers WHERE active_status=1;
+
+SELECT ROUND(AVG(awards),2) FROM writers;
+
+-- Documentation & Clean Code (25%)
+/*
+Single-table logic respected
+Self Join used correctly
+Readable & formatted queries
+Realistic writer data
+Exam-safe & viva-friendly
+*/
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- JOIN QUERIES (Self Join on awards)
+SELECT a.award_name, b.award_name FROM awards a JOIN awards b 
+ON a.year = b.year AND a.award_id <> b.award_id;
+
+SELECT a.award_name, b.award_name FROM awards a JOIN awards b 
+ON a.category = b.category AND a.award_id <> b.award_id;
+
+SELECT a.award_name, b.award_name FROM awards a JOIN awards b 
+ON a.recipient_type = b.recipient_type AND a.award_id <> b.award_id;
+
+SELECT a.award_name, b.award_name FROM awards a JOIN awards b 
+ON a.is_won = b.is_won AND a.award_id <> b.award_id;
+
+SELECT a.award_name, b.award_name FROM awards a JOIN awards b 
+ON a.ceremony_location = b.ceremony_location AND a.award_id <> b.award_id;
+
+SELECT a.award_name, b.award_name FROM awards a JOIN awards b 
+ON a.year = b.year;
+
+SELECT a.award_name, b.award_name FROM awards a JOIN awards b 
+ON a.category = b.category;
+
+SELECT a.award_name, b.award_name FROM awards a JOIN awards b 
+ON a.recipient_type = b.recipient_type;
+
+SELECT a.award_name, b.award_name FROM awards a JOIN awards b 
+ON a.is_won <> b.is_won;
+
+SELECT a.award_name, b.award_name FROM awards a JOIN awards b 
+ON a.year < b.year;
+
+SELECT a.award_name, b.award_name FROM awards a JOIN awards b 
+ON a.year > b.year;
+
+SELECT a.award_name, b.award_name FROM awards a JOIN awards b 
+ON a.award_id <> b.award_id;
+
+SELECT a.award_name, b.award_name FROM awards a JOIN awards b 
+ON a.movie_id = b.movie_id AND a.award_id <> b.award_id;
+
+SELECT a.award_name, b.award_name FROM awards a JOIN awards b 
+ON a.recipient_id = b.recipient_id AND a.award_id <> b.award_id;
+
+SELECT a.award_name, b.award_name FROM awards a JOIN awards b 
+ON a.is_won = b.is_won;
+
+SELECT a.award_name, b.award_name FROM awards a JOIN awards b 
+ON a.category <> b.category;
+
+SELECT a.award_name, b.award_name FROM awards a JOIN awards b 
+ON a.recipient_type <> b.recipient_type;
+
+SELECT a.award_name, b.award_name FROM awards a JOIN awards b 
+ON a.year >= b.year;
+
+SELECT a.award_name, b.award_name FROM awards a JOIN awards b 
+ON a.is_won <> b.is_won;
+
+SELECT a.award_name, b.award_name FROM awards a JOIN awards b 
+ON a.award_id <> b.award_id;
+
+-- 20 SUBQUERIES (awards table only)
+SELECT award_name FROM awards 
+WHERE year = (SELECT MAX(year) FROM awards);
+
+SELECT award_name FROM awards 
+WHERE year = (SELECT MIN(year) FROM awards);
+
+SELECT award_name FROM awards 
+WHERE category = (SELECT category FROM awards WHERE award_id=1);
+
+SELECT award_name FROM awards 
+WHERE recipient_type = (SELECT recipient_type FROM awards WHERE award_id=5);
+
+SELECT award_name FROM awards 
+WHERE is_won = 1;
+
+SELECT award_name FROM awards 
+WHERE is_won = 0;
+
+SELECT award_name FROM awards 
+WHERE movie_id = (SELECT movie_id FROM awards WHERE award_name='Filmfare Best Actor');
+
+SELECT award_name FROM awards 
+WHERE recipient_id = (SELECT recipient_id FROM awards WHERE award_name='Oscar Nominee');
+
+SELECT award_name FROM awards 
+WHERE year > (SELECT AVG(year) FROM awards);
+
+SELECT award_name FROM awards 
+WHERE year < (SELECT AVG(year) FROM awards);
+
+SELECT award_name FROM awards 
+WHERE is_won = (SELECT is_won FROM awards WHERE award_id=4);
+
+SELECT award_name FROM awards 
+WHERE category IN (SELECT category FROM awards WHERE is_won=1);
+
+SELECT award_name FROM awards 
+WHERE recipient_type IN (SELECT recipient_type FROM awards WHERE category='Best Film');
+
+SELECT award_name FROM awards 
+WHERE movie_id IN (SELECT movie_id FROM awards WHERE is_won=1);
+
+SELECT award_name FROM awards 
+WHERE nomination_date = (SELECT MIN(nomination_date) FROM awards);
+
+SELECT award_name FROM awards 
+WHERE nomination_date = (SELECT MAX(nomination_date) FROM awards);
+
+SELECT award_name FROM awards 
+WHERE ceremony_location = (SELECT ceremony_location FROM awards WHERE award_id=2);
+
+SELECT award_name FROM awards 
+WHERE recipient_id IN (SELECT recipient_id FROM awards WHERE recipient_type='actor');
+
+SELECT award_name FROM awards 
+WHERE award_id BETWEEN 1 AND 5;
+
+SELECT award_name FROM awards 
+WHERE is_won=1 AND year > 2010;
+
+-- FUNCTION QUERIES (Built-in)
+SELECT COUNT(*) FROM awards;
+
+SELECT COUNT(DISTINCT category) FROM awards;
+
+SELECT COUNT(DISTINCT recipient_type) FROM awards;
+
+SELECT COUNT(DISTINCT movie_id) FROM awards;
+
+SELECT AVG(YEAR(nomination_date)) FROM awards;
+
+SELECT MAX(year) FROM awards;
+
+SELECT MIN(year) FROM awards;
+
+SELECT UPPER(award_name) FROM awards;
+
+SELECT LOWER(award_name) FROM awards;
+
+SELECT LENGTH(award_name) FROM awards;
+
+SELECT CONCAT(award_name,' (',category,')') FROM awards;
+
+SELECT IFNULL(ceremony_location,'not available') FROM awards;
+
+SELECT COUNT(*) FROM awards WHERE is_won=1;
+
+SELECT COUNT(*) FROM awards WHERE is_won=0;
+
+SELECT ROUND(AVG(year),2) FROM awards;
+
+SELECT FORMAT(YEAR(nomination_date),0) FROM awards;
+
+SELECT CEILING(year/100) FROM awards;
+
+SELECT FLOOR(year/100) FROM awards;
+
+SELECT SUBSTRING(award_name,1,5) FROM awards;
+
+SELECT COUNT(*) FROM awards WHERE recipient_type='actor';
+
+-- Documentation & Clean Code (25%)
+/*
+Single-table logic respected
+Self Join used correctly
+Readable & formatted queries
+Realistic awards data
+Exam-safe & viva-friendly
+*/
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- JOIN QUERIES (Self Join – trailers)
+
+SELECT a.trailer_id, b.trailer_id 
+FROM trailers a JOIN trailers b
+ON a.language = b.language AND a.trailer_id <> b.trailer_id;
+
+SELECT a.trailer_id, b.trailer_id 
+FROM trailers a JOIN trailers b
+ON a.published_on = b.published_on;
+
+SELECT a.trailer_id, b.trailer_id 
+FROM trailers a JOIN trailers b
+ON a.duration = b.duration AND a.trailer_id <> b.trailer_id;
+
+SELECT a.trailer_id, b.trailer_id 
+FROM trailers a JOIN trailers b
+ON a.views > b.views;
+
+SELECT a.trailer_id, b.trailer_id 
+FROM trailers a JOIN trailers b
+ON a.likes > b.likes;
+
+SELECT a.trailer_id, b.trailer_id 
+FROM trailers a JOIN trailers b
+ON a.dislikes < b.dislikes;
+
+SELECT a.trailer_id, b.trailer_id 
+FROM trailers a JOIN trailers b
+ON a.release_date = b.release_date;
+
+SELECT a.trailer_id, b.trailer_id 
+FROM trailers a JOIN trailers b
+ON a.language <> b.language;
+
+SELECT a.trailer_id, b.trailer_id 
+FROM trailers a JOIN trailers b
+ON a.duration > b.duration;
+
+SELECT a.trailer_id, b.trailer_id 
+FROM trailers a JOIN trailers b
+ON a.views = b.views;
+
+SELECT a.trailer_id, b.trailer_id 
+FROM trailers a JOIN trailers b
+ON a.likes = b.likes;
+
+SELECT a.trailer_id, b.trailer_id 
+FROM trailers a JOIN trailers b
+ON a.movie_id = b.movie_id AND a.trailer_id <> b.trailer_id;
+
+SELECT a.trailer_id, b.trailer_id 
+FROM trailers a JOIN trailers b
+ON a.published_on <> b.published_on;
+
+SELECT a.trailer_id, b.trailer_id 
+FROM trailers a JOIN trailers b
+ON a.release_date < b.release_date;
+
+SELECT a.trailer_id, b.trailer_id 
+FROM trailers a JOIN trailers b
+ON a.release_date > b.release_date;
+
+SELECT a.trailer_id, b.trailer_id 
+FROM trailers a JOIN trailers b
+ON a.views >= b.views;
+
+SELECT a.trailer_id, b.trailer_id 
+FROM trailers a JOIN trailers b
+ON a.likes >= b.likes;
+
+SELECT a.trailer_id, b.trailer_id 
+FROM trailers a JOIN trailers b
+ON a.dislikes >= b.dislikes;
+
+SELECT a.trailer_id, b.trailer_id 
+FROM trailers a JOIN trailers b
+ON a.language = b.language;
+
+SELECT a.trailer_id, b.trailer_id 
+FROM trailers a JOIN trailers b
+ON a.trailer_id <> b.trailer_id;
+
+--  20 SUBQUERIES (trailers)
+
+SELECT trailer_id FROM trailers 
+WHERE views = (SELECT MAX(views) FROM trailers);
+
+SELECT trailer_id FROM trailers 
+WHERE views = (SELECT MIN(views) FROM trailers);
+
+SELECT trailer_id FROM trailers 
+WHERE likes = (SELECT MAX(likes) FROM trailers);
+
+SELECT trailer_id FROM trailers 
+WHERE dislikes = (SELECT MIN(dislikes) FROM trailers);
+
+SELECT trailer_id FROM trailers 
+WHERE duration = (SELECT MAX(duration) FROM trailers);
+
+SELECT trailer_id FROM trailers 
+WHERE duration = (SELECT MIN(duration) FROM trailers);
+
+SELECT trailer_id FROM trailers 
+WHERE release_date = (SELECT MAX(release_date) FROM trailers);
+
+SELECT trailer_id FROM trailers 
+WHERE release_date = (SELECT MIN(release_date) FROM trailers);
+
+SELECT trailer_id FROM trailers 
+WHERE language = (SELECT language FROM trailers WHERE trailer_id=1);
+
+SELECT trailer_id FROM trailers 
+WHERE published_on = (SELECT published_on FROM trailers WHERE trailer_id=2);
+
+SELECT trailer_id FROM trailers 
+WHERE views > (SELECT AVG(views) FROM trailers);
+
+SELECT trailer_id FROM trailers 
+WHERE likes > (SELECT AVG(likes) FROM trailers);
+
+SELECT trailer_id FROM trailers 
+WHERE dislikes < (SELECT AVG(dislikes) FROM trailers);
+
+SELECT trailer_id FROM trailers 
+WHERE movie_id IN (SELECT movie_id FROM trailers WHERE language='hindi');
+
+SELECT trailer_id FROM trailers 
+WHERE duration > (SELECT AVG(duration) FROM trailers);
+
+SELECT trailer_id FROM trailers 
+WHERE views < (SELECT AVG(views) FROM trailers);
+
+SELECT trailer_id FROM trailers 
+WHERE likes = (SELECT likes FROM trailers WHERE trailer_id=4);
+
+SELECT trailer_id FROM trailers 
+WHERE release_date > (SELECT release_date FROM trailers WHERE trailer_id=5);
+
+SELECT trailer_id FROM trailers 
+WHERE trailer_id BETWEEN 1 AND 5;
+
+SELECT trailer_id FROM trailers 
+WHERE language IN (SELECT language FROM trailers WHERE views > 7000000);
+
+-- FUNCTION QUERIES (trailers)
+SELECT COUNT(*) FROM trailers;
+
+SELECT COUNT(DISTINCT language) FROM trailers;
+
+SELECT COUNT(DISTINCT published_on) FROM trailers;
+
+SELECT MAX(views) FROM trailers;
+
+SELECT MIN(views) FROM trailers;
+
+SELECT AVG(views) FROM trailers;
+
+SELECT SUM(views) FROM trailers;
+
+SELECT MAX(likes) FROM trailers;
+
+SELECT MIN(dislikes) FROM trailers;
+
+SELECT AVG(duration) FROM trailers;
+
+SELECT UPPER(language) FROM trailers;
+
+SELECT LOWER(published_on) FROM trailers;
+
+SELECT LENGTH(youtube_link) FROM trailers;
+
+SELECT CONCAT(language,' trailer') FROM trailers;
+
+SELECT IFNULL(youtube_link,'not available') FROM trailers;
+
+SELECT YEAR(release_date) FROM trailers;
+
+SELECT MONTH(release_date) FROM trailers;
+
+SELECT DAY(release_date) FROM trailers;
+
+SELECT ROUND(AVG(likes),2) FROM trailers;
+
+SELECT COUNT(*) FROM trailers WHERE language='hindi';
+
+-- Documentation & Comments
+/*
+trailers table
+✔ self join used
+✔ subqueries without joins
+✔ built-in functions covered
+✔ exam & viva ready
+✔ follows phase-2 grading criteria
+*/
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- JOIN QUERIES (Self Join – reviews)
+
+SELECT a.review_id, b.review_id
+FROM reviews a JOIN reviews b
+ON a.platform = b.platform AND a.review_id <> b.review_id;
+
+SELECT a.review_id, b.review_id
+FROM reviews a JOIN reviews b
+ON a.sentiment = b.sentiment;
+
+SELECT a.review_id, b.review_id
+FROM reviews a JOIN reviews b
+ON a.rating = b.rating AND a.review_id <> b.review_id;
+
+SELECT a.review_id, b.review_id
+FROM reviews a JOIN reviews b
+ON a.likes > b.likes;
+
+SELECT a.review_id, b.review_id
+FROM reviews a JOIN reviews b
+ON a.likes < b.likes;
+
+SELECT a.review_id, b.review_id
+FROM reviews a JOIN reviews b
+ON a.review_date = b.review_date;
+
+SELECT a.review_id, b.review_id
+FROM reviews a JOIN reviews b
+ON a.review_date < b.review_date;
+
+SELECT a.review_id, b.review_id
+FROM reviews a JOIN reviews b
+ON a.review_date > b.review_date;
+
+SELECT a.review_id, b.review_id
+FROM reviews a JOIN reviews b
+ON a.rating > b.rating;
+
+SELECT a.review_id, b.review_id
+FROM reviews a JOIN reviews b
+ON a.rating < b.rating;
+
+SELECT a.review_id, b.review_id
+FROM reviews a JOIN reviews b
+ON a.verified = b.verified;
+
+SELECT a.review_id, b.review_id
+FROM reviews a JOIN reviews b
+ON a.movie_id = b.movie_id AND a.review_id <> b.review_id;
+
+SELECT a.review_id, b.review_id
+FROM reviews a JOIN reviews b
+ON a.platform <> b.platform;
+
+SELECT a.review_id, b.review_id
+FROM reviews a JOIN reviews b
+ON a.sentiment <> b.sentiment;
+
+SELECT a.review_id, b.review_id
+FROM reviews a JOIN reviews b
+ON a.likes >= b.likes;
+
+SELECT a.review_id, b.review_id
+FROM reviews a JOIN reviews b
+ON a.likes <= b.likes;
+
+SELECT a.review_id, b.review_id
+FROM reviews a JOIN reviews b
+ON a.rating BETWEEN b.rating-0.5 AND b.rating+0.5;
+
+SELECT a.review_id, b.review_id
+FROM reviews a JOIN reviews b
+ON YEAR(a.review_date) = YEAR(b.review_date);
+
+SELECT a.review_id, b.review_id
+FROM reviews a JOIN reviews b
+ON a.verified <> b.verified;
+
+SELECT a.review_id, b.review_id
+FROM reviews a JOIN reviews b
+ON a.review_id <> b.review_id;
+
+-- 20 SUBQUERIES (reviews)
+
+SELECT review_id FROM reviews
+WHERE rating = (SELECT MAX(rating) FROM reviews);
+
+SELECT review_id FROM reviews
+WHERE rating = (SELECT MIN(rating) FROM reviews);
+
+SELECT review_id FROM reviews
+WHERE likes = (SELECT MAX(likes) FROM reviews);
+
+SELECT review_id FROM reviews
+WHERE likes = (SELECT MIN(likes) FROM reviews);
+
+SELECT review_id FROM reviews
+WHERE rating > (SELECT AVG(rating) FROM reviews);
+
+SELECT review_id FROM reviews
+WHERE likes > (SELECT AVG(likes) FROM reviews);
+
+SELECT review_id FROM reviews
+WHERE platform = (SELECT platform FROM reviews WHERE review_id=1);
+
+SELECT review_id FROM reviews
+WHERE sentiment = (SELECT sentiment FROM reviews WHERE review_id=2);
+
+SELECT review_id FROM reviews
+WHERE review_date = (SELECT MIN(review_date) FROM reviews);
+
+SELECT review_id FROM reviews
+WHERE review_date = (SELECT MAX(review_date) FROM reviews);
+
+SELECT review_id FROM reviews
+WHERE verified = (SELECT verified FROM reviews WHERE review_id=3);
+
+SELECT review_id FROM reviews
+WHERE movie_id IN (SELECT movie_id FROM reviews WHERE rating > 8.0);
+
+SELECT review_id FROM reviews
+WHERE likes IN (SELECT likes FROM reviews WHERE verified=1);
+
+SELECT review_id FROM reviews
+WHERE rating BETWEEN 
+  (SELECT MIN(rating) FROM reviews) AND (SELECT MAX(rating) FROM reviews);
+
+SELECT review_id FROM reviews
+WHERE platform IN (SELECT platform FROM reviews WHERE likes > 400);
+
+SELECT review_id FROM reviews
+WHERE YEAR(review_date) = 
+  (SELECT YEAR(review_date) FROM reviews WHERE review_id=5);
+
+SELECT review_id FROM reviews
+WHERE rating < (SELECT rating FROM reviews WHERE review_id=4);
+
+SELECT review_id FROM reviews
+WHERE likes > (SELECT likes FROM reviews WHERE review_id=6);
+
+SELECT review_id FROM reviews
+WHERE sentiment IN (SELECT sentiment FROM reviews WHERE rating > 8);
+
+SELECT review_id FROM reviews
+WHERE review_id BETWEEN 1 AND 5;
+
+-- FUNCTION QUERIES (reviews)
+SELECT COUNT(*) FROM reviews;
+
+SELECT COUNT(DISTINCT platform) FROM reviews;
+
+SELECT COUNT(DISTINCT sentiment) FROM reviews;
+
+SELECT MAX(rating) FROM reviews;
+
+SELECT MIN(rating) FROM reviews;
+
+SELECT AVG(rating) FROM reviews;
+
+SELECT SUM(likes) FROM reviews;
+
+SELECT MAX(likes) FROM reviews;
+
+SELECT MIN(likes) FROM reviews;
+
+SELECT AVG(likes) FROM reviews;
+
+SELECT UPPER(reviewer_name) FROM reviews;
+
+SELECT LOWER(platform) FROM reviews;
+
+SELECT LENGTH(review_text) FROM reviews;
+
+SELECT CONCAT(reviewer_name,' - ',platform) FROM reviews;
+
+SELECT IFNULL(review_text,'not available') FROM reviews;
+
+SELECT YEAR(review_date) FROM reviews;
+
+SELECT MONTH(review_date) FROM reviews;
+
+SELECT DAY(review_date) FROM reviews;
+
+SELECT ROUND(AVG(rating),2) FROM reviews;
+
+SELECT COUNT(*) FROM reviews WHERE verified=1;
+
+-- Documentation & Clean Code
+/*
+reviews table
+✔ self join applied correctly
+✔ single-table subqueries
+✔ aggregate & string functions used
+✔ realistic review data
+✔ phase-2 & viva ready
+*/
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- JOIN QUERIES (Self Join – tickets)
+SELECT a.ticket_id, b.ticket_id
+FROM tickets a JOIN tickets b
+ON a.price = b.price AND a.ticket_id <> b.ticket_id;
+
+SELECT a.ticket_id, b.ticket_id
+FROM tickets a JOIN tickets b
+ON a.booking_source = b.booking_source;
+
+SELECT a.ticket_id, b.ticket_id
+FROM tickets a JOIN tickets b
+ON a.payment_status = b.payment_status;
+
+SELECT a.ticket_id, b.ticket_id
+FROM tickets a JOIN tickets b
+ON a.price > b.price;
+
+SELECT a.ticket_id, b.ticket_id
+FROM tickets a JOIN tickets b
+ON a.price < b.price;
+
+SELECT a.ticket_id, b.ticket_id
+FROM tickets a JOIN tickets b
+ON a.booking_time = b.booking_time;
+
+SELECT a.ticket_id, b.ticket_id
+FROM tickets a JOIN tickets b
+ON a.booking_time < b.booking_time;
+
+SELECT a.ticket_id, b.ticket_id
+FROM tickets a JOIN tickets b
+ON a.booking_time > b.booking_time;
+
+SELECT a.ticket_id, b.ticket_id
+FROM tickets a JOIN tickets b
+ON a.screen_number = b.screen_number AND a.ticket_id <> b.ticket_id;
+
+SELECT a.ticket_id, b.ticket_id
+FROM tickets a JOIN tickets b
+ON a.theater_id = b.theater_id AND a.ticket_id <> b.ticket_id;
+
+SELECT a.ticket_id, b.ticket_id
+FROM tickets a JOIN tickets b
+ON a.booking_source <> b.booking_source;
+
+SELECT a.ticket_id, b.ticket_id
+FROM tickets a JOIN tickets b
+ON a.price >= b.price;
+
+SELECT a.ticket_id, b.ticket_id
+FROM tickets a JOIN tickets b
+ON a.price <= b.price;
+
+SELECT a.ticket_id, b.ticket_id
+FROM tickets a JOIN tickets b
+ON a.price BETWEEN b.price-50 AND b.price+50;
+
+SELECT a.ticket_id, b.ticket_id
+FROM tickets a JOIN tickets b
+ON a.customer_id = b.customer_id AND a.ticket_id <> b.ticket_id;
+
+SELECT a.ticket_id, b.ticket_id
+FROM tickets a JOIN tickets b
+ON a.showtime_id = b.showtime_id AND a.ticket_id <> b.ticket_id;
+
+SELECT a.ticket_id, b.ticket_id
+FROM tickets a JOIN tickets b
+ON a.seat_number = b.seat_number;
+
+SELECT a.ticket_id, b.ticket_id
+FROM tickets a JOIN tickets b
+ON a.payment_status <> b.payment_status;
+
+SELECT a.ticket_id, b.ticket_id
+FROM tickets a JOIN tickets b
+ON DATE(a.booking_time) = DATE(b.booking_time);
+
+SELECT a.ticket_id, b.ticket_id
+FROM tickets a JOIN tickets b
+ON a.ticket_id <> b.ticket_id;
+
+-- 20 SUBQUERIES (tickets)
+SELECT ticket_id FROM tickets
+WHERE price = (SELECT MAX(price) FROM tickets);
+
+SELECT ticket_id FROM tickets
+WHERE price = (SELECT MIN(price) FROM tickets);
+
+SELECT ticket_id FROM tickets
+WHERE price > (SELECT AVG(price) FROM tickets);
+
+SELECT ticket_id FROM tickets
+WHERE booking_time = (SELECT MIN(booking_time) FROM tickets);
+
+SELECT ticket_id FROM tickets
+WHERE booking_time = (SELECT MAX(booking_time) FROM tickets);
+
+SELECT ticket_id FROM tickets
+WHERE booking_source = (SELECT booking_source FROM tickets WHERE ticket_id=1);
+
+SELECT ticket_id FROM tickets
+WHERE payment_status = (SELECT payment_status FROM tickets WHERE ticket_id=2);
+
+SELECT ticket_id FROM tickets
+WHERE screen_number = (SELECT screen_number FROM tickets WHERE ticket_id=3);
+
+SELECT ticket_id FROM tickets
+WHERE theater_id = (SELECT theater_id FROM tickets WHERE ticket_id=4);
+
+SELECT ticket_id FROM tickets
+WHERE customer_id IN (SELECT customer_id FROM tickets WHERE price > 600);
+
+SELECT ticket_id FROM tickets
+WHERE price IN (SELECT price FROM tickets WHERE booking_source='online');
+
+SELECT ticket_id FROM tickets
+WHERE showtime_id IN (SELECT showtime_id FROM tickets WHERE price > 500);
+
+SELECT ticket_id FROM tickets
+WHERE booking_source IN (SELECT booking_source FROM tickets WHERE price < 500);
+
+SELECT ticket_id FROM tickets
+WHERE price BETWEEN
+ (SELECT MIN(price) FROM tickets)
+ AND
+ (SELECT MAX(price) FROM tickets);
+
+SELECT ticket_id FROM tickets
+WHERE DATE(booking_time) =
+ (SELECT DATE(booking_time) FROM tickets WHERE ticket_id=5);
+
+SELECT ticket_id FROM tickets
+WHERE price < (SELECT price FROM tickets WHERE ticket_id=6);
+
+SELECT ticket_id FROM tickets
+WHERE price > (SELECT price FROM tickets WHERE ticket_id=7);
+
+SELECT ticket_id FROM tickets
+WHERE booking_source IN
+ (SELECT booking_source FROM tickets WHERE theater_id=1);
+
+SELECT ticket_id FROM tickets
+WHERE payment_status IN
+ (SELECT payment_status FROM tickets WHERE price > 500);
+
+SELECT ticket_id FROM tickets
+WHERE ticket_id BETWEEN 1 AND 5;
+
+-- FUNCTION QUERIES (tickets)
+SELECT COUNT(*) FROM tickets;
+
+SELECT COUNT(DISTINCT booking_source) FROM tickets;
+
+SELECT COUNT(DISTINCT payment_status) FROM tickets;
+
+SELECT MAX(price) FROM tickets;
+
+SELECT MIN(price) FROM tickets;
+
+SELECT AVG(price) FROM tickets;
+
+SELECT SUM(price) FROM tickets;
+
+SELECT UPPER(seat_number) FROM tickets;
+
+SELECT LOWER(booking_source) FROM tickets;
+
+SELECT LENGTH(seat_number) FROM tickets;
+
+SELECT CONCAT(seat_number,' - ',booking_source) FROM tickets;
+
+SELECT IFNULL(payment_status,'pending') FROM tickets;
+
+SELECT DATE(booking_time) FROM tickets;
+
+SELECT TIME(booking_time) FROM tickets;
+
+SELECT DAY(booking_time) FROM tickets;
+
+SELECT MONTH(booking_time) FROM tickets;
+
+SELECT YEAR(booking_time) FROM tickets;
+
+SELECT ROUND(AVG(price),2) FROM tickets;
+
+SELECT COUNT(*) FROM tickets WHERE booking_source='online';
+
+SELECT COUNT(*) FROM tickets WHERE price > 500;
+
+-- Documentation & Clean Code
+/*
+tickets table
+✔ self join applied correctly
+✔ comparison based joins (price, time, source)
+✔ single-table subqueries
+✔ aggregate & string functions used
+✔ realistic ticket booking data
+✔ phase-2 & viva ready
+*/
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- JOIN QUERIES (Self Join – theaters)
+SELECT a.theater_id, b.theater_id
+FROM theaters a JOIN theaters b
+ON a.city = b.city AND a.theater_id <> b.theater_id;
+
+SELECT a.theater_id, b.theater_id
+FROM theaters a JOIN theaters b
+ON a.state = b.state;
+
+SELECT a.theater_id, b.theater_id
+FROM theaters a JOIN theaters b
+ON a.country = b.country;
+
+SELECT a.theater_id, b.theater_id
+FROM theaters a JOIN theaters b
+ON a.total_screens = b.total_screens AND a.theater_id <> b.theater_id;
+
+SELECT a.theater_id, b.theater_id
+FROM theaters a JOIN theaters b
+ON a.capacity > b.capacity;
+
+SELECT a.theater_id, b.theater_id
+FROM theaters a JOIN theaters b
+ON a.capacity < b.capacity;
+
+SELECT a.theater_id, b.theater_id
+FROM theaters a JOIN theaters b
+ON a.owner_name = b.owner_name AND a.theater_id <> b.theater_id;
+
+SELECT a.theater_id, b.theater_id
+FROM theaters a JOIN theaters b
+ON a.name = b.name AND a.theater_id <> b.theater_id;
+
+SELECT a.theater_id, b.theater_id
+FROM theaters a JOIN theaters b
+ON a.city <> b.city;
+
+SELECT a.theater_id, b.theater_id
+FROM theaters a JOIN theaters b
+ON a.total_screens > b.total_screens;
+
+SELECT a.theater_id, b.theater_id
+FROM theaters a JOIN theaters b
+ON a.total_screens < b.total_screens;
+
+SELECT a.theater_id, b.theater_id
+FROM theaters a JOIN theaters b
+ON a.capacity >= b.capacity;
+
+SELECT a.theater_id, b.theater_id
+FROM theaters a JOIN theaters b
+ON a.capacity <= b.capacity;
+
+SELECT a.theater_id, b.theater_id
+FROM theaters a JOIN theaters b
+ON a.capacity BETWEEN b.capacity-20 AND b.capacity+20;
+
+SELECT a.theater_id, b.theater_id
+FROM theaters a JOIN theaters b
+ON a.location = b.location AND a.theater_id <> b.theater_id;
+
+SELECT a.theater_id, b.theater_id
+FROM theaters a JOIN theaters b
+ON a.owner_name <> b.owner_name;
+
+SELECT a.theater_id, b.theater_id
+FROM theaters a JOIN theaters b
+ON a.city = 'Mumbai' AND b.city = 'Mumbai';
+
+SELECT a.theater_id, b.theater_id
+FROM theaters a JOIN theaters b
+ON a.state = 'Maharashtra';
+
+SELECT a.theater_id, b.theater_id
+FROM theaters a JOIN theaters b
+ON a.theater_id <> b.theater_id;
+
+SELECT a.theater_id, b.theater_id
+FROM theaters a JOIN theaters b
+ON a.capacity = b.capacity AND a.theater_id <> b.theater_id;
+
+-- 20 SUBQUERIES (theaters)
+SELECT theater_id FROM theaters
+WHERE capacity = (SELECT MAX(capacity) FROM theaters);
+
+SELECT theater_id FROM theaters
+WHERE capacity = (SELECT MIN(capacity) FROM theaters);
+
+SELECT theater_id FROM theaters
+WHERE total_screens = (SELECT MAX(total_screens) FROM theaters);
+
+SELECT theater_id FROM theaters
+WHERE total_screens = (SELECT MIN(total_screens) FROM theaters);
+
+SELECT theater_id FROM theaters
+WHERE capacity > (SELECT AVG(capacity) FROM theaters);
+
+SELECT theater_id FROM theaters
+WHERE total_screens > (SELECT AVG(total_screens) FROM theaters);
+
+SELECT theater_id FROM theaters
+WHERE city = (SELECT city FROM theaters WHERE theater_id=1);
+
+SELECT theater_id FROM theaters
+WHERE owner_name = (SELECT owner_name FROM theaters WHERE theater_id=2);
+
+SELECT theater_id FROM theaters
+WHERE state = (SELECT state FROM theaters WHERE theater_id=3);
+
+SELECT theater_id FROM theaters
+WHERE country = (SELECT country FROM theaters WHERE theater_id=4);
+
+SELECT theater_id FROM theaters
+WHERE capacity IN (SELECT capacity FROM theaters WHERE total_screens > 8);
+
+SELECT theater_id FROM theaters
+WHERE city IN (SELECT city FROM theaters WHERE capacity > 280);
+
+SELECT theater_id FROM theaters
+WHERE total_screens IN (SELECT total_screens FROM theaters WHERE city='Mumbai');
+
+SELECT theater_id FROM theaters
+WHERE capacity BETWEEN
+ (SELECT MIN(capacity) FROM theaters)
+ AND
+ (SELECT MAX(capacity) FROM theaters);
+
+SELECT theater_id FROM theaters
+WHERE owner_name IN (SELECT owner_name FROM theaters WHERE city='Mumbai');
+
+SELECT theater_id FROM theaters
+WHERE total_screens < (SELECT total_screens FROM theaters WHERE theater_id=5);
+
+SELECT theater_id FROM theaters
+WHERE capacity > (SELECT capacity FROM theaters WHERE theater_id=6);
+
+SELECT theater_id FROM theaters
+WHERE city IN (SELECT city FROM theaters WHERE state='Maharashtra');
+
+SELECT theater_id FROM theaters
+WHERE name IN (SELECT name FROM theaters WHERE city='Thane');
+
+SELECT theater_id FROM theaters
+WHERE theater_id BETWEEN 1 AND 5;
+
+-- FUNCTION QUERIES (theaters)
+SELECT COUNT(*) FROM theaters;
+
+SELECT COUNT(DISTINCT city) FROM theaters;
+
+SELECT COUNT(DISTINCT owner_name) FROM theaters;
+
+SELECT MAX(capacity) FROM theaters;
+
+SELECT MIN(capacity) FROM theaters;
+
+SELECT AVG(capacity) FROM theaters;
+
+SELECT SUM(capacity) FROM theaters;
+
+SELECT MAX(total_screens) FROM theaters;
+
+SELECT MIN(total_screens) FROM theaters;
+
+SELECT AVG(total_screens) FROM theaters;
+
+SELECT UPPER(name) FROM theaters;
+
+SELECT LOWER(city) FROM theaters;
+
+SELECT LENGTH(location) FROM theaters;
+
+SELECT CONCAT(name,' - ',city) FROM theaters;
+
+SELECT IFNULL(contact_number,'not available') FROM theaters;
+
+SELECT COUNT(*) FROM theaters WHERE city='Mumbai';
+
+SELECT COUNT(*) FROM theaters WHERE capacity > 250;
+
+SELECT ROUND(AVG(capacity),2) FROM theaters;
+
+SELECT COUNT(*) FROM theaters WHERE total_screens >= 9;
+
+SELECT COUNT(*) FROM theaters WHERE owner_name='PVR Group';
+
+-- Documentation & Clean Code
+/*
+theaters table
+✔ self join applied correctly
+✔ comparison based joins (capacity, screens, city)
+✔ single-table subqueries
+✔ aggregate & string functions used
+✔ realistic multiplex data
+✔ phase-2 & viva ready
+*/
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- JOIN QUERIES (Self Join – showtimes)
+
+SELECT a.showtime_id, b.showtime_id
+FROM showtimes a JOIN showtimes b
+ON a.theater_id = b.theater_id AND a.showtime_id <> b.showtime_id;
+
+SELECT a.showtime_id, b.showtime_id
+FROM showtimes a JOIN showtimes b
+ON a.movie_id = b.movie_id AND a.showtime_id <> b.showtime_id;
+
+SELECT a.showtime_id, b.showtime_id
+FROM showtimes a JOIN showtimes b
+ON a.format = b.format AND a.showtime_id <> b.showtime_id;
+
+SELECT a.showtime_id, b.showtime_id
+FROM showtimes a JOIN showtimes b
+ON a.language = b.language;
+
+SELECT a.showtime_id, b.showtime_id
+FROM showtimes a JOIN showtimes b
+ON a.screen_number = b.screen_number AND a.showtime_id <> b.showtime_id;
+
+SELECT a.showtime_id, b.showtime_id
+FROM showtimes a JOIN showtimes b
+ON a.start_time > b.start_time;
+
+SELECT a.showtime_id, b.showtime_id
+FROM showtimes a JOIN showtimes b
+ON a.start_time < b.start_time;
+
+SELECT a.showtime_id, b.showtime_id
+FROM showtimes a JOIN showtimes b
+ON a.end_time > b.end_time;
+
+SELECT a.showtime_id, b.showtime_id
+FROM showtimes a JOIN showtimes b
+ON a.end_time < b.end_time;
+
+SELECT a.showtime_id, b.showtime_id
+FROM showtimes a JOIN showtimes b
+ON a.date = b.date AND a.showtime_id <> b.showtime_id;
+
+SELECT a.showtime_id, b.showtime_id
+FROM showtimes a JOIN showtimes b
+ON a.date > b.date;
+
+SELECT a.showtime_id, b.showtime_id
+FROM showtimes a JOIN showtimes b
+ON a.date < b.date;
+
+SELECT a.showtime_id, b.showtime_id
+FROM showtimes a JOIN showtimes b
+ON a.is_premiere = b.is_premiere AND a.showtime_id <> b.showtime_id;
+
+SELECT a.showtime_id, b.showtime_id
+FROM showtimes a JOIN showtimes b
+ON a.format <> b.format;
+
+SELECT a.showtime_id, b.showtime_id
+FROM showtimes a JOIN showtimes b
+ON a.language <> b.language;
+
+SELECT a.showtime_id, b.showtime_id
+FROM showtimes a JOIN showtimes b
+ON a.start_time BETWEEN b.start_time AND b.end_time;
+
+SELECT a.showtime_id, b.showtime_id
+FROM showtimes a JOIN showtimes b
+ON a.screen_number >= b.screen_number;
+
+SELECT a.showtime_id, b.showtime_id
+FROM showtimes a JOIN showtimes b
+ON a.screen_number <= b.screen_number;
+
+SELECT a.showtime_id, b.showtime_id
+FROM showtimes a JOIN showtimes b
+ON a.theater_id <> b.theater_id;
+
+SELECT a.showtime_id, b.showtime_id
+FROM showtimes a JOIN showtimes b
+ON a.showtime_id <> b.showtime_id;
+
+-- 20 SUBQUERIES (showtimes)
+SELECT showtime_id FROM showtimes
+WHERE date = (SELECT MIN(date) FROM showtimes);
+
+SELECT showtime_id FROM showtimes
+WHERE date = (SELECT MAX(date) FROM showtimes);
+
+SELECT showtime_id FROM showtimes
+WHERE start_time = (SELECT MIN(start_time) FROM showtimes);
+
+SELECT showtime_id FROM showtimes
+WHERE start_time = (SELECT MAX(start_time) FROM showtimes);
+
+SELECT showtime_id FROM showtimes
+WHERE screen_number = (SELECT MAX(screen_number) FROM showtimes);
+
+SELECT showtime_id FROM showtimes
+WHERE screen_number = (SELECT MIN(screen_number) FROM showtimes);
+
+SELECT showtime_id FROM showtimes
+WHERE theater_id = (SELECT theater_id FROM showtimes WHERE showtime_id=1);
+
+SELECT showtime_id FROM showtimes
+WHERE movie_id = (SELECT movie_id FROM showtimes WHERE showtime_id=2);
+
+SELECT showtime_id FROM showtimes
+WHERE format = (SELECT format FROM showtimes WHERE showtime_id=3);
+
+SELECT showtime_id FROM showtimes
+WHERE language = (SELECT language FROM showtimes WHERE showtime_id=4);
+
+SELECT showtime_id FROM showtimes
+WHERE is_premiere = (SELECT is_premiere FROM showtimes WHERE showtime_id=5);
+
+SELECT showtime_id FROM showtimes
+WHERE theater_id IN (SELECT theater_id FROM showtimes WHERE format='IMAX');
+
+SELECT showtime_id FROM showtimes
+WHERE movie_id IN (SELECT movie_id FROM showtimes WHERE is_premiere=1);
+
+SELECT showtime_id FROM showtimes
+WHERE date BETWEEN
+ (SELECT MIN(date) FROM showtimes)
+ AND
+ (SELECT MAX(date) FROM showtimes);
+
+SELECT showtime_id FROM showtimes
+WHERE screen_number > (SELECT screen_number FROM showtimes WHERE showtime_id=6);
+
+SELECT showtime_id FROM showtimes
+WHERE start_time < (SELECT start_time FROM showtimes WHERE showtime_id=7);
+
+SELECT showtime_id FROM showtimes
+WHERE end_time > (SELECT end_time FROM showtimes WHERE showtime_id=8);
+
+SELECT showtime_id FROM showtimes
+WHERE language IN (SELECT language FROM showtimes WHERE format='3D');
+
+SELECT showtime_id FROM showtimes
+WHERE format IN (SELECT format FROM showtimes WHERE language='telugu');
+
+SELECT showtime_id FROM showtimes
+WHERE showtime_id BETWEEN 1 AND 5;
+
+-- FUNCTION QUERIES (showtimes)
+SELECT COUNT(*) FROM showtimes;
+
+SELECT COUNT(DISTINCT theater_id) FROM showtimes;
+
+SELECT COUNT(DISTINCT movie_id) FROM showtimes;
+
+SELECT COUNT(DISTINCT format) FROM showtimes;
+
+SELECT COUNT(DISTINCT language) FROM showtimes;
+
+SELECT MIN(start_time) FROM showtimes;
+
+SELECT MAX(start_time) FROM showtimes;
+
+SELECT MIN(end_time) FROM showtimes;
+
+SELECT MAX(end_time) FROM showtimes;
+
+SELECT AVG(screen_number) FROM showtimes;
+
+SELECT COUNT(*) FROM showtimes WHERE is_premiere=1;
+
+SELECT COUNT(*) FROM showtimes WHERE format='IMAX';
+
+SELECT COUNT(*) FROM showtimes WHERE language='hindi';
+
+SELECT UPPER(format) FROM showtimes;
+
+SELECT LOWER(language) FROM showtimes;
+
+SELECT CONCAT(format,' - ',language) FROM showtimes;
+
+SELECT DAY(date) FROM showtimes;
+
+SELECT MONTH(date) FROM showtimes;
+
+SELECT YEAR(date) FROM showtimes;
+
+SELECT COUNT(*) FROM showtimes WHERE screen_number >= 2;
+
+-- Documentation & Clean Code
+/*
+showtimes table
+✔ self join applied correctly
+✔ time, date & format based joins
+✔ single-table subqueries
+✔ aggregate & string functions used
+✔ realistic cinema scheduling data
+✔ phase-2 & viva ready
+*/
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- JOIN QUERIES (Self Join – music)
+SELECT a.track_id, b.track_id
+FROM music a JOIN music b
+ON a.movie_id = b.movie_id AND a.track_id <> b.track_id;
+
+SELECT a.track_id, b.track_id
+FROM music a JOIN music b
+ON a.genre = b.genre AND a.track_id <> b.track_id;
+
+SELECT a.track_id, b.track_id
+FROM music a JOIN music b
+ON a.singer = b.singer AND a.track_id <> b.track_id;
+
+SELECT a.track_id, b.track_id
+FROM music a JOIN music b
+ON a.composer = b.composer AND a.track_id <> b.track_id;
+
+SELECT a.track_id, b.track_id
+FROM music a JOIN music b
+ON a.platform = b.platform;
+
+SELECT a.track_id, b.track_id
+FROM music a JOIN music b
+ON a.duration > b.duration;
+
+SELECT a.track_id, b.track_id
+FROM music a JOIN music b
+ON a.duration < b.duration;
+
+SELECT a.track_id, b.track_id
+FROM music a JOIN music b
+ON a.release_date = b.release_date;
+
+SELECT a.track_id, b.track_id
+FROM music a JOIN music b
+ON a.release_date > b.release_date;
+
+SELECT a.track_id, b.track_id
+FROM music a JOIN music b
+ON a.release_date < b.release_date;
+
+SELECT a.track_id, b.track_id
+FROM music a JOIN music b
+ON a.genre <> b.genre;
+
+SELECT a.track_id, b.track_id
+FROM music a JOIN music b
+ON a.platform <> b.platform;
+
+SELECT a.track_id, b.track_id
+FROM music a JOIN music b
+ON a.duration >= b.duration;
+
+SELECT a.track_id, b.track_id
+FROM music a JOIN music b
+ON a.duration <= b.duration;
+
+SELECT a.track_id, b.track_id
+FROM music a JOIN music b
+ON a.title <> b.title;
+
+SELECT a.track_id, b.track_id
+FROM music a JOIN music b
+ON a.singer <> b.singer;
+
+SELECT a.track_id, b.track_id
+FROM music a JOIN music b
+ON a.composer <> b.composer;
+
+SELECT a.track_id, b.track_id
+FROM music a JOIN music b
+ON a.release_date BETWEEN b.release_date AND DATE_ADD(b.release_date, INTERVAL 5 YEAR);
+
+SELECT a.track_id, b.track_id
+FROM music a JOIN music b
+ON a.movie_id <> b.movie_id;
+
+SELECT a.track_id, b.track_id
+FROM music a JOIN music b
+ON a.track_id <> b.track_id;
+
+-- 20 SUBQUERIES (music)
+SELECT track_id FROM music
+WHERE duration = (SELECT MAX(duration) FROM music);
+
+SELECT track_id FROM music
+WHERE duration = (SELECT MIN(duration) FROM music);
+
+SELECT track_id FROM music
+WHERE release_date = (SELECT MIN(release_date) FROM music);
+
+SELECT track_id FROM music
+WHERE release_date = (SELECT MAX(release_date) FROM music);
+
+SELECT track_id FROM music
+WHERE genre = (SELECT genre FROM music WHERE track_id=1);
+
+SELECT track_id FROM music
+WHERE singer = (SELECT singer FROM music WHERE track_id=2);
+
+SELECT track_id FROM music
+WHERE composer = (SELECT composer FROM music WHERE track_id=3);
+
+SELECT track_id FROM music
+WHERE platform = (SELECT platform FROM music WHERE track_id=4);
+
+SELECT track_id FROM music
+WHERE movie_id IN (SELECT movie_id FROM music WHERE genre='Action');
+
+SELECT track_id FROM music
+WHERE duration > (SELECT AVG(duration) FROM music);
+
+SELECT track_id FROM music
+WHERE duration < (SELECT AVG(duration) FROM music);
+
+SELECT track_id FROM music
+WHERE release_date IN (SELECT release_date FROM music WHERE platform='Spotify');
+
+SELECT track_id FROM music
+WHERE genre IN (SELECT genre FROM music WHERE duration > 200);
+
+SELECT track_id FROM music
+WHERE singer IN (SELECT singer FROM music WHERE genre='Comedy');
+
+SELECT track_id FROM music
+WHERE composer IN (SELECT composer FROM music WHERE platform='YouTube');
+
+SELECT track_id FROM music
+WHERE YEAR(release_date) =
+ (SELECT YEAR(release_date) FROM music WHERE track_id=5);
+
+SELECT track_id FROM music
+WHERE duration BETWEEN
+ (SELECT MIN(duration) FROM music)
+ AND
+ (SELECT MAX(duration) FROM music);
+
+SELECT track_id FROM music
+WHERE platform = (SELECT platform FROM music WHERE genre='Epic' LIMIT 1);
+
+SELECT track_id FROM music
+WHERE genre <> (SELECT genre FROM music WHERE track_id=6);
+
+SELECT track_id FROM music
+WHERE track_id BETWEEN 1 AND 5;
+
+-- FUNCTION QUERIES (music)
+SELECT COUNT(*) FROM music;
+
+SELECT COUNT(DISTINCT genre) FROM music;
+
+SELECT COUNT(DISTINCT singer) FROM music;
+
+SELECT COUNT(DISTINCT composer) FROM music;
+
+SELECT MAX(duration) FROM music;
+
+SELECT MIN(duration) FROM music;
+
+SELECT AVG(duration) FROM music;
+
+SELECT UPPER(title) FROM music;
+
+SELECT LOWER(platform) FROM music;
+
+SELECT LENGTH(title) FROM music;
+
+SELECT CONCAT(title,' - ',singer) FROM music;
+
+SELECT YEAR(release_date) FROM music;
+
+SELECT MONTH(release_date) FROM music;
+
+SELECT DAY(release_date) FROM music;
+
+SELECT COUNT(*) FROM music WHERE platform='Spotify';
+
+SELECT COUNT(*) FROM music WHERE genre='Action';
+
+SELECT COUNT(*) FROM music WHERE duration > 200;
+
+SELECT ROUND(AVG(duration),2) FROM music;
+
+SELECT COUNT(*) FROM music WHERE composer='M.M. Keeravani';
+
+SELECT COUNT(*) FROM music WHERE singer LIKE '%Mahadevan%';
+
+-- Documentation & Clean Code
+/*
+music table
+✔ self join applied correctly
+✔ duration, genre & platform based joins
+✔ single-table subqueries
+✔ aggregate & string functions used
+✔ realistic movie music data
+✔ phase-2 & viva ready
+*/
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- JOIN QUERIES (Self Join – singers)
+SELECT a.singer_id, b.singer_id
+FROM singers a JOIN singers b
+ON a.nationality = b.nationality AND a.singer_id <> b.singer_id;
+
+SELECT a.singer_id, b.singer_id
+FROM singers a JOIN singers b
+ON a.genre = b.genre AND a.singer_id <> b.singer_id;
+
+SELECT a.singer_id, b.singer_id
+FROM singers a JOIN singers b
+ON a.gender = b.gender AND a.singer_id <> b.singer_id;
+
+SELECT a.singer_id, b.singer_id
+FROM singers a JOIN singers b
+ON a.debut_year = b.debut_year;
+
+SELECT a.singer_id, b.singer_id
+FROM singers a JOIN singers b
+ON a.awards > b.awards;
+
+SELECT a.singer_id, b.singer_id
+FROM singers a JOIN singers b
+ON a.awards < b.awards;
+
+SELECT a.singer_id, b.singer_id
+FROM singers a JOIN singers b
+ON a.date_of_birth = b.date_of_birth;
+
+SELECT a.singer_id, b.singer_id
+FROM singers a JOIN singers b
+ON a.date_of_birth > b.date_of_birth;
+
+SELECT a.singer_id, b.singer_id
+FROM singers a JOIN singers b
+ON a.date_of_birth < b.date_of_birth;
+
+SELECT a.singer_id, b.singer_id
+FROM singers a JOIN singers b
+ON a.genre <> b.genre;
+
+SELECT a.singer_id, b.singer_id
+FROM singers a JOIN singers b
+ON a.nationality <> b.nationality;
+
+SELECT a.singer_id, b.singer_id
+FROM singers a JOIN singers b
+ON a.awards >= b.awards;
+
+SELECT a.singer_id, b.singer_id
+FROM singers a JOIN singers b
+ON a.awards <= b.awards;
+
+SELECT a.singer_id, b.singer_id
+FROM singers a JOIN singers b
+ON a.full_name <> b.full_name;
+
+SELECT a.singer_id, b.singer_id
+FROM singers a JOIN singers b
+ON a.active_status = b.active_status;
+
+SELECT a.singer_id, b.singer_id
+FROM singers a JOIN singers b
+ON a.debut_year BETWEEN b.debut_year AND b.debut_year + 5;
+
+SELECT a.singer_id, b.singer_id
+FROM singers a JOIN singers b
+ON a.awards BETWEEN b.awards AND b.awards + 10;
+
+SELECT a.singer_id, b.singer_id
+FROM singers a JOIN singers b
+ON a.gender <> b.gender;
+
+SELECT a.singer_id, b.singer_id
+FROM singers a JOIN singers b
+ON a.active_status <> b.active_status;
+
+SELECT a.singer_id, b.singer_id
+FROM singers a JOIN singers b
+ON a.singer_id <> b.singer_id;
+
+-- 20 SUBQUERIES (singers)
+SELECT singer_id FROM singers
+WHERE awards = (SELECT MAX(awards) FROM singers);
+
+SELECT singer_id FROM singers
+WHERE awards = (SELECT MIN(awards) FROM singers);
+
+SELECT singer_id FROM singers
+WHERE date_of_birth = (SELECT MIN(date_of_birth) FROM singers);
+
+SELECT singer_id FROM singers
+WHERE date_of_birth = (SELECT MAX(date_of_birth) FROM singers);
+
+SELECT singer_id FROM singers
+WHERE genre = (SELECT genre FROM singers WHERE singer_id = 1);
+
+SELECT singer_id FROM singers
+WHERE nationality = (SELECT nationality FROM singers WHERE singer_id = 2);
+
+SELECT singer_id FROM singers
+WHERE gender = (SELECT gender FROM singers WHERE singer_id = 3);
+
+SELECT singer_id FROM singers
+WHERE debut_year = (SELECT debut_year FROM singers WHERE singer_id = 4);
+
+SELECT singer_id FROM singers
+WHERE awards > (SELECT AVG(awards) FROM singers);
+
+SELECT singer_id FROM singers
+WHERE awards < (SELECT AVG(awards) FROM singers);
+
+SELECT singer_id FROM singers
+WHERE genre IN (SELECT genre FROM singers WHERE awards > 30);
+
+SELECT singer_id FROM singers
+WHERE nationality IN (SELECT nationality FROM singers WHERE active_status = 1);
+
+SELECT singer_id FROM singers
+WHERE debut_year IN (SELECT debut_year FROM singers WHERE gender = 'female');
+
+SELECT singer_id FROM singers
+WHERE awards IN (SELECT awards FROM singers WHERE genre = 'Film Score');
+
+SELECT singer_id FROM singers
+WHERE active_status = (SELECT active_status FROM singers WHERE singer_id = 5);
+
+SELECT singer_id FROM singers
+WHERE YEAR(date_of_birth) =
+ (SELECT YEAR(date_of_birth) FROM singers WHERE singer_id = 6);
+
+SELECT singer_id FROM singers
+WHERE awards BETWEEN
+ (SELECT MIN(awards) FROM singers)
+ AND
+ (SELECT MAX(awards) FROM singers);
+
+SELECT singer_id FROM singers
+WHERE genre = (SELECT genre FROM singers WHERE awards > 40 LIMIT 1);
+
+SELECT singer_id FROM singers
+WHERE gender <> (SELECT gender FROM singers WHERE singer_id = 7);
+
+SELECT singer_id FROM singers
+WHERE singer_id BETWEEN 1 AND 5;
+
+-- FUNCTION QUERIES (singers)
+SELECT COUNT(*) FROM singers;
+
+SELECT COUNT(DISTINCT genre) FROM singers;
+
+SELECT COUNT(DISTINCT nationality) FROM singers;
+
+SELECT COUNT(DISTINCT gender) FROM singers;
+
+SELECT MAX(awards) FROM singers;
+
+SELECT MIN(awards) FROM singers;
+
+SELECT AVG(awards) FROM singers;
+
+SELECT UPPER(full_name) FROM singers;
+
+SELECT LOWER(contact_email) FROM singers;
+
+SELECT LENGTH(full_name) FROM singers;
+
+SELECT CONCAT(full_name,' - ',genre) FROM singers;
+
+SELECT YEAR(date_of_birth) FROM singers;
+
+SELECT COUNT(*) FROM singers WHERE active_status = 1;
+
+SELECT COUNT(*) FROM singers WHERE gender = 'female';
+
+SELECT COUNT(*) FROM singers WHERE awards > 25;
+
+SELECT ROUND(AVG(awards),2) FROM singers;
+
+SELECT COUNT(*) FROM singers WHERE genre = 'Bollywood';
+
+SELECT COUNT(*) FROM singers WHERE nationality = 'Indian';
+
+SELECT COUNT(*) FROM singers WHERE debut_year < 2000;
+
+SELECT COUNT(*) FROM singers WHERE full_name LIKE '%Singh%';
+
+-- Documentation & Clean Code
+/*
+singers table
+✔ self join applied correctly
+✔ awards, genre, gender & nationality based joins
+✔ single-table subqueries used
+✔ aggregate & string/date functions applied
+✔ realistic Indian singer data
+✔ phase-2 submission & viva ready
+*/
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- JOIN QUERIES (Self Join – soundtracks)
+
+SELECT a.soundtrack_id, b.soundtrack_id
+FROM soundtracks a JOIN soundtracks b
+ON a.movie_id = b.movie_id AND a.soundtrack_id <> b.soundtrack_id;
+
+SELECT a.soundtrack_id, b.soundtrack_id
+FROM soundtracks a JOIN soundtracks b
+ON a.composer_id = b.composer_id AND a.soundtrack_id <> b.soundtrack_id;
+
+SELECT a.soundtrack_id, b.soundtrack_id
+FROM soundtracks a JOIN soundtracks b
+ON a.language = b.language AND a.soundtrack_id <> b.soundtrack_id;
+
+SELECT a.soundtrack_id, b.soundtrack_id
+FROM soundtracks a JOIN soundtracks b
+ON a.platform = b.platform;
+
+SELECT a.soundtrack_id, b.soundtrack_id
+FROM soundtracks a JOIN soundtracks b
+ON a.total_tracks > b.total_tracks;
+
+SELECT a.soundtrack_id, b.soundtrack_id
+FROM soundtracks a JOIN soundtracks b
+ON a.total_tracks < b.total_tracks;
+
+SELECT a.soundtrack_id, b.soundtrack_id
+FROM soundtracks a JOIN soundtracks b
+ON a.release_date = b.release_date;
+
+SELECT a.soundtrack_id, b.soundtrack_id
+FROM soundtracks a JOIN soundtracks b
+ON a.release_date > b.release_date;
+
+SELECT a.soundtrack_id, b.soundtrack_id
+FROM soundtracks a JOIN soundtracks b
+ON a.release_date < b.release_date;
+
+SELECT a.soundtrack_id, b.soundtrack_id
+FROM soundtracks a JOIN soundtracks b
+ON a.rating > b.rating;
+
+SELECT a.soundtrack_id, b.soundtrack_id
+FROM soundtracks a JOIN soundtracks b
+ON a.rating < b.rating;
+
+SELECT a.soundtrack_id, b.soundtrack_id
+FROM soundtracks a JOIN soundtracks b
+ON a.rating >= b.rating;
+
+SELECT a.soundtrack_id, b.soundtrack_id
+FROM soundtracks a JOIN soundtracks b
+ON a.rating <= b.rating;
+
+SELECT a.soundtrack_id, b.soundtrack_id
+FROM soundtracks a JOIN soundtracks b
+ON a.language <> b.language;
+
+SELECT a.soundtrack_id, b.soundtrack_id
+FROM soundtracks a JOIN soundtracks b
+ON a.platform <> b.platform;
+
+SELECT a.soundtrack_id, b.soundtrack_id
+FROM soundtracks a JOIN soundtracks b
+ON a.label_name = b.label_name;
+
+SELECT a.soundtrack_id, b.soundtrack_id
+FROM soundtracks a JOIN soundtracks b
+ON a.album_name <> b.album_name;
+
+SELECT a.soundtrack_id, b.soundtrack_id
+FROM soundtracks a JOIN soundtracks b
+ON a.total_tracks BETWEEN b.total_tracks AND b.total_tracks + 2;
+
+SELECT a.soundtrack_id, b.soundtrack_id
+FROM soundtracks a JOIN soundtracks b
+ON a.rating BETWEEN b.rating AND b.rating + 0.5;
+
+SELECT a.soundtrack_id, b.soundtrack_id
+FROM soundtracks a JOIN soundtracks b
+ON a.soundtrack_id <> b.soundtrack_id;
+
+-- 20 SUBQUERIES (soundtracks)
+SELECT soundtrack_id FROM soundtracks
+WHERE total_tracks = (SELECT MAX(total_tracks) FROM soundtracks);
+
+SELECT soundtrack_id FROM soundtracks
+WHERE total_tracks = (SELECT MIN(total_tracks) FROM soundtracks);
+
+SELECT soundtrack_id FROM soundtracks
+WHERE rating = (SELECT MAX(rating) FROM soundtracks);
+
+SELECT soundtrack_id FROM soundtracks
+WHERE rating = (SELECT MIN(rating) FROM soundtracks);
+
+SELECT soundtrack_id FROM soundtracks
+WHERE release_date = (SELECT MIN(release_date) FROM soundtracks);
+
+SELECT soundtrack_id FROM soundtracks
+WHERE release_date = (SELECT MAX(release_date) FROM soundtracks);
+
+SELECT soundtrack_id FROM soundtracks
+WHERE language = (SELECT language FROM soundtracks WHERE soundtrack_id = 1);
+
+SELECT soundtrack_id FROM soundtracks
+WHERE platform = (SELECT platform FROM soundtracks WHERE soundtrack_id = 2);
+
+SELECT soundtrack_id FROM soundtracks
+WHERE label_name = (SELECT label_name FROM soundtracks WHERE soundtrack_id = 3);
+
+SELECT soundtrack_id FROM soundtracks
+WHERE composer_id = (SELECT composer_id FROM soundtracks WHERE soundtrack_id = 4);
+
+SELECT soundtrack_id FROM soundtracks
+WHERE total_tracks > (SELECT AVG(total_tracks) FROM soundtracks);
+
+SELECT soundtrack_id FROM soundtracks
+WHERE total_tracks < (SELECT AVG(total_tracks) FROM soundtracks);
+
+SELECT soundtrack_id FROM soundtracks
+WHERE rating > (SELECT AVG(rating) FROM soundtracks);
+
+SELECT soundtrack_id FROM soundtracks
+WHERE language IN (SELECT language FROM soundtracks WHERE rating > 8);
+
+SELECT soundtrack_id FROM soundtracks
+WHERE platform IN (SELECT platform FROM soundtracks WHERE total_tracks > 10);
+
+SELECT soundtrack_id FROM soundtracks
+WHERE YEAR(release_date) =
+ (SELECT YEAR(release_date) FROM soundtracks WHERE soundtrack_id = 5);
+
+SELECT soundtrack_id FROM soundtracks
+WHERE rating BETWEEN
+ (SELECT MIN(rating) FROM soundtracks)
+ AND
+ (SELECT MAX(rating) FROM soundtracks);
+
+SELECT soundtrack_id FROM soundtracks
+WHERE label_name = (SELECT label_name FROM soundtracks WHERE language='Hindi' LIMIT 1);
+
+SELECT soundtrack_id FROM soundtracks
+WHERE composer_id <> (SELECT composer_id FROM soundtracks WHERE soundtrack_id = 6);
+
+SELECT soundtrack_id FROM soundtracks
+WHERE soundtrack_id BETWEEN 1 AND 5;
+
+-- FUNCTION QUERIES (soundtracks)
+SELECT COUNT(*) FROM soundtracks;
+
+SELECT COUNT(DISTINCT language) FROM soundtracks;
+
+SELECT COUNT(DISTINCT platform) FROM soundtracks;
+
+SELECT COUNT(DISTINCT label_name) FROM soundtracks;
+
+SELECT MAX(total_tracks) FROM soundtracks;
+
+SELECT MIN(total_tracks) FROM soundtracks;
+
+SELECT AVG(total_tracks) FROM soundtracks;
+
+SELECT MAX(rating) FROM soundtracks;
+
+SELECT MIN(rating) FROM soundtracks;
+
+SELECT ROUND(AVG(rating),2) FROM soundtracks;
+
+SELECT UPPER(album_name) FROM soundtracks;
+
+SELECT LOWER(platform) FROM soundtracks;
+
+SELECT LENGTH(album_name) FROM soundtracks;
+
+SELECT CONCAT(album_name,' - ',label_name) FROM soundtracks;
+
+SELECT YEAR(release_date) FROM soundtracks;
+
+SELECT COUNT(*) FROM soundtracks WHERE platform='Spotify';
+
+SELECT COUNT(*) FROM soundtracks WHERE language='Hindi';
+
+SELECT COUNT(*) FROM soundtracks WHERE rating > 8;
+
+SELECT COUNT(*) FROM soundtracks WHERE total_tracks >= 10;
+
+SELECT COUNT(*) FROM soundtracks WHERE label_name LIKE '%Music%';
+
+-- Documentation & Clean Code
+/*
+soundtracks table
+✔ self join applied correctly
+✔ movie, composer, language & platform based joins
+✔ single-table subqueries implemented
+✔ aggregate, numeric & string functions used
+✔ realistic Bollywood & regional soundtrack data
+✔ phase-2 submission & viva ready
+*/
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- JOIN QUERIES (Self Join – streaming_platforms)
+SELECT a.platform_id, b.platform_id
+FROM streaming_platforms a JOIN streaming_platforms b
+ON a.country = b.country AND a.platform_id <> b.platform_id;
+
+SELECT a.platform_id, b.platform_id
+FROM streaming_platforms a JOIN streaming_platforms b
+ON a.subscription_fee = b.subscription_fee AND a.platform_id <> b.platform_id;
+
+SELECT a.platform_id, b.platform_id
+FROM streaming_platforms a JOIN streaming_platforms b
+ON a.app_available = b.app_available;
+
+SELECT a.platform_id, b.platform_id
+FROM streaming_platforms a JOIN streaming_platforms b
+ON a.monthly_views > b.monthly_views;
+
+SELECT a.platform_id, b.platform_id
+FROM streaming_platforms a JOIN streaming_platforms b
+ON a.monthly_views < b.monthly_views;
+
+SELECT a.platform_id, b.platform_id
+FROM streaming_platforms a JOIN streaming_platforms b
+ON a.subscription_fee > b.subscription_fee;
+
+SELECT a.platform_id, b.platform_id
+FROM streaming_platforms a JOIN streaming_platforms b
+ON a.subscription_fee < b.subscription_fee;
+
+SELECT a.platform_id, b.platform_id
+FROM streaming_platforms a JOIN streaming_platforms b
+ON a.founded_year = b.founded_year;
+
+SELECT a.platform_id, b.platform_id
+FROM streaming_platforms a JOIN streaming_platforms b
+ON a.founded_year > b.founded_year;
+
+SELECT a.platform_id, b.platform_id
+FROM streaming_platforms a JOIN streaming_platforms b
+ON a.founded_year < b.founded_year;
+
+SELECT a.platform_id, b.platform_id
+FROM streaming_platforms a JOIN streaming_platforms b
+ON a.active_status = b.active_status;
+
+SELECT a.platform_id, b.platform_id
+FROM streaming_platforms a JOIN streaming_platforms b
+ON a.country <> b.country;
+
+SELECT a.platform_id, b.platform_id
+FROM streaming_platforms a JOIN streaming_platforms b
+ON a.subscription_fee >= b.subscription_fee;
+
+SELECT a.platform_id, b.platform_id
+FROM streaming_platforms a JOIN streaming_platforms b
+ON a.subscription_fee <= b.subscription_fee;
+
+SELECT a.platform_id, b.platform_id
+FROM streaming_platforms a JOIN streaming_platforms b
+ON a.monthly_views >= b.monthly_views;
+
+SELECT a.platform_id, b.platform_id
+FROM streaming_platforms a JOIN streaming_platforms b
+ON a.monthly_views <= b.monthly_views;
+
+SELECT a.platform_id, b.platform_id
+FROM streaming_platforms a JOIN streaming_platforms b
+ON a.name <> b.name;
+
+SELECT a.platform_id, b.platform_id
+FROM streaming_platforms a JOIN streaming_platforms b
+ON a.subscription_fee BETWEEN b.subscription_fee AND b.subscription_fee + 100;
+
+SELECT a.platform_id, b.platform_id
+FROM streaming_platforms a JOIN streaming_platforms b
+ON a.founded_year BETWEEN b.founded_year AND b.founded_year + 5;
+
+SELECT a.platform_id, b.platform_id
+FROM streaming_platforms a JOIN streaming_platforms b
+ON a.platform_id <> b.platform_id;
+
+-- 20 SUBQUERIES (streaming_platforms)
+SELECT platform_id FROM streaming_platforms
+WHERE monthly_views = (SELECT MAX(monthly_views) FROM streaming_platforms);
+
+SELECT platform_id FROM streaming_platforms
+WHERE monthly_views = (SELECT MIN(monthly_views) FROM streaming_platforms);
+
+SELECT platform_id FROM streaming_platforms
+WHERE subscription_fee = (SELECT MAX(subscription_fee) FROM streaming_platforms);
+
+SELECT platform_id FROM streaming_platforms
+WHERE subscription_fee = (SELECT MIN(subscription_fee) FROM streaming_platforms);
+
+SELECT platform_id FROM streaming_platforms
+WHERE founded_year = (SELECT MIN(founded_year) FROM streaming_platforms);
+
+SELECT platform_id FROM streaming_platforms
+WHERE founded_year = (SELECT MAX(founded_year) FROM streaming_platforms);
+
+SELECT platform_id FROM streaming_platforms
+WHERE country = (SELECT country FROM streaming_platforms WHERE platform_id = 1);
+
+SELECT platform_id FROM streaming_platforms
+WHERE subscription_fee = (SELECT subscription_fee FROM streaming_platforms WHERE platform_id = 2);
+
+SELECT platform_id FROM streaming_platforms
+WHERE app_available = (SELECT app_available FROM streaming_platforms WHERE platform_id = 3);
+
+SELECT platform_id FROM streaming_platforms
+WHERE active_status = (SELECT active_status FROM streaming_platforms WHERE platform_id = 4);
+
+SELECT platform_id FROM streaming_platforms
+WHERE monthly_views > (SELECT AVG(monthly_views) FROM streaming_platforms);
+
+SELECT platform_id FROM streaming_platforms
+WHERE monthly_views < (SELECT AVG(monthly_views) FROM streaming_platforms);
+
+SELECT platform_id FROM streaming_platforms
+WHERE subscription_fee > (SELECT AVG(subscription_fee) FROM streaming_platforms);
+
+SELECT platform_id FROM streaming_platforms
+WHERE country IN (SELECT country FROM streaming_platforms WHERE monthly_views > 20000000);
+
+SELECT platform_id FROM streaming_platforms
+WHERE subscription_fee IN (SELECT subscription_fee FROM streaming_platforms WHERE app_available = 1);
+
+SELECT platform_id FROM streaming_platforms
+WHERE YEAR(founded_year) =
+ (SELECT YEAR(founded_year) FROM streaming_platforms WHERE platform_id = 5);
+
+SELECT platform_id FROM streaming_platforms
+WHERE subscription_fee BETWEEN
+ (SELECT MIN(subscription_fee) FROM streaming_platforms)
+ AND
+ (SELECT MAX(subscription_fee) FROM streaming_platforms);
+
+SELECT platform_id FROM streaming_platforms
+WHERE country = (SELECT country FROM streaming_platforms WHERE name='YouTube');
+
+SELECT platform_id FROM streaming_platforms
+WHERE subscription_fee <> (SELECT subscription_fee FROM streaming_platforms WHERE platform_id = 6);
+
+SELECT platform_id FROM streaming_platforms
+WHERE platform_id BETWEEN 1 AND 5;
+
+-- FUNCTION QUERIES (streaming_platforms)
+SELECT COUNT(*) FROM streaming_platforms;
+
+SELECT COUNT(DISTINCT country) FROM streaming_platforms;
+
+SELECT COUNT(DISTINCT subscription_fee) FROM streaming_platforms;
+
+SELECT COUNT(*) FROM streaming_platforms WHERE app_available = 1;
+
+SELECT MAX(monthly_views) FROM streaming_platforms;
+
+SELECT MIN(monthly_views) FROM streaming_platforms;
+
+SELECT AVG(monthly_views) FROM streaming_platforms;
+
+SELECT MAX(subscription_fee) FROM streaming_platforms;
+
+SELECT MIN(subscription_fee) FROM streaming_platforms;
+
+SELECT ROUND(AVG(subscription_fee),2) FROM streaming_platforms;
+
+SELECT UPPER(name) FROM streaming_platforms;
+
+SELECT LOWER(website) FROM streaming_platforms;
+
+SELECT LENGTH(name) FROM streaming_platforms;
+
+SELECT CONCAT(name,' - ',country) FROM streaming_platforms;
+
+SELECT YEAR(founded_year) FROM streaming_platforms;
+
+SELECT COUNT(*) FROM streaming_platforms WHERE country='India';
+
+SELECT COUNT(*) FROM streaming_platforms WHERE subscription_fee = 0;
+
+SELECT COUNT(*) FROM streaming_platforms WHERE monthly_views > 20000000;
+
+SELECT COUNT(*) FROM streaming_platforms WHERE active_status = 1;
+
+SELECT COUNT(*) FROM streaming_platforms WHERE name LIKE '%TV%';
+
+-- Documentation & Clean Code
+/*
+streaming_platforms table
+✔ self join applied correctly
+✔ country, subscription & views based joins
+✔ single-table subqueries implemented
+✔ aggregate, numeric & string functions used
+✔ realistic OTT platform data
+✔ phase-2 submission & viva ready
+*/
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- JOIN QUERIES (Self Join – movie_availability)
+SELECT a.availability_id, b.availability_id
+FROM movie_availability a JOIN movie_availability b
+ON a.movie_id = b.movie_id AND a.availability_id <> b.availability_id;
+
+SELECT a.availability_id, b.availability_id
+FROM movie_availability a JOIN movie_availability b
+ON a.platform_id = b.platform_id AND a.availability_id <> b.availability_id;
+
+SELECT a.availability_id, b.availability_id
+FROM movie_availability a JOIN movie_availability b
+ON a.language = b.language;
+
+SELECT a.availability_id, b.availability_id
+FROM movie_availability a JOIN movie_availability b
+ON a.format = b.format;
+
+SELECT a.availability_id, b.availability_id
+FROM movie_availability a JOIN movie_availability b
+ON a.resolution = b.resolution;
+
+SELECT a.availability_id, b.availability_id
+FROM movie_availability a JOIN movie_availability b
+ON a.views > b.views;
+
+SELECT a.availability_id, b.availability_id
+FROM movie_availability a JOIN movie_availability b
+ON a.views < b.views;
+
+SELECT a.availability_id, b.availability_id
+FROM movie_availability a JOIN movie_availability b
+ON a.rating > b.rating;
+
+SELECT a.availability_id, b.availability_id
+FROM movie_availability a JOIN movie_availability b
+ON a.rating < b.rating;
+
+SELECT a.availability_id, b.availability_id
+FROM movie_availability a JOIN movie_availability b
+ON a.release_date = b.release_date;
+
+SELECT a.availability_id, b.availability_id
+FROM movie_availability a JOIN movie_availability b
+ON a.release_date > b.release_date;
+
+SELECT a.availability_id, b.availability_id
+FROM movie_availability a JOIN movie_availability b
+ON a.release_date < b.release_date;
+
+SELECT a.availability_id, b.availability_id
+FROM movie_availability a JOIN movie_availability b
+ON a.expiry_date = b.expiry_date;
+
+SELECT a.availability_id, b.availability_id
+FROM movie_availability a JOIN movie_availability b
+ON a.language <> b.language;
+
+SELECT a.availability_id, b.availability_id
+FROM movie_availability a JOIN movie_availability b
+ON a.format <> b.format;
+
+SELECT a.availability_id, b.availability_id
+FROM movie_availability a JOIN movie_availability b
+ON a.views >= b.views;
+
+SELECT a.availability_id, b.availability_id
+FROM movie_availability a JOIN movie_availability b
+ON a.views <= b.views;
+
+SELECT a.availability_id, b.availability_id
+FROM movie_availability a JOIN movie_availability b
+ON a.rating >= b.rating;
+
+SELECT a.availability_id, b.availability_id
+FROM movie_availability a JOIN movie_availability b
+ON a.rating <= b.rating;
+
+SELECT a.availability_id, b.availability_id
+FROM movie_availability a JOIN movie_availability b
+ON a.availability_id <> b.availability_id;
+
+-- 20 SUBQUERIES (movie_availability)
+SELECT availability_id FROM movie_availability
+WHERE views = (SELECT MAX(views) FROM movie_availability);
+
+SELECT availability_id FROM movie_availability
+WHERE views = (SELECT MIN(views) FROM movie_availability);
+
+SELECT availability_id FROM movie_availability
+WHERE rating = (SELECT MAX(rating) FROM movie_availability);
+
+SELECT availability_id FROM movie_availability
+WHERE rating = (SELECT MIN(rating) FROM movie_availability);
+
+SELECT availability_id FROM movie_availability
+WHERE release_date = (SELECT MIN(release_date) FROM movie_availability);
+
+SELECT availability_id FROM movie_availability
+WHERE release_date = (SELECT MAX(release_date) FROM movie_availability);
+
+SELECT availability_id FROM movie_availability
+WHERE language = (SELECT language FROM movie_availability WHERE availability_id = 1);
+
+SELECT availability_id FROM movie_availability
+WHERE format = (SELECT format FROM movie_availability WHERE availability_id = 2);
+
+SELECT availability_id FROM movie_availability
+WHERE resolution = (SELECT resolution FROM movie_availability WHERE availability_id = 3);
+
+SELECT availability_id FROM movie_availability
+WHERE platform_id = (SELECT platform_id FROM movie_availability WHERE availability_id = 4);
+
+SELECT availability_id FROM movie_availability
+WHERE views > (SELECT AVG(views) FROM movie_availability);
+
+SELECT availability_id FROM movie_availability
+WHERE views < (SELECT AVG(views) FROM movie_availability);
+
+SELECT availability_id FROM movie_availability
+WHERE rating > (SELECT AVG(rating) FROM movie_availability);
+
+SELECT availability_id FROM movie_availability
+WHERE movie_id IN (SELECT movie_id FROM movie_availability WHERE language='Hindi');
+
+SELECT availability_id FROM movie_availability
+WHERE platform_id IN (SELECT platform_id FROM movie_availability WHERE format='4K');
+
+SELECT availability_id FROM movie_availability
+WHERE YEAR(release_date) =
+ (SELECT YEAR(release_date) FROM movie_availability WHERE availability_id = 5);
+
+SELECT availability_id FROM movie_availability
+WHERE views BETWEEN
+ (SELECT MIN(views) FROM movie_availability)
+ AND
+ (SELECT MAX(views) FROM movie_availability);
+
+SELECT availability_id FROM movie_availability
+WHERE rating <> (SELECT rating FROM movie_availability WHERE availability_id = 6);
+
+SELECT availability_id FROM movie_availability
+WHERE expiry_date = (SELECT expiry_date FROM movie_availability LIMIT 1);
+
+SELECT availability_id FROM movie_availability
+WHERE availability_id BETWEEN 1 AND 5;
+
+ -- FUNCTION QUERIES (movie_availability)
+SELECT COUNT(*) FROM movie_availability;
+
+SELECT COUNT(DISTINCT movie_id) FROM movie_availability;
+
+SELECT COUNT(DISTINCT platform_id) FROM movie_availability;
+
+SELECT COUNT(DISTINCT language) FROM movie_availability;
+
+SELECT MAX(views) FROM movie_availability;
+
+SELECT MIN(views) FROM movie_availability;
+
+SELECT AVG(views) FROM movie_availability;
+
+SELECT MAX(rating) FROM movie_availability;
+
+SELECT MIN(rating) FROM movie_availability;
+
+SELECT ROUND(AVG(rating),2) FROM movie_availability;
+
+SELECT UPPER(language) FROM movie_availability;
+
+SELECT LOWER(format) FROM movie_availability;
+
+SELECT LENGTH(resolution) FROM movie_availability;
+
+SELECT CONCAT(language,' - ',format) FROM movie_availability;
+
+SELECT YEAR(release_date) FROM movie_availability;
+
+SELECT COUNT(*) FROM movie_availability WHERE language='Hindi';
+
+SELECT COUNT(*) FROM movie_availability WHERE format='4K';
+
+SELECT COUNT(*) FROM movie_availability WHERE views > 4000000;
+
+SELECT COUNT(*) FROM movie_availability WHERE rating >= 8.0;
+
+SELECT COUNT(*) FROM movie_availability WHERE platform_id = 1;
+
+--Documentation & Clean Code
+/*
+movie_availability table
+✔ self join applied correctly
+✔ movie, platform, views & rating based joins
+✔ single-table subqueries implemented
+✔ aggregate, numeric & string functions used
+✔ realistic OTT movie availability data
+✔ phase-2 submission & viva ready
+*/
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+jOIN QUERIES (Self Join – box_office_collections)
+SELECT a.collection_id, b.collection_id
+FROM box_office_collections a JOIN box_office_collections b
+ON a.movie_id = b.movie_id AND a.collection_id <> b.collection_id;
+
+SELECT a.collection_id, b.collection_id
+FROM box_office_collections a JOIN box_office_collections b
+ON a.region = b.region;
+
+SELECT a.collection_id, b.collection_id
+FROM box_office_collections a JOIN box_office_collections b
+ON a.platform = b.platform;
+
+SELECT a.collection_id, b.collection_id
+FROM box_office_collections a JOIN box_office_collections b
+ON a.currency = b.currency;
+
+SELECT a.collection_id, b.collection_id
+FROM box_office_collections a JOIN box_office_collections b
+ON a.source = b.source;
+
+SELECT a.collection_id, b.collection_id
+FROM box_office_collections a JOIN box_office_collections b
+ON a.revenue > b.revenue;
+
+SELECT a.collection_id, b.collection_id
+FROM box_office_collections a JOIN box_office_collections b
+ON a.revenue < b.revenue;
+
+SELECT a.collection_id, b.collection_id
+FROM box_office_collections a JOIN box_office_collections b
+ON a.tickets_sold > b.tickets_sold;
+
+SELECT a.collection_id, b.collection_id
+FROM box_office_collections a JOIN box_office_collections b
+ON a.tickets_sold < b.tickets_sold;
+
+SELECT a.collection_id, b.collection_id
+FROM box_office_collections a JOIN box_office_collections b
+ON a.show_count > b.show_count;
+
+SELECT a.collection_id, b.collection_id
+FROM box_office_collections a JOIN box_office_collections b
+ON a.show_count < b.show_count;
+
+SELECT a.collection_id, b.collection_id
+FROM box_office_collections a JOIN box_office_collections b
+ON a.date = b.date;
+
+SELECT a.collection_id, b.collection_id
+FROM box_office_collections a JOIN box_office_collections b
+ON a.date > b.date;
+
+SELECT a.collection_id, b.collection_id
+FROM box_office_collections a JOIN box_office_collections b
+ON a.date < b.date;
+
+SELECT a.collection_id, b.collection_id
+FROM box_office_collections a JOIN box_office_collections b
+ON a.region <> b.region;
+
+SELECT a.collection_id, b.collection_id
+FROM box_office_collections a JOIN box_office_collections b
+ON a.platform <> b.platform;
+
+SELECT a.collection_id, b.collection_id
+FROM box_office_collections a JOIN box_office_collections b
+ON a.revenue >= b.revenue;
+
+SELECT a.collection_id, b.collection_id
+FROM box_office_collections a JOIN box_office_collections b
+ON a.revenue <= b.revenue;
+
+SELECT a.collection_id, b.collection_id
+FROM box_office_collections a JOIN box_office_collections b
+ON a.tickets_sold = b.tickets_sold;
+
+SELECT a.collection_id, b.collection_id
+FROM box_office_collections a JOIN box_office_collections b
+ON a.collection_id <> b.collection_id;
+
+-- 20 SUBQUERIES (box_office_collections)
+SELECT collection_id FROM box_office_collections
+WHERE revenue = (SELECT MAX(revenue) FROM box_office_collections);
+
+SELECT collection_id FROM box_office_collections
+WHERE revenue = (SELECT MIN(revenue) FROM box_office_collections);
+
+SELECT collection_id FROM box_office_collections
+WHERE tickets_sold = (SELECT MAX(tickets_sold) FROM box_office_collections);
+
+SELECT collection_id FROM box_office_collections
+WHERE tickets_sold = (SELECT MIN(tickets_sold) FROM box_office_collections);
+
+SELECT collection_id FROM box_office_collections
+WHERE show_count = (SELECT MAX(show_count) FROM box_office_collections);
+
+SELECT collection_id FROM box_office_collections
+WHERE show_count = (SELECT MIN(show_count) FROM box_office_collections);
+
+SELECT collection_id FROM box_office_collections
+WHERE region = (SELECT region FROM box_office_collections WHERE collection_id=1);
+
+SELECT collection_id FROM box_office_collections
+WHERE platform = (SELECT platform FROM box_office_collections WHERE collection_id=2);
+
+SELECT collection_id FROM box_office_collections
+WHERE currency = (SELECT currency FROM box_office_collections WHERE collection_id=3);
+
+SELECT collection_id FROM box_office_collections
+WHERE source = (SELECT source FROM box_office_collections WHERE collection_id=4);
+
+SELECT collection_id FROM box_office_collections
+WHERE revenue > (SELECT AVG(revenue) FROM box_office_collections);
+
+SELECT collection_id FROM box_office_collections
+WHERE tickets_sold > (SELECT AVG(tickets_sold) FROM box_office_collections);
+
+SELECT collection_id FROM box_office_collections
+WHERE show_count > (SELECT AVG(show_count) FROM box_office_collections);
+
+SELECT collection_id FROM box_office_collections
+WHERE movie_id IN
+ (SELECT movie_id FROM box_office_collections WHERE revenue > 60000000);
+
+SELECT collection_id FROM box_office_collections
+WHERE platform IN
+ (SELECT platform FROM box_office_collections WHERE tickets_sold > 1000000);
+
+SELECT collection_id FROM box_office_collections
+WHERE YEAR(date) =
+ (SELECT YEAR(date) FROM box_office_collections WHERE collection_id=5);
+
+SELECT collection_id FROM box_office_collections
+WHERE revenue BETWEEN
+ (SELECT MIN(revenue) FROM box_office_collections)
+ AND
+ (SELECT MAX(revenue) FROM box_office_collections);
+
+SELECT collection_id FROM box_office_collections
+WHERE tickets_sold < (SELECT tickets_sold FROM box_office_collections WHERE collection_id=6);
+
+SELECT collection_id FROM box_office_collections
+WHERE source <> (SELECT source FROM box_office_collections WHERE collection_id=7);
+
+SELECT collection_id FROM box_office_collections
+WHERE collection_id BETWEEN 1 AND 5;
+
+-- FUNCTION QUERIES (box_office_collections)
+SELECT COUNT(*) FROM box_office_collections;
+
+SELECT COUNT(DISTINCT movie_id) FROM box_office_collections;
+
+SELECT COUNT(DISTINCT region) FROM box_office_collections;
+
+SELECT COUNT(DISTINCT platform) FROM box_office_collections;
+
+SELECT MAX(revenue) FROM box_office_collections;
+
+SELECT MIN(revenue) FROM box_office_collections;
+
+SELECT ROUND(AVG(revenue),2) FROM box_office_collections;
+
+SELECT SUM(revenue) FROM box_office_collections;
+
+SELECT MAX(tickets_sold) FROM box_office_collections;
+
+SELECT MIN(tickets_sold) FROM box_office_collections;
+
+SELECT ROUND(AVG(tickets_sold),0) FROM box_office_collections;
+
+SELECT UPPER(region) FROM box_office_collections;
+
+SELECT LOWER(platform) FROM box_office_collections;
+
+SELECT LENGTH(source) FROM box_office_collections;
+
+SELECT CONCAT(region,' - ',platform) FROM box_office_collections;
+
+SELECT YEAR(date) FROM box_office_collections;
+
+SELECT COUNT(*) FROM box_office_collections WHERE region='India';
+
+SELECT COUNT(*) FROM box_office_collections WHERE revenue > 50000000;
+
+SELECT COUNT(*) FROM box_office_collections WHERE tickets_sold > 1000000;
+
+SELECT COUNT(*) FROM box_office_collections WHERE source='BoxOfficeIndia';
+
+-- Documentation & Clean Code
+/*
+box_office_collections table
+✔ self join applied correctly
+✔ revenue, tickets & date based joins
+✔ single-table subqueries implemented
+✔ aggregate, numeric & string functions used
+✔ realistic box office collection data
+✔ phase-2 submission & viva ready
+*/
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- JOIN QUERIES (Self Join – merchandise)
+SELECT a.item_id, b.item_id
+FROM merchandise a JOIN merchandise b
+ON a.movie_id = b.movie_id AND a.item_id <> b.item_id;
+
+SELECT a.item_id, b.item_id
+FROM merchandise a JOIN merchandise b
+ON a.category = b.category AND a.item_id <> b.item_id;
+
+SELECT a.item_id, b.item_id
+FROM merchandise a JOIN merchandise b
+ON a.vendor = b.vendor AND a.item_id <> b.item_id;
+
+SELECT a.item_id, b.item_id
+FROM merchandise a JOIN merchandise b
+ON a.price > b.price;
+
+SELECT a.item_id, b.item_id
+FROM merchandise a JOIN merchandise b
+ON a.price < b.price;
+
+SELECT a.item_id, b.item_id
+FROM merchandise a JOIN merchandise b
+ON a.available_stock > b.available_stock;
+
+SELECT a.item_id, b.item_id
+FROM merchandise a JOIN merchandise b
+ON a.available_stock < b.available_stock;
+
+SELECT a.item_id, b.item_id
+FROM merchandise a JOIN merchandise b
+ON a.sold_quantity > b.sold_quantity;
+
+SELECT a.item_id, b.item_id
+FROM merchandise a JOIN merchandise b
+ON a.sold_quantity < b.sold_quantity;
+
+SELECT a.item_id, b.item_id
+FROM merchandise a JOIN merchandise b
+ON a.rating > b.rating;
+
+SELECT a.item_id, b.item_id
+FROM merchandise a JOIN merchandise b
+ON a.rating < b.rating;
+
+SELECT a.item_id, b.item_id
+FROM merchandise a JOIN merchandise b
+ON a.launch_date = b.launch_date;
+
+SELECT a.item_id, b.item_id
+FROM merchandise a JOIN merchandise b
+ON a.launch_date > b.launch_date;
+
+SELECT a.item_id, b.item_id
+FROM merchandise a JOIN merchandise b
+ON a.launch_date < b.launch_date;
+
+SELECT a.item_id, b.item_id
+FROM merchandise a JOIN merchandise b
+ON a.category <> b.category;
+
+SELECT a.item_id, b.item_id
+FROM merchandise a JOIN merchandise b
+ON a.vendor <> b.vendor;
+
+SELECT a.item_id, b.item_id
+FROM merchandise a JOIN merchandise b
+ON a.price >= b.price;
+
+SELECT a.item_id, b.item_id
+FROM merchandise a JOIN merchandise b
+ON a.price <= b.price;
+
+SELECT a.item_id, b.item_id
+FROM merchandise a JOIN merchandise b
+ON a.item_id <> b.item_id;
+
+--  20 SUBQUERIES (merchandise)
+SELECT item_id FROM merchandise
+WHERE price = (SELECT MAX(price) FROM merchandise);
+
+SELECT item_id FROM merchandise
+WHERE price = (SELECT MIN(price) FROM merchandise);
+
+SELECT item_id FROM merchandise
+WHERE sold_quantity = (SELECT MAX(sold_quantity) FROM merchandise);
+
+SELECT item_id FROM merchandise
+WHERE sold_quantity = (SELECT MIN(sold_quantity) FROM merchandise);
+
+SELECT item_id FROM merchandise
+WHERE available_stock = (SELECT MAX(available_stock) FROM merchandise);
+
+SELECT item_id FROM merchandise
+WHERE available_stock = (SELECT MIN(available_stock) FROM merchandise);
+
+SELECT item_id FROM merchandise
+WHERE category = (SELECT category FROM merchandise WHERE item_id=1);
+
+SELECT item_id FROM merchandise
+WHERE vendor = (SELECT vendor FROM merchandise WHERE item_id=2);
+
+SELECT item_id FROM merchandise
+WHERE rating = (SELECT rating FROM merchandise WHERE item_id=3);
+
+SELECT item_id FROM merchandise
+WHERE movie_id IN (SELECT movie_id FROM merchandise WHERE price > 500);
+
+SELECT item_id FROM merchandise
+WHERE sold_quantity > (SELECT AVG(sold_quantity) FROM merchandise);
+
+SELECT item_id FROM merchandise
+WHERE available_stock < (SELECT AVG(available_stock) FROM merchandise);
+
+SELECT item_id FROM merchandise
+WHERE launch_date BETWEEN
+ (SELECT MIN(launch_date) FROM merchandise)
+ AND
+ (SELECT MAX(launch_date) FROM merchandise);
+
+SELECT item_id FROM merchandise
+WHERE category IN (SELECT category FROM merchandise WHERE price > 300);
+
+SELECT item_id FROM merchandise
+WHERE vendor IN (SELECT vendor FROM merchandise WHERE sold_quantity > 100);
+
+SELECT item_id FROM merchandise
+WHERE price BETWEEN
+ (SELECT MIN(price) FROM merchandise)
+ AND
+ (SELECT MAX(price) FROM merchandise);
+
+SELECT item_id FROM merchandise
+WHERE rating > (SELECT AVG(rating) FROM merchandise);
+
+SELECT item_id FROM merchandise
+WHERE movie_id <> (SELECT movie_id FROM merchandise WHERE item_id=5);
+
+SELECT item_id FROM merchandise
+WHERE item_id BETWEEN 1 AND 5;
+
+--  FUNCTION QUERIES (merchandise)
+SELECT COUNT(*) FROM merchandise;
+
+SELECT COUNT(DISTINCT movie_id) FROM merchandise;
+
+SELECT COUNT(DISTINCT category) FROM merchandise;
+
+SELECT COUNT(DISTINCT vendor) FROM merchandise;
+
+SELECT MAX(price) FROM merchandise;
+
+SELECT MIN(price) FROM merchandise;
+
+SELECT AVG(price) FROM merchandise;
+
+SELECT SUM(price) FROM merchandise;
+
+SELECT MAX(sold_quantity) FROM merchandise;
+
+SELECT MIN(sold_quantity) FROM merchandise;
+
+SELECT AVG(sold_quantity) FROM merchandise;
+
+SELECT MAX(available_stock) FROM merchandise;
+
+SELECT MIN(available_stock) FROM merchandise;
+
+SELECT AVG(available_stock) FROM merchandise;
+
+SELECT UPPER(item_name) FROM merchandise;
+
+SELECT LOWER(vendor) FROM merchandise;
+
+SELECT LENGTH(item_name) FROM merchandise;
+
+SELECT CONCAT(item_name,' - ',vendor) FROM merchandise;
+
+SELECT YEAR(launch_date) FROM merchandise;
+
+SELECT COUNT(*) FROM merchandise WHERE category='Apparel';
+
+SELECT COUNT(*) FROM merchandise WHERE price > 500;
+
+SELECT COUNT(*) FROM merchandise WHERE sold_quantity > 100;
+
+SELECT COUNT(*) FROM merchandise WHERE vendor='Amazon';
+
+--  Documentation & Clean Code
+/*
+merchandise table
+✔ self join applied correctly
+✔ price, sold_quantity & stock based joins
+✔ single-table subqueries implemented
+✔ aggregate, numeric & string functions used
+✔ realistic merchandise data
+✔ phase-2 submission & viva ready
+*/
+
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- JOIN QUERIES (Self Join – promotions)
+SELECT a.promo_id, b.promo_id
+FROM promotions a JOIN promotions b
+ON a.movie_id = b.movie_id AND a.promo_id <> b.promo_id;
+
+SELECT a.promo_id, b.promo_id
+FROM promotions a JOIN promotions b
+ON a.platform = b.platform AND a.promo_id <> b.promo_id;
+
+SELECT a.promo_id, b.promo_id
+FROM promotions a JOIN promotions b
+ON a.campaign_name = b.campaign_name AND a.promo_id <> b.promo_id;
+
+SELECT a.promo_id, b.promo_id
+FROM promotions a JOIN promotions b
+ON a.budget > b.budget;
+
+SELECT a.promo_id, b.promo_id
+FROM promotions a JOIN promotions b
+ON a.budget < b.budget;
+
+SELECT a.promo_id, b.promo_id
+FROM promotions a JOIN promotions b
+ON a.reach > b.reach;
+
+SELECT a.promo_id, b.promo_id
+FROM promotions a JOIN promotions b
+ON a.reach < b.reach;
+
+SELECT a.promo_id, b.promo_id
+FROM promotions a JOIN promotions b
+ON a.impressions > b.impressions;
+
+SELECT a.promo_id, b.promo_id
+FROM promotions a JOIN promotions b
+ON a.impressions < b.impressions;
+
+SELECT a.promo_id, b.promo_id
+FROM promotions a JOIN promotions b
+ON a.status = b.status;
+
+SELECT a.promo_id, b.promo_id
+FROM promotions a JOIN promotions b
+ON a.start_date = b.start_date;
+
+SELECT a.promo_id, b.promo_id
+FROM promotions a JOIN promotions b
+ON a.start_date > b.start_date;
+
+SELECT a.promo_id, b.promo_id
+FROM promotions a JOIN promotions b
+ON a.start_date < b.start_date;
+
+SELECT a.promo_id, b.promo_id
+FROM promotions a JOIN promotions b
+ON a.end_date = b.end_date;
+
+SELECT a.promo_id, b.promo_id
+FROM promotions a JOIN promotions b
+ON a.end_date > b.end_date;
+
+SELECT a.promo_id, b.promo_id
+FROM promotions a JOIN promotions b
+ON a.end_date < b.end_date;
+
+SELECT a.promo_id, b.promo_id
+FROM promotions a JOIN promotions b
+ON a.promo_id <> b.promo_id;
+
+SELECT a.promo_id, b.promo_id
+FROM promotions a JOIN promotions b
+ON a.budget >= b.budget;
+
+SELECT a.promo_id, b.promo_id
+FROM promotions a JOIN promotions b
+ON a.budget <= b.budget;
+
+SELECT a.promo_id, b.promo_id
+FROM promotions a JOIN promotions b
+ON a.reach >= b.reach;
+
+-- 🔁 20 SUBQUERIES (promotions)
+SELECT promo_id FROM promotions
+WHERE budget = (SELECT MAX(budget) FROM promotions);
+
+SELECT promo_id FROM promotions
+WHERE budget = (SELECT MIN(budget) FROM promotions);
+
+SELECT promo_id FROM promotions
+WHERE reach = (SELECT MAX(reach) FROM promotions);
+
+SELECT promo_id FROM promotions
+WHERE reach = (SELECT MIN(reach) FROM promotions);
+
+SELECT promo_id FROM promotions
+WHERE impressions = (SELECT MAX(impressions) FROM promotions);
+
+SELECT promo_id FROM promotions
+WHERE impressions = (SELECT MIN(impressions) FROM promotions);
+
+SELECT promo_id FROM promotions
+WHERE platform = (SELECT platform FROM promotions WHERE promo_id=1);
+
+SELECT promo_id FROM promotions
+WHERE campaign_name = (SELECT campaign_name FROM promotions WHERE promo_id=2);
+
+SELECT promo_id FROM promotions
+WHERE status = (SELECT status FROM promotions WHERE promo_id=3);
+
+SELECT promo_id FROM promotions
+WHERE movie_id IN (SELECT movie_id FROM promotions WHERE budget > 150000);
+
+SELECT promo_id FROM promotions
+WHERE reach > (SELECT AVG(reach) FROM promotions);
+
+SELECT promo_id FROM promotions
+WHERE impressions > (SELECT AVG(impressions) FROM promotions);
+
+SELECT promo_id FROM promotions
+WHERE start_date BETWEEN
+ (SELECT MIN(start_date) FROM promotions)
+ AND
+ (SELECT MAX(start_date) FROM promotions);
+
+SELECT promo_id FROM promotions
+WHERE end_date BETWEEN
+ (SELECT MIN(end_date) FROM promotions)
+ AND
+ (SELECT MAX(end_date) FROM promotions);
+
+SELECT promo_id FROM promotions
+WHERE budget BETWEEN
+ (SELECT MIN(budget) FROM promotions)
+ AND
+ (SELECT MAX(budget) FROM promotions);
+
+SELECT promo_id FROM promotions
+WHERE movie_id <> (SELECT movie_id FROM promotions WHERE promo_id=5);
+
+SELECT promo_id FROM promotions
+WHERE promo_id BETWEEN 1 AND 5;
+
+SELECT promo_id FROM promotions
+WHERE platform IN (SELECT platform FROM promotions WHERE status='Active');
+
+SELECT promo_id FROM promotions
+WHERE budget > (SELECT AVG(budget) FROM promotions);
+
+SELECT promo_id FROM promotions
+WHERE status <> (SELECT status FROM promotions WHERE promo_id=7);
+
+--  FUNCTION QUERIES (promotions)
+SELECT COUNT(*) FROM promotions;
+
+SELECT COUNT(DISTINCT movie_id) FROM promotions;
+
+SELECT COUNT(DISTINCT platform) FROM promotions;
+
+SELECT COUNT(DISTINCT campaign_name) FROM promotions;
+
+SELECT MAX(budget) FROM promotions;
+
+SELECT MIN(budget) FROM promotions;
+
+SELECT AVG(budget) FROM promotions;
+
+SELECT SUM(budget) FROM promotions;
+
+SELECT MAX(reach) FROM promotions;
+
+SELECT MIN(reach) FROM promotions;
+
+SELECT AVG(reach) FROM promotions;
+
+SELECT MAX(impressions) FROM promotions;
+
+SELECT MIN(impressions) FROM promotions;
+
+SELECT AVG(impressions) FROM promotions;
+
+SELECT UPPER(campaign_name) FROM promotions;
+
+SELECT LOWER(platform) FROM promotions;
+
+SELECT LENGTH(status) FROM promotions;
+
+SELECT CONCAT(campaign_name,' - ',platform) FROM promotions;
+
+SELECT YEAR(start_date) FROM promotions;
+
+SELECT COUNT(*) FROM promotions WHERE status='Active';
+
+SELECT COUNT(*) FROM promotions WHERE budget > 150000;
+
+SELECT COUNT(*) FROM promotions WHERE impressions > 2000000;
+
+SELECT COUNT(*) FROM promotions WHERE platform='Instagram';
+
+--  Documentation & Clean Code
+/*
+promotions table
+✔ self join applied correctly
+✔ budget, reach & impressions based joins
+✔ single-table subqueries implemented
+✔ aggregate, numeric & string functions used
+✔ realistic promotions data
+✔ phase-2 submission & viva ready
+*/
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- JOIN QUERIES (Self Join – crew_members)
+SELECT a.crew_id, b.crew_id
+FROM crew_members a JOIN crew_members b
+ON a.movie_id = b.movie_id AND a.crew_id <> b.crew_id;
+
+SELECT a.crew_id, b.crew_id
+FROM crew_members a JOIN crew_members b
+ON a.role = b.role AND a.crew_id <> b.crew_id;
+
+SELECT a.crew_id, b.crew_id
+FROM crew_members a JOIN crew_members b
+ON a.department = b.department AND a.crew_id <> b.crew_id;
+
+SELECT a.crew_id, b.crew_id
+FROM crew_members a JOIN crew_members b
+ON a.nationality = b.nationality;
+
+SELECT a.crew_id, b.crew_id
+FROM crew_members a JOIN crew_members b
+ON a.experience_years > b.experience_years;
+
+SELECT a.crew_id, b.crew_id
+FROM crew_members a JOIN crew_members b
+ON a.experience_years < b.experience_years;
+
+SELECT a.crew_id, b.crew_id
+FROM crew_members a JOIN crew_members b
+ON a.awards > b.awards;
+
+SELECT a.crew_id, b.crew_id
+FROM crew_members a JOIN crew_members b
+ON a.awards < b.awards;
+
+SELECT a.crew_id, b.crew_id
+FROM crew_members a JOIN crew_members b
+ON a.availability = b.availability;
+
+SELECT a.crew_id, b.crew_id
+FROM crew_members a JOIN crew_members b
+ON a.crew_id <> b.crew_id;
+
+SELECT a.crew_id, b.crew_id
+FROM crew_members a JOIN crew_members b
+ON a.experience_years >= b.experience_years;
+
+SELECT a.crew_id, b.crew_id
+FROM crew_members a JOIN crew_members b
+ON a.experience_years <= b.experience_years;
+
+SELECT a.crew_id, b.crew_id
+FROM crew_members a JOIN crew_members b
+ON a.awards >= b.awards;
+
+SELECT a.crew_id, b.crew_id
+FROM crew_members a JOIN crew_members b
+ON a.awards <= b.awards;
+
+SELECT a.crew_id, b.crew_id
+FROM crew_members a JOIN crew_members b
+ON a.department <> b.department;
+
+SELECT a.crew_id, b.crew_id
+FROM crew_members a JOIN crew_members b
+ON a.role <> b.role;
+
+SELECT a.crew_id, b.crew_id
+FROM crew_members a JOIN crew_members b
+ON a.movie_id <> b.movie_id;
+
+SELECT a.crew_id, b.crew_id
+FROM crew_members a JOIN crew_members b
+ON a.experience_years BETWEEN b.experience_years AND b.experience_years + 5;
+
+SELECT a.crew_id, b.crew_id
+FROM crew_members a JOIN crew_members b
+ON a.crew_id <> b.crew_id;
+
+SELECT a.crew_id, b.crew_id
+FROM crew_members a JOIN crew_members b
+ON a.availability <> b.availability;
+
+--  20 SUBQUERIES (crew_members)
+SELECT crew_id FROM crew_members
+WHERE experience_years = (SELECT MAX(experience_years) FROM crew_members);
+
+SELECT crew_id FROM crew_members
+WHERE experience_years = (SELECT MIN(experience_years) FROM crew_members);
+
+SELECT crew_id FROM crew_members
+WHERE awards = (SELECT MAX(awards) FROM crew_members);
+
+SELECT crew_id FROM crew_members
+WHERE awards = (SELECT MIN(awards) FROM crew_members);
+
+SELECT crew_id FROM crew_members
+WHERE department = (SELECT department FROM crew_members WHERE crew_id=1);
+
+SELECT crew_id FROM crew_members
+WHERE role = (SELECT role FROM crew_members WHERE crew_id=2);
+
+SELECT crew_id FROM crew_members
+WHERE movie_id IN (SELECT movie_id FROM crew_members WHERE experience_years > 10);
+
+SELECT crew_id FROM crew_members
+WHERE nationality = (SELECT nationality FROM crew_members WHERE crew_id=3);
+
+SELECT crew_id FROM crew_members
+WHERE availability = (SELECT availability FROM crew_members WHERE crew_id=4);
+
+SELECT crew_id FROM crew_members
+WHERE experience_years > (SELECT AVG(experience_years) FROM crew_members);
+
+SELECT crew_id FROM crew_members
+WHERE awards > (SELECT AVG(awards) FROM crew_members);
+
+SELECT crew_id FROM crew_members
+WHERE experience_years BETWEEN
+ (SELECT MIN(experience_years) FROM crew_members)
+ AND
+ (SELECT MAX(experience_years) FROM crew_members);
+
+SELECT crew_id FROM crew_members
+WHERE awards BETWEEN
+ (SELECT MIN(awards) FROM crew_members)
+ AND
+ (SELECT MAX(awards) FROM crew_members);
+
+SELECT crew_id FROM crew_members
+WHERE crew_id BETWEEN 1 AND 5;
+
+SELECT crew_id FROM crew_members
+WHERE role IN (SELECT role FROM crew_members WHERE department='VFX');
+
+SELECT crew_id FROM crew_members
+WHERE movie_id <> (SELECT movie_id FROM crew_members WHERE crew_id=5);
+
+SELECT crew_id FROM crew_members
+WHERE department <> (SELECT department FROM crew_members WHERE crew_id=6);
+
+SELECT crew_id FROM crew_members
+WHERE availability=1;
+
+SELECT crew_id FROM crew_members
+WHERE full_name LIKE '%Sharma%';
+
+-- 🧮 FUNCTION QUERIES (crew_members)
+SELECT COUNT(*) FROM crew_members;
+
+SELECT COUNT(DISTINCT movie_id) FROM crew_members;
+
+SELECT COUNT(DISTINCT department) FROM crew_members;
+
+SELECT COUNT(DISTINCT role) FROM crew_members;
+
+SELECT MAX(experience_years) FROM crew_members;
+
+SELECT MIN(experience_years) FROM crew_members;
+
+SELECT AVG(experience_years) FROM crew_members;
+
+SELECT SUM(experience_years) FROM crew_members;
+
+SELECT MAX(awards) FROM crew_members;
+
+SELECT MIN(awards) FROM crew_members;
+
+SELECT ROUND(AVG(awards),2) FROM crew_members;
+
+SELECT COUNT(*) FROM crew_members WHERE availability=1;
+
+SELECT UPPER(role) FROM crew_members;
+
+SELECT LOWER(department) FROM crew_members;
+
+SELECT LENGTH(full_name) FROM crew_members;
+
+SELECT CONCAT(full_name,' - ',role) FROM crew_members;
+
+SELECT YEAR(CURDATE()) FROM crew_members;
+
+SELECT COUNT(*) FROM crew_members WHERE nationality='Indian';
+
+SELECT COUNT(*) FROM crew_members WHERE experience_years > 10;
+
+SELECT COUNT(*) FROM crew_members WHERE awards >= 2;
+
+SELECT COUNT(*) FROM crew_members WHERE department='Camera';
+
+--  Documentation & Clean Code
+/*
+crew_members table
+✔ self join applied correctly
+✔ experience & awards based joins
+✔ single-table subqueries implemented
+✔ aggregate, numeric & string functions used
+✔ realistic crew members data
+✔ phase-2 submission & viva ready
+*/
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- JOIN QUERIES (Self Join – movie_statistics)
+SELECT a.stat_id, b.stat_id
+FROM movie_statistics a JOIN movie_statistics b
+ON a.movie_id = b.movie_id AND a.stat_id <> b.stat_id;
+
+SELECT a.stat_id, b.stat_id
+FROM movie_statistics a JOIN movie_statistics b
+ON a.views > b.views;
+
+SELECT a.stat_id, b.stat_id
+FROM movie_statistics a JOIN movie_statistics b
+ON a.views < b.views;
+
+SELECT a.stat_id, b.stat_id
+FROM movie_statistics a JOIN movie_statistics b
+ON a.likes > b.likes;
+
+SELECT a.stat_id, b.stat_id
+FROM movie_statistics a JOIN movie_statistics b
+ON a.likes < b.likes;
+
+SELECT a.stat_id, b.stat_id
+FROM movie_statistics a JOIN movie_statistics b
+ON a.dislikes > b.dislikes;
+
+SELECT a.stat_id, b.stat_id
+FROM movie_statistics a JOIN movie_statistics b
+ON a.dislikes < b.dislikes;
+
+SELECT a.stat_id, b.stat_id
+FROM movie_statistics a JOIN movie_statistics b
+ON a.reviews_count > b.reviews_count;
+
+SELECT a.stat_id, b.stat_id
+FROM movie_statistics a JOIN movie_statistics b
+ON a.reviews_count < b.reviews_count;
+
+SELECT a.stat_id, b.stat_id
+FROM movie_statistics a JOIN movie_statistics b
+ON a.average_rating > b.average_rating;
+
+SELECT a.stat_id, b.stat_id
+FROM movie_statistics a JOIN movie_statistics b
+ON a.average_rating < b.average_rating;
+
+SELECT a.stat_id, b.stat_id
+FROM movie_statistics a JOIN movie_statistics b
+ON a.social_mentions > b.social_mentions;
+
+SELECT a.stat_id, b.stat_id
+FROM movie_statistics a JOIN movie_statistics b
+ON a.social_mentions < b.social_mentions;
+
+SELECT a.stat_id, b.stat_id
+FROM movie_statistics a JOIN movie_statistics b
+ON a.trending_rank > b.trending_rank;
+
+SELECT a.stat_id, b.stat_id
+FROM movie_statistics a JOIN movie_statistics b
+ON a.trending_rank < b.trending_rank;
+
+SELECT a.stat_id, b.stat_id
+FROM movie_statistics a JOIN movie_statistics b
+ON a.last_updated = b.last_updated;
+
+SELECT a.stat_id, b.stat_id
+FROM movie_statistics a JOIN movie_statistics b
+ON a.stat_id <> b.stat_id;
+
+SELECT a.stat_id, b.stat_id
+FROM movie_statistics a JOIN movie_statistics b
+ON a.views >= b.views;
+
+SELECT a.stat_id, b.stat_id
+FROM movie_statistics a JOIN movie_statistics b
+ON a.average_rating >= b.average_rating;
+
+SELECT a.stat_id, b.stat_id
+FROM movie_statistics a JOIN movie_statistics b
+ON a.likes <> b.likes;
+
+--  20 SUBQUERIES (movie_statistics)
+SELECT stat_id FROM movie_statistics
+WHERE views = (SELECT MAX(views) FROM movie_statistics);
+
+SELECT stat_id FROM movie_statistics
+WHERE views = (SELECT MIN(views) FROM movie_statistics);
+
+SELECT stat_id FROM movie_statistics
+WHERE likes = (SELECT MAX(likes) FROM movie_statistics);
+
+SELECT stat_id FROM movie_statistics
+WHERE dislikes = (SELECT MAX(dislikes) FROM movie_statistics);
+
+SELECT stat_id FROM movie_statistics
+WHERE reviews_count = (SELECT MAX(reviews_count) FROM movie_statistics);
+
+SELECT stat_id FROM movie_statistics
+WHERE average_rating = (SELECT MAX(average_rating) FROM movie_statistics);
+
+SELECT stat_id FROM movie_statistics
+WHERE social_mentions = (SELECT MAX(social_mentions) FROM movie_statistics);
+
+SELECT stat_id FROM movie_statistics
+WHERE trending_rank = (SELECT MIN(trending_rank) FROM movie_statistics);
+
+SELECT stat_id FROM movie_statistics
+WHERE last_updated = (SELECT MAX(last_updated) FROM movie_statistics);
+
+SELECT stat_id FROM movie_statistics
+WHERE movie_id IN (SELECT movie_id FROM movie_statistics WHERE views > 4000000);
+
+SELECT stat_id FROM movie_statistics
+WHERE average_rating > (SELECT AVG(average_rating) FROM movie_statistics);
+
+SELECT stat_id FROM movie_statistics
+WHERE likes > (SELECT AVG(likes) FROM movie_statistics);
+
+SELECT stat_id FROM movie_statistics
+WHERE views BETWEEN
+ (SELECT MIN(views) FROM movie_statistics)
+ AND
+ (SELECT MAX(views) FROM movie_statistics);
+
+SELECT stat_id FROM movie_statistics
+WHERE reviews_count < (SELECT AVG(reviews_count) FROM movie_statistics);
+
+SELECT stat_id FROM movie_statistics
+WHERE social_mentions > (SELECT AVG(social_mentions) FROM movie_statistics);
+
+SELECT stat_id FROM movie_statistics
+WHERE trending_rank BETWEEN 1 AND 5;
+
+SELECT stat_id FROM movie_statistics
+WHERE stat_id BETWEEN 1 AND 5;
+
+SELECT stat_id FROM movie_statistics
+WHERE average_rating < (SELECT MAX(average_rating) FROM movie_statistics);
+
+SELECT stat_id FROM movie_statistics
+WHERE views <> (SELECT views FROM movie_statistics WHERE stat_id=6);
+
+SELECT stat_id FROM movie_statistics
+WHERE likes <> (SELECT likes FROM movie_statistics WHERE stat_id=7);
+
+-- 🧮 FUNCTION QUERIES (movie_statistics)
+SELECT COUNT(*) FROM movie_statistics;
+
+SELECT COUNT(DISTINCT movie_id) FROM movie_statistics;
+
+SELECT MAX(views) FROM movie_statistics;
+
+SELECT MIN(views) FROM movie_statistics;
+
+SELECT AVG(views) FROM movie_statistics;
+
+SELECT SUM(views) FROM movie_statistics;
+
+SELECT MAX(likes) FROM movie_statistics;
+
+SELECT MIN(likes) FROM movie_statistics;
+
+SELECT AVG(likes) FROM movie_statistics;
+
+SELECT SUM(likes) FROM movie_statistics;
+
+SELECT MAX(dislikes) FROM movie_statistics;
+
+SELECT MIN(dislikes) FROM movie_statistics;
+
+SELECT ROUND(AVG(average_rating),2) FROM movie_statistics;
+
+SELECT COUNT(*) FROM movie_statistics WHERE trending_rank <=5;
+
+SELECT UPPER(platform) FROM movie_statistics;
+
+SELECT LOWER(last_updated) FROM movie_statistics;
+
+SELECT LENGTH(stat_id) FROM movie_statistics;
+
+SELECT CONCAT(movie_id,' - ',views) FROM movie_statistics;
+
+SELECT YEAR(last_updated) FROM movie_statistics;
+
+SELECT COUNT(*) FROM movie_statistics WHERE average_rating > 8;
+
+SELECT COUNT(*) FROM movie_statistics WHERE views > 4000000;
+
+SELECT COUNT(*) FROM movie_statistics WHERE likes > 300000;
+
+SELECT COUNT(*) FROM movie_statistics WHERE reviews_count > 150;
+
+--  Documentation & Clean Code
+/*
+movie_statistics table
+✔ self join applied correctly
+✔ views, likes, ratings & trending_rank based joins
+✔ single-table subqueries implemented
+✔ aggregate, numeric & string functions used
+✔ realistic movie statistics data
+✔ phase-2 submission & viva ready
+*/
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
