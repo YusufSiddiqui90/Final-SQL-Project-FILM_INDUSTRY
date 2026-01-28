@@ -1,0 +1,5315 @@
+use Films;
+
+-- 1.DDL QUERIES
+-- 2. Add column
+ALTER TABLE movies ADD COLUMN studio_id INT;
+
+-- 3. Add check constraint
+ALTER TABLE movies ADD CONSTRAINT chk_budget CHECK (budget >= 0);
+
+-- 4. Modify column
+ALTER TABLE movies MODIFY title VARCHAR(250);
+
+-- 5. Rename column
+ALTER TABLE movies RENAME COLUMN rating TO imdb_rating;
+
+-- 6. Drop column
+ALTER TABLE movies DROP COLUMN language;
+
+-- 7. Add unique constraint
+ALTER TABLE movies ADD CONSTRAINT uq_title UNIQUE(title);
+
+-- 8. Drop constraint
+ALTER TABLE movies DROP CHECK chk_budget;
+
+-- 9. Create index
+CREATE INDEX idx_release_year ON movies(release_year);
+
+-- 10. Create composite index
+CREATE INDEX idx_genre_director ON movies(genre, director_id);
+
+-- 11. Drop index
+DROP INDEX idx_release_year ON movies;
+
+-- 12. Create view
+CREATE VIEW top_movies AS
+SELECT title, box_office, imdb_rating
+FROM movies
+WHERE box_office > 500000000;
+
+-- 13. Drop view
+DROP VIEW top_movies;
+
+-- 14. Rename table
+ALTER TABLE movies RENAME TO film_movies;
+
+-- 15. Revert table name
+ALTER TABLE film_movies RENAME TO movies;
+
+-- 16. Add default
+ALTER TABLE movies ALTER duration_minutes SET DEFAULT 120;
+
+-- 17. Truncate table
+TRUNCATE TABLE movies;
+
+-- 18. Drop table
+DROP TABLE movies;
+
+-- 19. Create backup table
+CREATE TABLE movies_backup LIKE movies;
+
+-- 20. Temporary table
+CREATE TEMPORARY TABLE temp_movies SELECT * FROM movies;
+
+ -- 2DML QUERIES – Movies Table
+
+-- 1. Insert single movie
+INSERT INTO movies (title, genre, release_year, budget)
+VALUES ('Test Movie', 'Drama', 2025, 5000000);
+
+-- 2. Insert multiple movies
+INSERT INTO movies (title, genre, release_year, budget)
+VALUES
+('Movie A','Action',2024,10000000),
+('Movie B','Comedy',2023,8000000);
+
+-- 3. Update box office
+UPDATE movies SET box_office=600000000 WHERE title='dangal';
+
+-- 4. Update multiple columns
+UPDATE movies SET imdb_rating=9.0, budget=80000000 WHERE title='3 idiots';
+
+-- 5. Conditional update
+UPDATE movies SET duration_minutes=150 WHERE duration_minutes IS NULL;
+
+-- 6. Delete record
+DELETE FROM movies WHERE title='Movie A';
+
+-- 7. Delete by condition
+DELETE FROM movies WHERE release_year < 2000;
+
+-- 8. Delete all records
+DELETE FROM movies;
+
+-- 9. Start transaction
+START TRANSACTION;
+
+-- 10. Insert inside transaction
+INSERT INTO movies (title, genre, release_year, budget)
+VALUES ('Transactional Movie','Thriller',2025,7000000);
+
+-- 11. Rollback
+ROLLBACK;
+
+-- 12. Commit
+COMMIT;
+
+-- 13. Update release year
+UPDATE movies SET release_year = release_year + 1 WHERE title='bahubali';
+
+-- 14. Update budget
+UPDATE movies SET budget=budget+10000000 WHERE title='pathaan';
+
+-- 15. Update using subquery
+UPDATE movies
+SET box_office=box_office+5000000
+WHERE director_id IN (SELECT director_id FROM movies WHERE genre='action');
+
+-- 16. Insert from select
+INSERT INTO movies_backup SELECT * FROM movies;
+
+-- 17. Delete using subquery
+DELETE FROM movies
+WHERE movie_id IN (SELECT movie_id FROM movies WHERE box_office < 10000000);
+
+-- 18. Update null rating
+UPDATE movies SET imdb_rating=7.5 WHERE imdb_rating IS NULL;
+
+-- 19. Update with limit
+UPDATE movies SET budget=budget+1000000 LIMIT 1;
+
+-- 20. Safe delete
+DELETE FROM movies WHERE title='Test Movie';
+
+-- 3.DQL QUERIES – Movies Table
+
+-- 1. Select all
+SELECT * FROM movies;
+
+-- 2. Specific columns
+SELECT title, budget, box_office FROM movies;
+
+-- 3. WHERE clause
+SELECT * FROM movies WHERE imdb_rating > 8;
+
+-- 4. AND operator
+SELECT * FROM movies WHERE imdb_rating > 8 AND genre='drama';
+
+-- 5. OR operator
+SELECT * FROM movies WHERE genre='action' OR genre='comedy';
+
+-- 6. BETWEEN
+SELECT * FROM movies WHERE release_year BETWEEN 2010 AND 2020;
+
+-- 7. IN
+SELECT * FROM movies WHERE title IN ('dangal','3 idiots');
+
+-- 8. NOT IN
+SELECT * FROM movies WHERE director_id NOT IN (1,2);
+
+-- 9. LIKE
+SELECT * FROM movies WHERE title LIKE '%a%';
+
+-- 10. ORDER BY
+SELECT * FROM movies ORDER BY box_office DESC;
+
+-- 11. LIMIT
+SELECT * FROM movies LIMIT 5;
+
+-- 12. Aggregate
+SELECT COUNT(*) FROM movies;
+
+-- 13. MIN
+SELECT MIN(box_office) FROM movies;
+
+-- 14. MAX
+SELECT MAX(box_office) FROM movies;
+
+-- 15. GROUP BY
+SELECT genre, COUNT(*) FROM movies GROUP BY genre;
+
+-- 16. HAVING
+SELECT genre, COUNT(*) FROM movies GROUP BY genre HAVING COUNT(*) > 1;
+
+-- 17. Subquery
+SELECT * FROM movies WHERE box_office > (SELECT AVG(box_office) FROM movies);
+
+-- 18. Alias
+SELECT title AS movie_name, budget AS movie_budget FROM movies;
+
+-- 19. DISTINCT
+SELECT DISTINCT genre FROM movies;
+
+-- 20. CASE
+SELECT title,
+CASE
+ WHEN imdb_rating > 8 THEN 'Hit'
+ ELSE 'Average'
+END AS movie_status
+FROM movies;
+
+-- 4.CASCADES DEMONSTRATION – Movies Table
+
+CREATE TABLE movie_cast (
+ movie_cast_id INT AUTO_INCREMENT PRIMARY KEY,
+ movie_id INT,
+ actor_id INT,
+ role_name VARCHAR(100),
+ FOREIGN KEY (movie_id) REFERENCES movies(movie_id)
+ ON DELETE CASCADE
+ ON UPDATE CASCADE
+);
+
+-- 5.DOCUMENTATION & COMMENTS
+
+-- movies table stores films with details like genre, budget, box office, rating
+-- foreign key director_id connects to directors table
+-- constraints ensure data consistency (unique, check, default)
+-- cascading maintains relational integrity with related tables like movie_cast
+-- queries demonstrate full SQL: DDL, DML, DQL, transactions, subqueries, aggregates
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- 2.DDL QUERIES – Actors Table
+ALTER TABLE actors ADD COLUMN agency_name VARCHAR(100);
+
+-- 3. Add check constraint
+ALTER TABLE actors ADD CONSTRAINT chk_awards CHECK (awards_won >= 0);
+
+-- 4. Modify column
+ALTER TABLE actors MODIFY full_name VARCHAR(200);
+
+-- 5. Rename column
+ALTER TABLE actors RENAME COLUMN phone_number TO contact_number;
+
+-- 6. Drop column
+ALTER TABLE actors DROP COLUMN agency_name;
+
+-- 7. Add unique constraint
+ALTER TABLE actors ADD CONSTRAINT uq_email UNIQUE (contact_email);
+
+-- 8. Drop constraint
+ALTER TABLE actors DROP CHECK chk_awards;
+
+-- 9. Create index
+CREATE INDEX idx_debut_year ON actors(debut_year);
+
+-- 10. Create composite index
+CREATE INDEX idx_gender_nationality ON actors(gender, nationality);
+
+-- 11. Drop index
+DROP INDEX idx_debut_year ON actors;
+
+-- 12. Create view
+CREATE VIEW active_actors AS
+SELECT full_name, nationality
+FROM actors
+WHERE active_status = TRUE;
+
+-- 13. Drop view
+DROP VIEW active_actors;
+
+-- 14. Rename table
+ALTER TABLE actors RENAME TO film_actors;
+
+-- 15. Revert table name
+ALTER TABLE film_actors RENAME TO actors;
+
+-- 16. Add default
+ALTER TABLE actors ALTER active_status SET DEFAULT TRUE;
+
+-- 17. Truncate table
+TRUNCATE TABLE actors;
+
+-- 18. Drop table
+DROP TABLE actors;
+
+-- 19. Create backup table
+CREATE TABLE actors_backup LIKE actors;
+
+-- 20. Temporary table
+CREATE TEMPORARY TABLE temp_actors SELECT * FROM actors;
+
+-- 2.DML QUERIES – Actors Table
+
+-- 1. Insert single actor
+INSERT INTO actors (full_name, gender, nationality)
+VALUES ('Test Actor', 'male', 'Indian');
+
+-- 2. Insert multiple actors
+INSERT INTO actors (full_name, gender, nationality)
+VALUES
+('Actor A','male','Indian'),
+('Actor B','female','Indian');
+
+-- 3. Update awards won
+UPDATE actors SET awards_won=35 WHERE full_name='aamir khan';
+
+-- 4. Update multiple columns
+UPDATE actors SET active_status=FALSE, debut_year=2000 WHERE full_name='ajay devgn';
+
+-- 5. Conditional update
+UPDATE actors SET active_status=TRUE WHERE active_status IS NULL;
+
+-- 6. Delete record
+DELETE FROM actors WHERE full_name='Actor A';
+
+-- 7. Delete by condition
+DELETE FROM actors WHERE debut_year < 1980;
+
+-- 8. Delete all records
+DELETE FROM actors;
+
+-- 9. Start transaction
+START TRANSACTION;
+
+-- 10. Insert inside transaction
+INSERT INTO actors (full_name, gender, nationality)
+VALUES ('Transactional Actor','male','Indian');
+
+-- 11. Rollback
+ROLLBACK;
+
+-- 12. Commit
+COMMIT;
+
+-- 13. Update debut year
+UPDATE actors SET debut_year=debut_year+1 WHERE full_name='alia bhatt';
+
+-- 14. Update email
+UPDATE actors SET contact_email='updated_actor@gmail.com' WHERE full_name='akshay kumar';
+
+-- 15. Update using subquery
+UPDATE actors
+SET awards_won=awards_won+1
+WHERE actor_id IN (SELECT actor_id FROM actors WHERE debut_year>2000);
+
+-- 16. Insert from select
+INSERT INTO actors_backup SELECT * FROM actors;
+
+-- 17. Delete using subquery
+DELETE FROM actors WHERE actor_id IN (SELECT actor_id FROM actors WHERE active_status=FALSE);
+
+-- 18. Update null email
+UPDATE actors SET contact_email='not_available@gmail.com' WHERE contact_email IS NULL;
+
+-- 19. Update with limit
+UPDATE actors SET active_status=FALSE LIMIT 1;
+
+-- 20. Safe delete
+DELETE FROM actors WHERE full_name='Test Actor';
+
+-- 3.DQL QUERIES – Actors Table
+
+-- 1. Select all
+SELECT * FROM actors;
+
+-- 2. Specific columns
+SELECT full_name, gender, debut_year FROM actors;
+
+-- 3. WHERE clause
+SELECT * FROM actors WHERE active_status = TRUE;
+
+-- 4. AND operator
+SELECT * FROM actors WHERE active_status = TRUE AND awards_won > 20;
+
+-- 5. OR operator
+SELECT * FROM actors WHERE gender='male' OR gender='female';
+
+-- 6. BETWEEN
+SELECT * FROM actors WHERE debut_year BETWEEN 2000 AND 2010;
+
+-- 7. IN
+SELECT * FROM actors WHERE full_name IN ('aamir khan','shah rukh khan');
+
+-- 8. NOT IN
+SELECT * FROM actors WHERE nationality NOT IN ('Indian');
+
+-- 9. LIKE
+SELECT * FROM actors WHERE full_name LIKE '%khan%';
+
+-- 10. ORDER BY
+SELECT * FROM actors ORDER BY awards_won DESC;
+
+-- 11. LIMIT
+SELECT * FROM actors LIMIT 5;
+
+-- 12. Aggregate
+SELECT COUNT(*) FROM actors;
+
+-- 13. MIN
+SELECT MIN(debut_year) FROM actors;
+
+-- 14. MAX
+SELECT MAX(debut_year) FROM actors;
+
+-- 15. GROUP BY
+SELECT gender, COUNT(*) FROM actors GROUP BY gender;
+
+-- 16. HAVING
+SELECT gender, COUNT(*) FROM actors GROUP BY gender HAVING COUNT(*) > 2;
+
+-- 17. Subquery
+SELECT * FROM actors WHERE awards_won > (SELECT AVG(awards_won) FROM actors);
+
+-- 18. Alias
+SELECT full_name AS actor_name, debut_year AS debut FROM actors;
+
+-- 19. DISTINCT
+SELECT DISTINCT nationality FROM actors;
+
+-- 20. CASE
+SELECT full_name,
+CASE
+ WHEN awards_won > 20 THEN 'Star Actor'
+ ELSE 'Upcoming Actor'
+END AS actor_status
+FROM actors;
+
+-- 4.CASCADES DEMONSTRATION – Actors Table
+
+CREATE TABLE actor_movies (
+ actor_movie_id INT AUTO_INCREMENT PRIMARY KEY,
+ actor_id INT,
+ movie_id INT,
+ role_name VARCHAR(100),
+ FOREIGN KEY (actor_id) REFERENCES actors(actor_id)
+ ON DELETE CASCADE
+ ON UPDATE CASCADE
+);
+
+-- 5.DOCUMENTATION & COMMENTS
+
+-- actors table stores all actors with personal and professional info
+-- tracks awards, debut year, contact info, and active status
+-- constraints ensure data validity (unique emails, check awards >= 0)
+-- cascading maintains relational integrity with actor_movies table
+-- queries cover full SQL: DDL, DML, DQL, transactions, aggregates, subqueries
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- . DDL QUERIES – Directors Table
+
+-- 2. Add column
+ALTER TABLE directors ADD COLUMN agency_name VARCHAR(100);
+
+-- 3. Add check constraint
+ALTER TABLE directors ADD CONSTRAINT chk_awards CHECK (awards_won >= 0);
+
+-- 4. Modify column
+ALTER TABLE directors MODIFY full_name VARCHAR(200);
+
+-- 5. Rename column
+ALTER TABLE directors RENAME COLUMN phone_number TO contact_number;
+
+-- 6. Drop column
+ALTER TABLE directors DROP COLUMN agency_name;
+
+-- 7. Add unique constraint
+ALTER TABLE directors ADD CONSTRAINT uq_email UNIQUE (contact_email);
+
+-- 8. Drop constraint
+ALTER TABLE directors DROP CHECK chk_awards;
+
+-- 9. Create index
+CREATE INDEX idx_debut_year ON directors(debut_year);
+
+-- 10. Create composite index
+CREATE INDEX idx_gender_nationality ON directors(gender, nationality);
+
+-- 11. Drop index
+DROP INDEX idx_debut_year ON directors;
+
+-- 12. Create view
+CREATE VIEW active_directors AS
+SELECT full_name, nationality
+FROM directors
+WHERE active_status = TRUE;
+
+-- 13. Drop view
+DROP VIEW active_directors;
+
+-- 14. Rename table
+ALTER TABLE directors RENAME TO film_directors;
+
+-- 15. Revert table name
+ALTER TABLE film_directors RENAME TO directors;
+
+-- 16. Add default
+ALTER TABLE directors ALTER active_status SET DEFAULT TRUE;
+
+-- 17. Truncate table
+TRUNCATE TABLE directors;
+
+-- 18. Drop table
+DROP TABLE directors;
+
+-- 19. Create backup table
+CREATE TABLE directors_backup LIKE directors;
+
+-- 20. Temporary table
+CREATE TEMPORARY TABLE temp_directors SELECT * FROM directors;
+
+-- 2. DML QUERIES – Directors Table
+
+-- 1. Insert single director
+INSERT INTO directors (full_name, gender, nationality)
+VALUES ('Test Director', 'male', 'Indian');
+
+-- 2. Insert multiple directors
+INSERT INTO directors (full_name, gender, nationality)
+VALUES
+('Director A','male','Indian'),
+('Director B','female','Indian');
+
+-- 3. Update awards won
+UPDATE directors SET awards_won=20 WHERE full_name='ss rajamouli';
+
+-- 4. Update multiple columns
+UPDATE directors SET active_status=FALSE, debut_year=2000 WHERE full_name='rohit shetty';
+
+-- 5. Conditional update
+UPDATE directors SET active_status=TRUE WHERE active_status IS NULL;
+
+-- 6. Delete record
+DELETE FROM directors WHERE full_name='Director A';
+
+-- 7. Delete by condition
+DELETE FROM directors WHERE debut_year < 1970;
+
+-- 8. Delete all records
+DELETE FROM directors;
+
+-- 9. Start transaction
+START TRANSACTION;
+
+-- 10. Insert inside transaction
+INSERT INTO directors (full_name, gender, nationality)
+VALUES ('Transactional Director','male','Indian');
+
+-- 11. Rollback
+ROLLBACK;
+
+-- 12. Commit
+COMMIT;
+
+-- 13. Update debut year
+UPDATE directors SET debut_year=debut_year+1 WHERE full_name='nitesh tiwari';
+
+-- 14. Update email
+UPDATE directors SET contact_email='updated_director@gmail.com' WHERE full_name='rajkumar hirani';
+
+-- 15. Update using subquery
+UPDATE directors
+SET awards_won=awards_won+1
+WHERE director_id IN (SELECT director_id FROM directors WHERE debut_year>2000);
+
+-- 16. Insert from select
+INSERT INTO directors_backup SELECT * FROM directors;
+
+-- 17. Delete using subquery
+DELETE FROM directors WHERE director_id IN (SELECT director_id FROM directors WHERE active_status=FALSE);
+
+-- 18. Update null email
+UPDATE directors SET contact_email='not_available@gmail.com' WHERE contact_email IS NULL;
+
+-- 19. Update with limit
+UPDATE directors SET active_status=FALSE LIMIT 1;
+
+-- 20. Safe delete
+DELETE FROM directors WHERE full_name='Test Director';
+
+-- 3.DQL QUERIES – Directors Table
+
+-- 1. Select all
+SELECT * FROM directors;
+
+-- 2. Specific columns
+SELECT full_name, gender, debut_year FROM directors;
+
+-- 3. WHERE clause
+SELECT * FROM directors WHERE active_status = TRUE;
+
+-- 4. AND operator
+SELECT * FROM directors WHERE active_status = TRUE AND awards_won > 5;
+
+-- 5. OR operator
+SELECT * FROM directors WHERE gender='male' OR gender='female';
+
+-- 6. BETWEEN
+SELECT * FROM directors WHERE debut_year BETWEEN 2000 AND 2010;
+
+-- 7. IN
+SELECT * FROM directors WHERE full_name IN ('ss rajamouli','rajkumar hirani');
+
+-- 8. NOT IN
+SELECT * FROM directors WHERE nationality NOT IN ('Indian');
+
+-- 9. LIKE
+SELECT * FROM directors WHERE full_name LIKE '%ali%';
+
+-- 10. ORDER BY
+SELECT * FROM directors ORDER BY awards_won DESC;
+
+-- 11. LIMIT
+SELECT * FROM directors LIMIT 5;
+
+-- 12. Aggregate
+SELECT COUNT(*) FROM directors;
+
+-- 13. MIN
+SELECT MIN(debut_year) FROM directors;
+
+-- 14. MAX
+SELECT MAX(debut_year) FROM directors;
+
+-- 15. GROUP BY
+SELECT gender, COUNT(*) FROM directors GROUP BY gender;
+
+-- 16. HAVING
+SELECT gender, COUNT(*) FROM directors GROUP BY gender HAVING COUNT(*) > 2;
+
+-- 17. Subquery
+SELECT * FROM directors WHERE awards_won > (SELECT AVG(awards_won) FROM directors);
+
+-- 18. Alias
+SELECT full_name AS director_name, debut_year AS debut FROM directors;
+
+-- 19. DISTINCT
+SELECT DISTINCT nationality FROM directors;
+
+-- 20. CASE
+SELECT full_name,
+CASE
+ WHEN awards_won > 10 THEN 'Top Director'
+ ELSE 'Upcoming Director'
+END AS director_status
+FROM directors;
+
+-- 4.CASCADES DEMONSTRATION – Directors Table
+
+CREATE TABLE director_movies (
+ director_movie_id INT AUTO_INCREMENT PRIMARY KEY,
+ director_id INT,
+ movie_id INT,
+ FOREIGN KEY (director_id) REFERENCES directors(director_id)
+ ON DELETE CASCADE
+ ON UPDATE CASCADE
+);
+
+-- 5. DOCUMENTATION & COMMENTS
+
+-- directors table stores all film directors
+-- tracks personal info, debut year, awards, contact details, and active status
+-- constraints ensure data validity (unique emails, check awards >= 0)
+-- cascading ensures relational integrity with director_movies table
+-- queries cover complete SQL syllabus: DDL, DML, DQL, transactions, aggregates, subqueries
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- 2. Add column
+ALTER TABLE cast ADD COLUMN manager_name VARCHAR(100);
+
+-- 3. Add check constraint
+ALTER TABLE cast ADD CONSTRAINT chk_screen_time CHECK (screen_time > 0);
+
+-- 4. Modify column
+ALTER TABLE cast MODIFY role_name VARCHAR(150);
+
+-- 5. Rename column
+ALTER TABLE cast RENAME COLUMN contract_amount TO payment_amount;
+
+-- 6. Drop column
+ALTER TABLE cast DROP COLUMN manager_name;
+
+-- 7. Add unique constraint
+ALTER TABLE cast ADD CONSTRAINT uq_actor_movie UNIQUE (movie_id, actor_id);
+
+-- 8. Drop constraint
+ALTER TABLE cast DROP CHECK chk_screen_time;
+
+-- 9. Create index
+-- CREATE INDEX idx_movie_id ON cast(movie_id);
+
+-- 10. Create composite index
+-- CREATE INDEX idx_actor_movie ON cast(actor_id, movie_id);
+
+-- 11. Drop index
+DROP INDEX idx_movie_id ON cast;
+
+-- 12. Create view
+CREATE VIEW lead_cast AS
+SELECT actor_id, movie_id, role_name
+FROM cast
+WHERE is_lead = TRUE;
+
+-- 13. Drop view
+DROP VIEW lead_cast;
+
+-- 14. Rename table
+ALTER TABLE cast RENAME TO movie_cast;
+
+-- 15. Revert table name
+ALTER TABLE movie_cast RENAME TO cast;
+
+-- 16. Add default
+ALTER TABLE cast ALTER is_lead SET DEFAULT FALSE;
+
+-- 17. Truncate table
+TRUNCATE TABLE cast;
+
+-- 18. Drop table
+DROP TABLE cast;
+
+-- 19. Create backup table
+CREATE TABLE cast_backup LIKE cast;
+
+-- 20. Temporary table
+CREATE TEMPORARY TABLE temp_cast SELECT * FROM cast;
+
+-- 2. DML QUERIES – Cast Table
+
+-- 1. Insert single cast
+INSERT INTO cast (movie_id, actor_id, role_name, is_lead)
+VALUES (1,2,'Supporting Role',0);
+
+-- 2. Insert multiple casts
+INSERT INTO cast (movie_id, actor_id, role_name, is_lead)
+VALUES
+(2,3,'Supporting Role',0),
+(3,4,'Lead Role',1);
+
+-- 3. Update role_name
+UPDATE cast SET role_name='Main Lead' WHERE cast_id=1;
+
+-- 4. Update multiple columns
+UPDATE cast SET is_lead=TRUE, award_won='Filmfare' WHERE cast_id=6;
+
+-- 5. Conditional update
+UPDATE cast SET screen_time=100 WHERE screen_time IS NULL;
+
+-- 6. Delete record
+DELETE FROM cast WHERE cast_id=2;
+
+-- 7. Delete by condition
+DELETE FROM cast WHERE screen_time < 90;
+
+-- 8. Delete all records
+DELETE FROM cast;
+
+-- 9. Start transaction
+START TRANSACTION;
+
+-- 10. Insert inside transaction
+INSERT INTO cast (movie_id, actor_id, role_name)
+VALUES (4,5,'Guest Role');
+
+-- 11. Rollback
+ROLLBACK;
+
+-- 12. Commit
+COMMIT;
+
+-- 13. Update screen time
+UPDATE cast SET screen_time=screen_time+5 WHERE cast_id=3;
+
+-- 14. Update award_won
+UPDATE cast SET award_won='National Award' WHERE cast_id=5;
+
+-- 15. Update using subquery
+UPDATE cast
+SET is_lead=TRUE
+WHERE actor_id IN (SELECT actor_id FROM actors WHERE active_status=TRUE);
+
+-- 16. Insert from select
+INSERT INTO cast_backup SELECT * FROM cast;
+
+-- 17. Delete using subquery
+DELETE FROM cast WHERE actor_id IN (SELECT actor_id FROM actors WHERE active_status=FALSE);
+
+-- 18. Update null award_won
+UPDATE cast SET award_won='None' WHERE award_won IS NULL;
+
+-- 19. Update with limit
+UPDATE cast SET is_lead=FALSE LIMIT 1;
+
+-- 20. Safe delete
+DELETE FROM cast WHERE cast_id=1;
+
+-- 3.DQL QUERIES – Cast Table
+
+-- 1. Select all
+SELECT * FROM cast;
+
+-- 2. Specific columns
+SELECT actor_id, movie_id, role_name FROM cast;
+
+-- 3. WHERE clause
+SELECT * FROM cast WHERE is_lead=TRUE;
+
+-- 4. AND operator
+SELECT * FROM cast WHERE is_lead=TRUE AND screen_time>120;
+
+-- 5. OR operator
+SELECT * FROM cast WHERE award_won='Filmfare' OR award_won='National Award';
+
+-- 6. BETWEEN
+SELECT * FROM cast WHERE screen_time BETWEEN 100 AND 150;
+
+-- 7. IN
+SELECT * FROM cast WHERE actor_id IN (1,2,3);
+
+-- 8. NOT IN
+SELECT * FROM cast WHERE actor_id NOT IN (4,5);
+
+-- 9. LIKE
+SELECT * FROM cast WHERE role_name LIKE '%Lead%';
+
+-- 10. ORDER BY
+SELECT * FROM cast ORDER BY screen_time DESC;
+
+-- 11. LIMIT
+SELECT * FROM cast LIMIT 5;
+
+-- 12. Aggregate
+SELECT COUNT(*) FROM cast;
+
+-- 13. MIN
+SELECT MIN(screen_time) FROM cast;
+
+-- 14. MAX
+SELECT MAX(screen_time) FROM cast;
+
+-- 15. GROUP BY
+SELECT actor_id, COUNT(*) FROM cast GROUP BY actor_id;
+
+-- 16. HAVING
+SELECT actor_id, COUNT(*) FROM cast GROUP BY actor_id HAVING COUNT(*)>1;
+
+-- 17. Subquery
+SELECT * FROM cast WHERE screen_time > (SELECT AVG(screen_time) FROM cast);
+
+-- 18. Alias
+SELECT actor_id AS cast_actor, movie_id AS cast_movie FROM cast;
+
+-- 19. DISTINCT
+SELECT DISTINCT role_name FROM cast;
+
+-- 20. CASE
+SELECT role_name,
+CASE
+ WHEN is_lead=TRUE THEN 'Lead'
+ ELSE 'Supporting'
+END AS role_type
+FROM cast;
+
+-- 4.CASCADES DEMONSTRATION – Cast Table
+
+
+-- 5. DOCUMENTATION & COMMENTS
+
+-- cast table stores movie cast information
+-- tracks which actor played which role, screen time, awards, contract info
+-- constraints ensure uniqueness and data validity (screen_time > 0)
+-- cascading ensures relational integrity with cast_movies table
+-- queries cover DDL, DML, DQL, aggregates, subqueries, transactions, and views
+
+-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- 1. Add column
+ALTER TABLE cast ADD COLUMN manager_name VARCHAR(100);
+
+-- 2. Add check constraint
+ALTER TABLE cast ADD CONSTRAINT chk_screen_time CHECK (screen_time > 0);
+
+-- 3. Modify column
+ALTER TABLE cast MODIFY role_name VARCHAR(150);
+
+-- 4. Rename column
+ALTER TABLE cast RENAME COLUMN contract_amount TO payment_amount;
+
+-- 5. Drop column
+ALTER TABLE cast DROP COLUMN manager_name;
+
+-- 6. Add unique constraint
+ALTER TABLE cast ADD CONSTRAINT uq_actor_movie UNIQUE (movie_id, actor_id);
+
+-- 7. Drop constraint
+ALTER TABLE cast DROP CHECK chk_screen_time;
+
+-- 8. Create index
+-- CREATE INDEX idx_movie_id ON cast(movie_id);
+
+-- 9. Create composite index
+-- CREATE INDEX idx_actor_movie ON cast(actor_id, movie_id);
+
+-- 10. Drop index
+DROP INDEX idx_movie_id ON cast;
+
+-- 11. Create view
+CREATE VIEW lead_cast AS
+SELECT actor_id, movie_id, role_name
+FROM cast
+WHERE is_lead = TRUE;
+
+-- 12. Drop view
+DROP VIEW lead_cast;
+
+-- 13. Rename table
+ALTER TABLE cast RENAME TO movie_cast;
+
+-- 14. Revert table name
+ALTER TABLE movie_cast RENAME TO cast;
+
+-- 15. Add default
+ALTER TABLE cast ALTER is_lead SET DEFAULT FALSE;
+
+-- 16. Truncate table
+TRUNCATE TABLE cast;
+
+-- 17. Drop table
+DROP TABLE cast;
+
+-- 18. Create backup table
+CREATE TABLE cast_backup LIKE cast;
+
+-- 19. Temporary table
+CREATE TEMPORARY TABLE temp_cast SELECT * FROM cast;
+
+-- 2. DML QUERIES – Cast Table
+
+-- 1. Insert single cast
+INSERT INTO cast (movie_id, actor_id, role_name, is_lead)
+VALUES (1,2,'Supporting Role',0);
+
+-- 2. Insert multiple casts
+INSERT INTO cast (movie_id, actor_id, role_name, is_lead)
+VALUES
+(2,3,'Supporting Role',0),
+(3,4,'Lead Role',1);
+
+-- 3. Update role_name
+UPDATE cast SET role_name='Main Lead' WHERE cast_id=1;
+
+-- 4. Update multiple columns
+UPDATE cast SET is_lead=TRUE, award_won='Filmfare' WHERE cast_id=6;
+
+-- 5. Conditional update
+UPDATE cast SET screen_time=100 WHERE screen_time IS NULL;
+
+-- 6. Delete record
+DELETE FROM cast WHERE cast_id=2;
+
+-- 7. Delete by condition
+DELETE FROM cast WHERE screen_time < 90;
+
+-- 8. Delete all records
+DELETE FROM cast;
+
+-- 9. Start transaction
+START TRANSACTION;
+
+-- 10. Insert inside transaction
+INSERT INTO cast (movie_id, actor_id, role_name)
+VALUES (4,5,'Guest Role');
+
+-- 11. Rollback
+ROLLBACK;
+
+-- 12. Commit
+COMMIT;
+
+-- 13. Update screen time
+UPDATE cast SET screen_time=screen_time+5 WHERE cast_id=3;
+
+-- 14. Update award_won
+UPDATE cast SET award_won='National Award' WHERE cast_id=5;
+
+-- 15. Update using subquery
+UPDATE cast
+SET is_lead=TRUE
+WHERE actor_id IN (SELECT actor_id FROM actors WHERE active_status=TRUE);
+
+-- 16. Insert from select
+INSERT INTO cast_backup SELECT * FROM cast;
+
+-- 17. Delete using subquery
+DELETE FROM cast WHERE actor_id IN (SELECT actor_id FROM actors WHERE active_status=FALSE);
+
+-- 18. Update null award_won
+UPDATE cast SET award_won='None' WHERE award_won IS NULL;
+
+-- 19. Update with limit
+UPDATE cast SET is_lead=FALSE LIMIT 1;
+
+-- 20. Safe delete
+DELETE FROM cast WHERE cast_id=1;
+
+-- 3. DQL QUERIES – Cast Table
+
+-- 1. Select all
+SELECT * FROM cast;
+
+-- 2. Specific columns
+SELECT actor_id, movie_id, role_name FROM cast;
+
+-- 3. WHERE clause
+SELECT * FROM cast WHERE is_lead=TRUE;
+
+-- 4. AND operator
+SELECT * FROM cast WHERE is_lead=TRUE AND screen_time>120;
+
+-- 5. OR operator
+SELECT * FROM cast WHERE award_won='Filmfare' OR award_won='National Award';
+
+-- 6. BETWEEN
+SELECT * FROM cast WHERE screen_time BETWEEN 100 AND 150;
+
+-- 7. IN
+SELECT * FROM cast WHERE actor_id IN (1,2,3);
+
+-- 8. NOT IN
+SELECT * FROM cast WHERE actor_id NOT IN (4,5);
+
+-- 9. LIKE
+SELECT * FROM cast WHERE role_name LIKE '%Lead%';
+
+-- 10. ORDER BY
+SELECT * FROM cast ORDER BY screen_time DESC;
+
+-- 11. LIMIT
+SELECT * FROM cast LIMIT 5;
+
+-- 12. Aggregate
+SELECT COUNT(*) FROM cast;
+
+-- 13. MIN
+SELECT MIN(screen_time) FROM cast;
+
+-- 14. MAX
+SELECT MAX(screen_time) FROM cast;
+
+-- 15. GROUP BY
+SELECT actor_id, COUNT(*) FROM cast GROUP BY actor_id;
+
+-- 16. HAVING
+SELECT actor_id, COUNT(*) FROM cast GROUP BY actor_id HAVING COUNT(*)>1;
+
+-- 17. Subquery
+SELECT * FROM cast WHERE screen_time > (SELECT AVG(screen_time) FROM cast);
+
+-- 18. Alias
+SELECT actor_id AS cast_actor, movie_id AS cast_movie FROM cast;
+
+-- 19. DISTINCT
+SELECT DISTINCT role_name FROM cast;
+
+-- 20. CASE
+SELECT role_name,
+CASE
+ WHEN is_lead=TRUE THEN 'Lead'
+ ELSE 'Supporting'
+END AS role_type
+FROM cast;
+
+-- 4. CASCADES DEMONSTRATION – Cast Table
+
+CREATE TABLE cast_movies (
+ cast_movie_id INT AUTO_INCREMENT PRIMARY KEY,
+ cast_id INT,
+ movie_id INT,
+ FOREIGN KEY (cast_id) REFERENCES cast(cast_id)
+ ON DELETE CASCADE
+ ON UPDATE CASCADE
+);
+
+-- 5.OCUMENTATION & COMMENTS – Cast Table
+
+-- cast table stores movie cast information
+-- tracks which actor played which role, screen time, awards, contract info
+-- constraints ensure uniqueness and data validity (screen_time > 0)
+-- cascading ensures relational integrity with cast_movies table
+-- queries cover DDL, DML, DQL, aggregates, subqueries, transactions, and views
+
+-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- 1. Add column
+ALTER TABLE producers ADD COLUMN website VARCHAR(200);
+
+-- 2. Add check constraint
+ALTER TABLE producers ADD CONSTRAINT chk_projects_done CHECK (projects_done >= 0);
+
+-- 3. Modify column
+ALTER TABLE producers MODIFY company_name VARCHAR(200);
+
+-- 4. Rename column
+ALTER TABLE producers RENAME COLUMN phone_number TO contact_number;
+
+-- 5. Drop column
+ALTER TABLE producers DROP COLUMN address;
+
+-- 6. Add unique constraint
+ALTER TABLE producers ADD CONSTRAINT uq_email UNIQUE (contact_email);
+
+-- 7. Drop constraint
+ALTER TABLE producers DROP CHECK chk_projects_done;
+
+-- 8. Create index
+CREATE INDEX idx_company_name ON producers(company_name);
+
+-- 9. Create composite index
+CREATE INDEX idx_name_email ON producers(full_name, contact_email);
+
+-- 10. Drop index
+DROP INDEX idx_company_name ON producers;
+
+-- 11. Create view
+CREATE VIEW active_producers AS
+SELECT full_name, company_name
+FROM producers
+WHERE active_status = TRUE;
+
+-- 12. Drop view
+DROP VIEW active_producers;
+
+-- 13. Rename table
+ALTER TABLE producers RENAME TO film_producers;
+
+-- 14. Revert table name
+ALTER TABLE film_producers RENAME TO producers;
+
+-- 15. Add default
+ALTER TABLE producers ALTER active_status SET DEFAULT TRUE;
+
+-- 16. Truncate table
+TRUNCATE TABLE producers;
+
+-- 17. Drop table
+DROP TABLE producers;
+
+-- 18. Create backup table
+CREATE TABLE producers_backup LIKE producers;
+
+-- 19. Temporary table
+CREATE TEMPORARY TABLE temp_producers SELECT * FROM producers;
+
+-- 2. DML QUERIES – Producers Table
+
+-- 1. Insert single producer
+INSERT INTO producers (full_name, company_name, contact_email, nationality, projects_done, active_status, date_of_birth)
+VALUES ('Test Producer','Test Films','test@prod.com','indian',5,1,'1980-01-01');
+
+-- 2. Insert multiple producers
+INSERT INTO producers (full_name, company_name, contact_email, nationality, projects_done, active_status, date_of_birth)
+VALUES
+('Producer A','Studio A','a@prod.com','indian',10,1,'1975-05-05'),
+('Producer B','Studio B','b@prod.com','indian',8,1,'1982-09-12');
+
+-- 3. Update company_name
+UPDATE producers SET company_name='Updated Productions' WHERE producer_id=1;
+
+-- 4. Update multiple columns
+UPDATE producers SET active_status=FALSE, projects_done=projects_done+1 WHERE producer_id=2;
+
+-- 5. Conditional update
+UPDATE producers SET projects_done=0 WHERE projects_done IS NULL;
+
+-- 6. Delete record
+DELETE FROM producers WHERE producer_id=3;
+
+-- 7. Delete by condition
+DELETE FROM producers WHERE projects_done < 10;
+
+-- 8. Delete all records
+DELETE FROM producers;
+
+-- 9. Start transaction
+START TRANSACTION;
+
+-- 10. Insert inside transaction
+INSERT INTO producers (full_name, company_name) VALUES ('Transactional Producer','Trans Films');
+
+-- 11. Rollback
+ROLLBACK;
+
+-- 12. Commit
+COMMIT;
+
+-- 13. Update email
+UPDATE producers SET contact_email='updated@prod.com' WHERE producer_id=4;
+
+-- 14. Update projects_done
+UPDATE producers SET projects_done=projects_done+5 WHERE producer_id=5;
+
+-- 15. Update using subquery
+UPDATE producers
+SET active_status=TRUE
+WHERE producer_id IN (SELECT producer_id FROM producers WHERE projects_done>20);
+
+-- 16. Insert from select
+INSERT INTO producers_backup SELECT * FROM producers;
+
+-- 17. Delete using subquery
+DELETE FROM producers WHERE producer_id IN (SELECT producer_id FROM producers WHERE active_status=FALSE);
+
+-- 18. Update null company_name
+UPDATE producers SET company_name='Not Available' WHERE company_name IS NULL;
+
+-- 19. Update with limit
+UPDATE producers SET active_status=FALSE LIMIT 1;
+
+-- 20. Safe delete
+DELETE FROM producers WHERE producer_id=1;
+
+-- 3.DQL QUERIES – Producers Table
+
+-- 1. Select all
+SELECT * FROM producers;
+
+-- 2. Specific columns
+SELECT full_name, company_name, contact_email FROM producers;
+
+-- 3. WHERE clause
+SELECT * FROM producers WHERE active_status=TRUE;
+
+-- 4. AND operator
+SELECT * FROM producers WHERE active_status=TRUE AND projects_done>20;
+
+-- 5. OR operator
+SELECT * FROM producers WHERE nationality='indian' OR projects_done>30;
+
+-- 6. BETWEEN
+SELECT * FROM producers WHERE projects_done BETWEEN 10 AND 50;
+
+-- 7. IN
+SELECT * FROM producers WHERE producer_id IN (1,2,3);
+
+-- 8. NOT IN
+SELECT * FROM producers WHERE producer_id NOT IN (4,5);
+
+-- 9. LIKE
+SELECT * FROM producers WHERE company_name LIKE '%Productions%';
+
+-- 10. ORDER BY
+SELECT * FROM producers ORDER BY projects_done DESC;
+
+-- 11. LIMIT
+SELECT * FROM producers LIMIT 5;
+
+-- 12. Aggregate
+SELECT COUNT(*) FROM producers;
+
+-- 13. MIN
+SELECT MIN(projects_done) FROM producers;
+
+-- 14. MAX
+SELECT MAX(projects_done) FROM producers;
+
+-- 15. GROUP BY
+SELECT nationality, COUNT(*) FROM producers GROUP BY nationality;
+
+-- 16. HAVING
+SELECT nationality, COUNT(*) FROM producers GROUP BY nationality HAVING COUNT(*)>1;
+
+-- 17. Subquery
+SELECT * FROM producers WHERE projects_done > (SELECT AVG(projects_done) FROM producers);
+
+-- 18. Alias
+SELECT full_name AS producer_name, company_name AS producer_company FROM producers;
+
+-- 19. DISTINCT
+SELECT DISTINCT nationality FROM producers;
+
+-- 20. CASE
+SELECT company_name,
+CASE
+ WHEN active_status=TRUE THEN 'Active Producer'
+ ELSE 'Inactive Producer'
+END AS status
+FROM producers;
+
+-- 4. CASCADES DEMONSTRATION – Producers Table
+
+CREATE TABLE producer_movies (
+ producer_movie_id INT AUTO_INCREMENT PRIMARY KEY,
+ producer_id INT,
+ movie_id INT,
+ FOREIGN KEY (producer_id) REFERENCES producers(producer_id)
+ ON DELETE CASCADE
+ ON UPDATE CASCADE
+);
+
+
+-- 5. DOCUMENTATION & COMMENTS – Producers Table
+
+-- producers table stores movie producers information
+-- tracks producer details, company, contact info, projects done, and activity status
+-- constraints ensure uniqueness, data validity, and positive project count
+-- cascading ensures relational integrity with producer_movies table
+-- queries cover DDL, DML, DQL, aggregates, subqueries, transactions, and views
+
+-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- 1. Add column
+ALTER TABLE production_companies ADD COLUMN ceo_name VARCHAR(150);
+
+-- 2. Add check constraint
+ALTER TABLE production_companies ADD CONSTRAINT chk_total_movies CHECK (total_movies >= 0);
+
+-- 3. Modify column
+ALTER TABLE production_companies MODIFY name VARCHAR(250);
+
+-- 4. Rename column
+ALTER TABLE production_companies RENAME COLUMN phone TO contact_number;
+
+-- 5. Drop column
+ALTER TABLE production_companies DROP COLUMN website;
+
+-- 6. Add unique constraint
+ALTER TABLE production_companies ADD CONSTRAINT uq_email UNIQUE (email);
+
+-- 7. Drop constraint
+ALTER TABLE production_companies DROP CHECK chk_total_movies;
+
+-- 8. Create index
+CREATE INDEX idx_location ON production_companies(location);
+
+-- 9. Create composite index
+CREATE INDEX idx_name_location ON production_companies(name, location);
+
+-- 10. Drop index
+DROP INDEX idx_location ON production_companies;
+
+-- 11. Create view
+CREATE VIEW active_companies AS
+SELECT name, location, total_movies
+FROM production_companies
+WHERE active_status=TRUE;
+
+-- 12. Drop view
+DROP VIEW active_companies;
+
+-- 13. Rename table
+ALTER TABLE production_companies RENAME TO film_companies;
+
+-- 14. Revert table name
+ALTER TABLE film_companies RENAME TO production_companies;
+
+-- 15. Add default
+ALTER TABLE production_companies ALTER active_status SET DEFAULT TRUE;
+
+-- 16. Truncate table
+TRUNCATE TABLE production_companies;
+
+-- 17. Drop table
+DROP TABLE production_companies;
+
+-- 18. Create backup table
+CREATE TABLE production_companies_backup LIKE production_companies;
+
+-- 19. Temporary table
+CREATE TEMPORARY TABLE temp_production_companies SELECT * FROM production_companies;
+
+-- 2.DML QUERIES – Production_Companies Table
+
+-- 1. Insert single company
+INSERT INTO production_companies (name, founder_name, location, total_movies, active_status)
+VALUES ('Test Company','Test Founder','Delhi',5,1);
+
+-- 2. Insert multiple companies
+INSERT INTO production_companies (name, founder_name, location, total_movies, active_status)
+VALUES
+('Studio A','Founder A','Mumbai',10,1),
+('Studio B','Founder B','Chennai',8,1);
+
+-- 3. Update location
+UPDATE production_companies SET location='Bengaluru' WHERE company_id=1;
+
+-- 4. Update multiple columns
+UPDATE production_companies SET active_status=FALSE, total_movies=total_movies+5 WHERE company_id=2;
+
+-- 5. Conditional update
+UPDATE production_companies SET total_movies=0 WHERE total_movies IS NULL;
+
+-- 6. Delete record
+DELETE FROM production_companies WHERE company_id=3;
+
+-- 7. Delete by condition
+DELETE FROM production_companies WHERE total_movies < 20;
+
+-- 8. Delete all records
+DELETE FROM production_companies;
+
+-- 9. Start transaction
+START TRANSACTION;
+
+-- 10. Insert inside transaction
+INSERT INTO production_companies (name, founder_name, location) VALUES ('Trans Company','Trans Founder','Pune');
+
+-- 11. Rollback
+ROLLBACK;
+
+-- 12. Commit
+COMMIT;
+
+-- 13. Update email
+UPDATE production_companies SET email='info@updated.com' WHERE company_id=4;
+
+-- 14. Update total_movies
+UPDATE production_companies SET total_movies=total_movies+3 WHERE company_id=5;
+
+-- 15. Update using subquery
+UPDATE production_companies
+SET active_status=TRUE
+WHERE company_id IN (SELECT company_id FROM production_companies WHERE total_movies>50);
+
+-- 16. Insert from select
+INSERT INTO production_companies_backup SELECT * FROM production_companies;
+
+-- 17. Delete using subquery
+DELETE FROM production_companies WHERE company_id IN (SELECT company_id FROM production_companies WHERE active_status=FALSE);
+
+-- 18. Update null founder_name
+UPDATE production_companies SET founder_name='Unknown' WHERE founder_name IS NULL;
+
+-- 19. Update with limit
+UPDATE production_companies SET active_status=FALSE LIMIT 1;
+
+-- 20. Safe delete
+DELETE FROM production_companies WHERE company_id=1;
+
+-- 3.DQL QUERIES – Production_Companies Table
+
+-- 1. Select all
+SELECT * FROM production_companies;
+
+-- 2. Specific columns
+SELECT name, founder_name, location, total_movies FROM production_companies;
+
+-- 3. WHERE clause
+SELECT * FROM production_companies WHERE active_status=TRUE;
+
+-- 4. AND operator
+SELECT * FROM production_companies WHERE active_status=TRUE AND total_movies>50;
+
+-- 5. OR operator
+SELECT * FROM production_companies WHERE location='Mumbai' OR total_movies>70;
+
+-- 6. BETWEEN
+SELECT * FROM production_companies WHERE total_movies BETWEEN 30 AND 80;
+
+-- 7. IN
+SELECT * FROM production_companies WHERE company_id IN (1,2,3);
+
+-- 8. NOT IN
+SELECT * FROM production_companies WHERE company_id NOT IN (4,5);
+
+-- 9. LIKE
+SELECT * FROM production_companies WHERE name LIKE '%Productions%';
+
+-- 10. ORDER BY
+SELECT * FROM production_companies ORDER BY total_movies DESC;
+
+-- 11. LIMIT
+SELECT * FROM production_companies LIMIT 5;
+
+-- 12. Aggregate
+SELECT COUNT(*) FROM production_companies;
+
+-- 13. MIN
+SELECT MIN(total_movies) FROM production_companies;
+
+-- 14. MAX
+SELECT MAX(total_movies) FROM production_companies;
+
+-- 15. GROUP BY
+SELECT location, COUNT(*) FROM production_companies GROUP BY location;
+
+-- 16. HAVING
+SELECT location, COUNT(*) FROM production_companies GROUP BY location HAVING COUNT(*)>1;
+
+-- 17. Subquery
+SELECT * FROM production_companies WHERE total_movies > (SELECT AVG(total_movies) FROM production_companies);
+
+-- 18. Alias
+SELECT name AS company_name, total_movies AS movies_count FROM production_companies;
+
+-- 19. DISTINCT
+SELECT DISTINCT location FROM production_companies;
+
+-- 20. CASE
+SELECT name,
+CASE
+ WHEN active_status=TRUE THEN 'Active Company'
+ ELSE 'Inactive Company'
+END AS status
+FROM production_companies;
+
+-- 4.CASCADES DEMONSTRATION – Production_Companies Table
+
+CREATE TABLE company_movies (
+ company_movie_id INT AUTO_INCREMENT PRIMARY KEY,
+ company_id INT,
+ movie_id INT,
+ FOREIGN KEY (company_id) REFERENCES production_companies(company_id)
+ ON DELETE CASCADE
+ ON UPDATE CASCADE
+);
+
+
+-- 5.DOCUMENTATION & COMMENTS – Production_Companies Table
+
+-- production_companies table stores movie production company information
+-- tracks company details, founder, location, total movies, and activity status
+-- constraints ensure data validity and uniqueness
+-- cascading ensures relational integrity with company_movies table
+-- queries cover DDL, DML, DQL, aggregates, subqueries, transactions, and views
+
+-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- 1. Add column
+ALTER TABLE roles ADD COLUMN costume_designer VARCHAR(100);
+
+-- 2. Add check constraint
+ALTER TABLE roles ADD CONSTRAINT chk_screen_time CHECK (screen_time > 0);
+
+-- 3. Modify column
+ALTER TABLE roles MODIFY role_name VARCHAR(150);
+
+-- 4. Rename column
+ALTER TABLE roles RENAME COLUMN importance_level TO priority_level;
+
+-- 5. Drop column
+ALTER TABLE roles DROP COLUMN costume_designer;
+
+-- 6. Add unique constraint
+ALTER TABLE roles ADD CONSTRAINT uq_role_name UNIQUE (role_name);
+
+-- 7. Drop constraint
+ALTER TABLE roles DROP CHECK chk_screen_time;
+
+-- 8. Create index
+CREATE INDEX idx_is_lead ON roles(is_lead);
+
+-- 9. Create composite index
+CREATE INDEX idx_role_screen_time ON roles(is_lead, screen_time);
+
+-- 10. Drop index
+DROP INDEX idx_is_lead ON roles;
+
+-- 11. Create view
+CREATE VIEW lead_roles AS
+SELECT role_id, role_name, screen_time
+FROM roles
+WHERE is_lead=TRUE;
+
+-- 12. Drop view
+DROP VIEW lead_roles;
+
+-- 13. Rename table
+ALTER TABLE roles RENAME TO movie_roles;
+
+-- 14. Revert table name
+ALTER TABLE movie_roles RENAME TO roles;
+
+-- 15. Add default
+ALTER TABLE roles ALTER is_lead SET DEFAULT FALSE;
+
+-- 16. Truncate table
+TRUNCATE TABLE roles;
+
+-- 17. Drop table
+DROP TABLE roles;
+
+-- 18. Create backup table
+CREATE TABLE roles_backup LIKE roles;
+
+-- 19. Temporary table
+CREATE TEMPORARY TABLE temp_roles SELECT * FROM roles;
+
+-- 2.DML QUERIES – Roles Table
+
+-- 1. Insert single role
+INSERT INTO roles (role_name, is_lead, screen_time) VALUES ('mentor','FALSE',40);
+
+-- 2. Insert multiple roles
+INSERT INTO roles (role_name, is_lead, is_villain, screen_time)
+VALUES
+('sidekick',0,0,30),
+('antagonist',0,1,50);
+
+-- 3. Update role_name
+UPDATE roles SET role_name='main hero' WHERE role_id=1;
+
+-- 4. Update multiple columns
+UPDATE roles SET is_lead=TRUE, screen_time=160 WHERE role_id=2;
+
+-- 5. Conditional update
+UPDATE roles SET screen_time=60 WHERE screen_time IS NULL;
+
+-- 6. Delete record
+DELETE FROM roles WHERE role_id=9;
+
+-- 7. Delete by condition
+DELETE FROM roles WHERE screen_time<40;
+
+-- 8. Delete all records
+DELETE FROM roles;
+
+-- 9. Start transaction
+START TRANSACTION;
+
+-- 10. Insert inside transaction
+INSERT INTO roles (role_name, is_lead) VALUES ('guest appearance',0);
+
+-- 11. Rollback
+ROLLBACK;
+
+-- 12. Commit
+COMMIT;
+
+-- 13. Update screen_time
+UPDATE roles SET screen_time=screen_time+10 WHERE role_id=3;
+
+-- 14. Update is_villain
+UPDATE roles SET is_villain=TRUE WHERE role_id=3;
+
+-- 15. Update using subquery
+UPDATE roles SET is_lead=TRUE WHERE role_id IN (SELECT role_id FROM roles WHERE screen_time>100);
+
+-- 16. Insert from select
+INSERT INTO roles_backup SELECT * FROM roles;
+
+-- 17. Delete using subquery
+DELETE FROM roles WHERE role_id IN (SELECT role_id FROM roles WHERE is_lead=FALSE);
+
+-- 18. Update null description
+UPDATE roles SET description='Not specified' WHERE description IS NULL;
+
+-- 19. Update with limit
+UPDATE roles SET is_lead=FALSE LIMIT 1;
+
+-- 20. Safe delete
+DELETE FROM roles WHERE role_id=1;
+
+-- 3.DQL QUERIES – Roles Table
+
+-- 1. Select all
+SELECT * FROM roles;
+
+-- 2. Specific columns
+SELECT role_name, is_lead, is_villain, screen_time FROM roles;
+
+-- 3. WHERE clause
+SELECT * FROM roles WHERE is_lead=TRUE;
+
+-- 4. AND operator
+SELECT * FROM roles WHERE is_lead=TRUE AND screen_time>100;
+
+-- 5. OR operator
+SELECT * FROM roles WHERE is_villain=TRUE OR screen_time>150;
+
+-- 6. BETWEEN
+SELECT * FROM roles WHERE screen_time BETWEEN 50 AND 150;
+
+-- 7. IN
+SELECT * FROM roles WHERE role_id IN (1,2,3);
+
+-- 8. NOT IN
+SELECT * FROM roles WHERE role_id NOT IN (4,5);
+
+-- 9. LIKE
+SELECT * FROM roles WHERE role_name LIKE '%hero%';
+
+-- 10. ORDER BY
+SELECT * FROM roles ORDER BY screen_time DESC;
+
+-- 11. LIMIT
+SELECT * FROM roles LIMIT 5;
+
+-- 12. Aggregate
+SELECT COUNT(*) FROM roles;
+
+-- 13. MIN
+SELECT MIN(screen_time) FROM roles;
+
+-- 14. MAX
+SELECT MAX(screen_time) FROM roles;
+
+-- 15. GROUP BY
+SELECT is_lead, COUNT(*) FROM roles GROUP BY is_lead;
+
+-- 16. HAVING
+SELECT is_lead, COUNT(*) FROM roles GROUP BY is_lead HAVING COUNT(*)>1;
+
+-- 17. Subquery
+SELECT * FROM roles WHERE screen_time>(SELECT AVG(screen_time) FROM roles);
+
+-- 18. Alias
+SELECT role_name AS role, screen_time AS minutes FROM roles;
+
+-- 19. DISTINCT
+SELECT DISTINCT importance_level FROM roles;
+
+-- 20. CASE
+SELECT role_name,
+CASE
+ WHEN is_lead=TRUE THEN 'Lead Role'
+ ELSE 'Supporting Role'
+END AS role_type
+FROM roles;
+
+-- 4. CASCADES DEMONSTRATION – Roles Table
+
+CREATE TABLE movie_roles_assign (
+ role_assign_id INT AUTO_INCREMENT PRIMARY KEY,
+ role_id INT,
+ movie_id INT,
+ FOREIGN KEY (role_id) REFERENCES roles(role_id)
+ ON DELETE CASCADE
+ ON UPDATE CASCADE
+);
+
+
+-- 5.OCUMENTATION & COMMENTS – Roles Table
+
+-- roles table stores details about different movie roles
+-- tracks role_name, description, importance, lead/villain status, screen_time, stunt requirements
+-- constraints ensure valid screen_time and uniqueness
+-- cascading ensures relational integrity with movie_roles_assign table
+-- queries cover DDL, DML, DQL, aggregates, subqueries, transactions, and views
+
+-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- 1. Add column
+ALTER TABLE writers ADD COLUMN social_media_handle VARCHAR(100);
+
+-- 2. Add check constraint
+ALTER TABLE writers ADD CONSTRAINT chk_projects_done CHECK (projects_done >= 0);
+
+-- 3. Modify column
+ALTER TABLE writers MODIFY full_name VARCHAR(200);
+
+-- 4. Rename column
+ALTER TABLE writers RENAME COLUMN awards TO awards_won;
+
+-- 5. Drop column
+ALTER TABLE writers DROP COLUMN social_media_handle;
+
+-- 6. Add unique constraint
+ALTER TABLE writers ADD CONSTRAINT uq_contact_email UNIQUE (contact_email);
+
+-- 7. Drop constraint
+ALTER TABLE writers DROP CHECK chk_projects_done;
+
+-- 8. Create index
+CREATE INDEX idx_active_status ON writers(active_status);
+
+-- 9. Create composite index
+CREATE INDEX idx_nationality_awards ON writers(nationality, awards_won);
+
+-- 10. Drop index
+DROP INDEX idx_active_status ON writers;
+
+-- 11. Create view
+CREATE VIEW active_writers AS
+SELECT full_name, nationality, projects_done
+FROM writers
+WHERE active_status=TRUE;
+
+-- 12. Drop view
+DROP VIEW active_writers;
+
+-- 13. Rename table
+ALTER TABLE writers RENAME TO movie_writers;
+
+-- 14. Revert table name
+ALTER TABLE movie_writers RENAME TO writers;
+
+-- 15. Add default
+ALTER TABLE writers ALTER active_status SET DEFAULT TRUE;
+
+-- 16. Truncate table
+TRUNCATE TABLE writers;
+
+-- 17. Drop table
+DROP TABLE writers;
+
+-- 18. Create backup table
+CREATE TABLE writers_backup LIKE writers;
+
+-- 19. Temporary table
+CREATE TEMPORARY TABLE temp_writers SELECT * FROM writers;
+
+-- 2.DML QUERIES – Writers Table
+
+-- 1. Insert single writer
+INSERT INTO writers (full_name, nationality, projects_done, active_status) 
+VALUES ('new writer','indian',1,TRUE);
+
+-- 2. Insert multiple writers
+INSERT INTO writers (full_name, nationality, projects_done, active_status)
+VALUES
+('writer A','indian',3,TRUE),
+('writer B','indian',2,FALSE);
+
+-- 3. Update full_name
+UPDATE writers SET full_name='Nitesh Tiwari' WHERE writer_id=1;
+
+-- 4. Update multiple columns
+UPDATE writers SET projects_done=10, awards_won=5 WHERE writer_id=2;
+
+-- 5. Conditional update
+UPDATE writers SET projects_done=0 WHERE projects_done IS NULL;
+
+-- 6. Delete record
+DELETE FROM writers WHERE writer_id=3;
+
+-- 7. Delete by condition
+DELETE FROM writers WHERE projects_done < 5;
+
+-- 8. Delete all records
+DELETE FROM writers;
+
+-- 9. Start transaction
+START TRANSACTION;
+
+-- 10. Insert inside transaction
+INSERT INTO writers (full_name, nationality) VALUES ('transactional writer','indian');
+
+-- 11. Rollback
+ROLLBACK;
+
+-- 12. Commit
+COMMIT;
+
+-- 13. Update awards
+UPDATE writers SET awards_won=awards_won+1 WHERE writer_id=4;
+
+-- 14. Update contact_email
+UPDATE writers SET contact_email='updated_writer@gmail.com' WHERE writer_id=5;
+
+-- 15. Update using subquery
+UPDATE writers SET active_status=TRUE WHERE writer_id IN 
+(SELECT writer_id FROM writers WHERE projects_done>5);
+
+-- 16. Insert from select
+INSERT INTO writers_backup SELECT * FROM writers;
+
+-- 17. Delete using subquery
+DELETE FROM writers WHERE writer_id IN (SELECT writer_id FROM writers WHERE active_status=FALSE);
+
+-- 18. Update null phone
+UPDATE writers SET phone='not_available' WHERE phone IS NULL;
+
+-- 19. Update with limit
+UPDATE writers SET active_status=FALSE LIMIT 1;
+
+-- 20. Safe delete
+DELETE FROM writers WHERE writer_id=1;
+
+-- 3.DQL QUERIES – Writers Table
+
+-- 1. Select all
+SELECT * FROM writers;
+
+-- 2. Specific columns
+SELECT full_name, nationality, projects_done FROM writers;
+
+-- 3. WHERE clause
+SELECT * FROM writers WHERE active_status=TRUE;
+
+-- 4. AND operator
+SELECT * FROM writers WHERE active_status=TRUE AND projects_done>5;
+
+-- 5. OR operator
+SELECT * FROM writers WHERE awards_won>5 OR projects_done>10;
+
+-- 6. BETWEEN
+SELECT * FROM writers WHERE projects_done BETWEEN 3 AND 10;
+
+-- 7. IN
+SELECT * FROM writers WHERE writer_id IN (1,2,5);
+
+-- 8. NOT IN
+SELECT * FROM writers WHERE writer_id NOT IN (3,4);
+
+-- 9. LIKE
+SELECT * FROM writers WHERE full_name LIKE '%Tiwari%';
+
+-- 10. ORDER BY
+SELECT * FROM writers ORDER BY projects_done DESC;
+
+-- 11. LIMIT
+SELECT * FROM writers LIMIT 5;
+
+-- 12. Aggregate
+SELECT COUNT(*) FROM writers;
+
+-- 13. MIN
+SELECT MIN(projects_done) FROM writers;
+
+-- 14. MAX
+SELECT MAX(projects_done) FROM writers;
+
+-- 15. GROUP BY
+SELECT nationality, COUNT(*) FROM writers GROUP BY nationality;
+
+-- 16. HAVING
+SELECT nationality, COUNT(*) FROM writers GROUP BY nationality HAVING COUNT(*)>1;
+
+-- 17. Subquery
+SELECT * FROM writers WHERE projects_done > (SELECT AVG(projects_done) FROM writers);
+
+-- 18. Alias
+SELECT full_name AS writer_name, projects_done AS total_projects FROM writers;
+
+-- 19. DISTINCT
+SELECT DISTINCT nationality FROM writers;
+
+-- 20. CASE
+SELECT full_name,
+CASE
+ WHEN active_status=TRUE THEN 'Active'
+ ELSE 'Inactive'
+END AS status
+FROM writers;
+
+-- 4.CASCADES DEMONSTRATION – Writers Table
+
+CREATE TABLE writer_movies (
+ writer_movie_id INT AUTO_INCREMENT PRIMARY KEY,
+ writer_id INT,
+ movie_id INT,
+ FOREIGN KEY (writer_id) REFERENCES writers(writer_id)
+ ON DELETE CASCADE
+ ON UPDATE CASCADE
+);
+
+-- 5.DOCUMENTATION & COMMENTS – Writers Table
+
+-- writers table stores information about movie script writers
+-- tracks name, nationality, genres, projects, awards, contact info, and status
+-- constraints ensure valid projects_done and unique emails
+-- cascading ensures relational integrity with writer_movies table
+-- queries cover DDL, DML, DQL, aggregates, subqueries, transactions, and views
+
+-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- 1. Add column
+ALTER TABLE awards ADD COLUMN sponsor VARCHAR(100);
+
+-- 2. Add check constraint
+ALTER TABLE awards ADD CONSTRAINT chk_year CHECK (year >= 1900);
+
+-- 3. Modify column
+ALTER TABLE awards MODIFY award_name VARCHAR(200);
+
+-- 4. Rename column
+ALTER TABLE awards RENAME COLUMN ceremony_location TO ceremony_city;
+
+-- 5. Drop column
+ALTER TABLE awards DROP COLUMN sponsor;
+
+-- 6. Add unique constraint
+ALTER TABLE awards ADD CONSTRAINT uq_award_movie_recipient UNIQUE (award_name, movie_id, recipient_id);
+
+-- 7. Drop constraint
+ALTER TABLE awards DROP CHECK chk_year;
+
+-- 8. Create index
+CREATE INDEX idx_movie_id ON awards(movie_id);
+
+-- 9. Create composite index
+CREATE INDEX idx_recipient_type_id ON awards(recipient_type, recipient_id);
+
+-- 10. Drop index
+DROP INDEX idx_movie_id ON awards;
+
+-- 11. Create view
+CREATE VIEW won_awards AS
+SELECT award_name, year, recipient_type, movie_id
+FROM awards
+WHERE is_won=TRUE;
+
+-- 12. Drop view
+DROP VIEW won_awards;
+
+-- 13. Rename table
+ALTER TABLE awards RENAME TO movie_awards;
+
+-- 14. Revert table name
+ALTER TABLE movie_awards RENAME TO awards;
+
+-- 15. Add default
+ALTER TABLE awards ALTER is_won SET DEFAULT FALSE;
+
+-- 16. Truncate table
+TRUNCATE TABLE awards;
+
+-- 17. Drop table
+DROP TABLE awards;
+
+-- 18. Create backup table
+CREATE TABLE awards_backup LIKE awards;
+
+-- 19. Temporary table
+CREATE TEMPORARY TABLE temp_awards SELECT * FROM awards;
+
+-- 2.DML QUERIES – Awards Table
+
+-- 1. Insert single award
+INSERT INTO awards (award_name, year, category, recipient_type, recipient_id, movie_id, is_won)
+VALUES ('Filmfare Best Supporting Actor',2023,'Best Supporting Actor','actor',2,4,1);
+
+-- 2. Insert multiple awards
+INSERT INTO awards (award_name, year, category, recipient_type, recipient_id, movie_id, is_won)
+VALUES
+('IIFA Best Director',2022,'Best Director','director',5,5,1),
+('Oscar Nominee',2023,'Best Foreign Film','movie',6,6,0);
+
+-- 3. Update award_name
+UPDATE awards SET award_name='Filmfare Best Actor' WHERE award_id=2;
+
+-- 4. Update multiple columns
+UPDATE awards SET is_won=TRUE, ceremony_city='Mumbai' WHERE award_id=5;
+
+-- 5. Conditional update
+UPDATE awards SET is_won=FALSE WHERE is_won IS NULL;
+
+-- 6. Delete record
+DELETE FROM awards WHERE award_id=3;
+
+-- 7. Delete by condition
+DELETE FROM awards WHERE year < 2000;
+
+-- 8. Delete all records
+DELETE FROM awards;
+
+-- 9. Start transaction
+START TRANSACTION;
+
+-- 10. Insert inside transaction
+INSERT INTO awards (award_name, year, category, recipient_type, recipient_id, movie_id)
+VALUES ('Special Jury Award',2023,'Special','actor',1,1);
+
+-- 11. Rollback
+ROLLBACK;
+
+-- 12. Commit
+COMMIT;
+
+-- 13. Update year
+UPDATE awards SET year=year+1 WHERE award_id=4;
+
+-- 14. Update recipient_type
+UPDATE awards SET recipient_type='writer' WHERE award_id=10;
+
+-- 15. Update using subquery
+UPDATE awards SET is_won=TRUE WHERE movie_id IN (SELECT movie_id FROM movies WHERE release_year>2015);
+
+-- 16. Insert from select
+INSERT INTO awards_backup SELECT * FROM awards;
+
+-- 17. Delete using subquery
+DELETE FROM awards WHERE recipient_id IN (SELECT actor_id FROM actors WHERE active_status=FALSE);
+
+-- 18. Update null ceremony_city
+UPDATE awards SET ceremony_city='Not Announced' WHERE ceremony_city IS NULL;
+
+-- 19. Update with limit
+UPDATE awards SET is_won=FALSE LIMIT 1;
+
+-- 20. Safe delete
+DELETE FROM awards WHERE award_id=1;
+
+-- 3. DQL QUERIES – Awards Table
+
+-- 1. Select all
+SELECT * FROM awards;
+
+-- 2. Specific columns
+SELECT award_name, year, recipient_type, movie_id FROM awards;
+
+-- 3. WHERE clause
+SELECT * FROM awards WHERE is_won=TRUE;
+
+-- 4. AND operator
+SELECT * FROM awards WHERE is_won=TRUE AND year>2015;
+
+-- 5. OR operator
+SELECT * FROM awards WHERE category='Best Actor' OR category='Best Director';
+
+-- 6. BETWEEN
+SELECT * FROM awards WHERE year BETWEEN 2000 AND 2020;
+
+-- 7. IN
+SELECT * FROM awards WHERE award_id IN (1,2,3);
+
+-- 8. NOT IN
+SELECT * FROM awards WHERE award_id NOT IN (4,5);
+
+-- 9. LIKE
+SELECT * FROM awards WHERE award_name LIKE '%Filmfare%';
+
+-- 10. ORDER BY
+SELECT * FROM awards ORDER BY year DESC;
+
+-- 11. LIMIT
+SELECT * FROM awards LIMIT 5;
+
+-- 12. Aggregate
+SELECT COUNT(*) FROM awards;
+
+-- 13. MIN
+SELECT MIN(year) FROM awards;
+
+-- 14. MAX
+SELECT MAX(year) FROM awards;
+
+-- 15. GROUP BY
+SELECT recipient_type, COUNT(*) FROM awards GROUP BY recipient_type;
+
+-- 16. HAVING
+SELECT recipient_type, COUNT(*) FROM awards GROUP BY recipient_type HAVING COUNT(*)>1;
+
+-- 17. Subquery
+SELECT * FROM awards WHERE year > (SELECT AVG(year) FROM awards);
+
+-- 18. Alias
+SELECT award_name AS award_title, recipient_type AS type FROM awards;
+
+-- 19. DISTINCT
+SELECT DISTINCT recipient_type FROM awards;
+
+-- 20. CASE
+SELECT award_name,
+CASE
+ WHEN is_won=TRUE THEN 'Won'
+ ELSE 'Nominated'
+END AS status
+FROM awards;
+
+-- 4.CASCADES DEMONSTRATION – Awards Table
+
+CREATE TABLE award_movies (
+ award_movie_id INT AUTO_INCREMENT PRIMARY KEY,
+ award_id INT,
+ movie_id INT,
+ FOREIGN KEY (award_id) REFERENCES awards(award_id)
+ ON DELETE CASCADE
+ ON UPDATE CASCADE
+);
+
+-- 5.DOCUMENTATION & COMMENTS – Awards Table
+
+-- awards table stores all movie awards and nominations
+-- tracks award name, year, category, recipient type/id, movie, win status, ceremony info
+-- constraints ensure uniqueness and valid years
+-- cascading ensures relational integrity with award_movies table
+-- queries cover DDL, DML, DQL, aggregates, subqueries, transactions, and views
+
+-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- DDL QUERIES – trailers
+-- 1. add new column
+ALTER TABLE trailers ADD COLUMN comments BIGINT;
+
+-- 2. modify column
+ALTER TABLE trailers MODIFY youtube_link VARCHAR(300);
+
+-- 3. rename column
+ALTER TABLE trailers RENAME COLUMN published_on TO platform;
+
+-- 4. add default value
+ALTER TABLE trailers ALTER likes SET DEFAULT 0;
+
+-- 5. add check constraint
+ALTER TABLE trailers ADD CONSTRAINT chk_duration CHECK (duration > 0);
+
+-- 6. add unique constraint
+ALTER TABLE trailers ADD CONSTRAINT uq_movie_trailer UNIQUE (movie_id);
+
+-- 7. drop constraint
+ALTER TABLE trailers DROP CHECK chk_duration;
+
+-- 8. create index
+CREATE INDEX idx_trailer_views ON trailers(views);
+
+-- 9. drop index
+DROP INDEX idx_trailer_views ON trailers;
+
+-- 10. rename table
+ALTER TABLE trailers RENAME TO movie_trailers;
+
+-- 11. revert table name
+ALTER TABLE movie_trailers RENAME TO trailers;
+
+-- 12. truncate table
+TRUNCATE TABLE trailers;
+
+-- 13. drop table
+DROP TABLE trailers;
+
+-- 14. backup table
+CREATE TABLE trailers_backup LIKE trailers;
+
+-- 15. temporary table
+CREATE TEMPORARY TABLE temp_trailers SELECT * FROM trailers;
+
+
+-- 2.DML QUERIES – trailers
+-- 1. insert single record
+INSERT INTO trailers (movie_id, release_date, duration, views, likes, language)
+VALUES (1,'2016-01-01',150,1000000,90000,'hindi');
+
+-- 2. insert multiple records
+INSERT INTO trailers (movie_id, release_date, duration, views, likes, language)
+VALUES
+(2,'2009-10-01',140,2000000,150000,'hindi'),
+(3,'2017-11-01',160,3000000,200000,'hindi');
+
+-- 3. update views
+UPDATE trailers SET views = views + 100000 WHERE trailer_id=1;
+
+-- 4. update likes & dislikes
+UPDATE trailers SET likes=likes+5000, dislikes=dislikes+200 WHERE trailer_id=2;
+
+-- 5. conditional update
+UPDATE trailers SET language='hindi' WHERE language IS NULL;
+
+-- 6. delete single record
+DELETE FROM trailers WHERE trailer_id=10;
+
+-- 7. delete by condition
+DELETE FROM trailers WHERE views < 2000000;
+
+-- 8. delete all
+DELETE FROM trailers;
+
+-- 9. transaction start
+START TRANSACTION;
+
+-- 10. insert in transaction
+INSERT INTO trailers (movie_id, release_date, duration)
+VALUES (4,'2024-01-01',170);
+
+-- 11. rollback
+ROLLBACK;
+
+-- 12. commit
+COMMIT;
+
+-- 13. update using subquery
+UPDATE trailers
+SET views = views + 500000
+WHERE movie_id IN (SELECT movie_id FROM movies WHERE release_year > 2015);
+
+-- 14. insert into backup
+INSERT INTO trailers_backup SELECT * FROM trailers;
+
+-- 15. safe delete
+DELETE FROM trailers WHERE trailer_id=1;
+
+-- 3.DQL QUERIES – trailers
+-- 1. select all
+SELECT * FROM trailers;
+
+-- 2. specific columns
+SELECT movie_id, views, likes FROM trailers;
+
+-- 3. where clause
+SELECT * FROM trailers WHERE language='hindi';
+
+-- 4. and operator
+SELECT * FROM trailers WHERE views>5000000 AND likes>400000;
+
+-- 5. or operator
+SELECT * FROM trailers WHERE language='hindi' OR language='telugu';
+
+-- 6. between
+SELECT * FROM trailers WHERE release_date BETWEEN '2015-01-01' AND '2020-01-01';
+
+-- 7. in
+SELECT * FROM trailers WHERE trailer_id IN (1,3,5);
+
+-- 8. like
+SELECT * FROM trailers WHERE youtube_link LIKE '%youtu%';
+
+-- 9. order by
+SELECT * FROM trailers ORDER BY views DESC;
+
+-- 10. limit
+SELECT * FROM trailers LIMIT 5;
+
+-- 11. aggregate count
+SELECT COUNT(*) FROM trailers;
+
+-- 12. max views
+SELECT MAX(views) FROM trailers;
+
+-- 13. min views
+SELECT MIN(views) FROM trailers;
+
+-- 14. average views
+SELECT AVG(views) FROM trailers;
+
+-- 15. group by language
+SELECT language, COUNT(*) FROM trailers GROUP BY language;
+
+-- 16. having
+SELECT language, COUNT(*) 
+FROM trailers 
+GROUP BY language 
+HAVING COUNT(*) > 1;
+
+-- 17. subquery
+SELECT * FROM trailers
+WHERE views > (SELECT AVG(views) FROM trailers);
+
+-- 18. alias
+SELECT views AS total_views, likes AS total_likes FROM trailers;
+
+-- 19. distinct
+SELECT DISTINCT language FROM trailers;
+
+-- 20. case
+SELECT trailer_id,
+CASE
+ WHEN views > 8000000 THEN 'Blockbuster'
+ WHEN views > 4000000 THEN 'Hit'
+ ELSE 'Average'
+END AS performance
+FROM trailers;
+
+-- 4.CASCADES DEMONSTRATION – trailers
+CREATE TABLE trailer_stats (
+  stat_id INT AUTO_INCREMENT PRIMARY KEY,
+  trailer_id INT,
+  daily_views INT,
+  FOREIGN KEY (trailer_id) REFERENCES trailers(trailer_id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+
+-- 5. DOCUMENTATION & COMMENTS – trailers
+-- trailers table stores promotional video details of movies
+-- includes views, likes, dislikes, platform and language
+-- foreign key ensures movie-trailer relationship
+-- indexes improve performance on views
+-- cascades maintain referential integrity
+-- queries cover ddl, dml, dql, transactions, subqueries & case
+
+-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- 1. DDL QUERIES – reviews
+-- 1. add new column
+ALTER TABLE reviews ADD COLUMN dislikes INT;
+
+-- 2. modify column
+ALTER TABLE reviews MODIFY reviewer_name VARCHAR(150);
+
+-- 3. rename column
+ALTER TABLE reviews RENAME COLUMN sentiment TO review_sentiment;
+
+-- 4. add default value
+ALTER TABLE reviews ALTER likes SET DEFAULT 0;
+
+-- 5. add check constraint
+ALTER TABLE reviews ADD CONSTRAINT chk_rating CHECK (rating BETWEEN 0 AND 10);
+
+-- 6. add unique constraint
+ALTER TABLE reviews ADD CONSTRAINT uq_movie_reviewer UNIQUE (movie_id, reviewer_name);
+
+-- 7. drop constraint
+ALTER TABLE reviews DROP CHECK chk_rating;
+
+-- 8. create index
+CREATE INDEX idx_review_rating ON reviews(rating);
+
+-- 9. drop index
+DROP INDEX idx_review_rating ON reviews;
+
+-- 10. rename table
+ALTER TABLE reviews RENAME TO movie_reviews;
+
+-- 11. revert table name
+ALTER TABLE movie_reviews RENAME TO reviews;
+
+-- 12. truncate table
+TRUNCATE TABLE reviews;
+
+-- 13. drop table
+DROP TABLE reviews;
+
+-- 14. backup table
+CREATE TABLE reviews_backup LIKE reviews;
+
+-- 15. temporary table
+CREATE TEMPORARY TABLE temp_reviews SELECT * FROM reviews;
+
+-- 2. DML QUERIES – reviews
+-- 1. insert single review
+INSERT INTO reviews (movie_id, reviewer_name, rating, platform, verified)
+VALUES (1,'Test Reviewer',7.5,'IMDb',1);
+
+-- 2. insert multiple reviews
+INSERT INTO reviews (movie_id, reviewer_name, rating, platform, verified)
+VALUES
+(2,'User A',8.0,'IMDb',1),
+(3,'User B',7.8,'Rotten Tomatoes',0);
+
+-- 3. update rating
+UPDATE reviews SET rating=8.9 WHERE review_id=1;
+
+-- 4. update multiple columns
+UPDATE reviews SET likes=likes+100, review_sentiment='positive' WHERE review_id=2;
+
+-- 5. conditional update
+UPDATE reviews SET review_sentiment='neutral' WHERE rating < 7;
+
+-- 6. delete single record
+DELETE FROM reviews WHERE review_id=10;
+
+-- 7. delete by condition
+DELETE FROM reviews WHERE rating < 7.0;
+
+-- 8. delete all records
+DELETE FROM reviews;
+
+-- 9. start transaction
+START TRANSACTION;
+
+-- 10. insert inside transaction
+INSERT INTO reviews (movie_id, reviewer_name, rating)
+VALUES (4,'Temp Reviewer',6.5);
+
+-- 11. rollback
+ROLLBACK;
+
+-- 12. commit
+COMMIT;
+
+-- 13. update using subquery
+UPDATE reviews
+SET verified=1
+WHERE movie_id IN (SELECT movie_id FROM movies WHERE rating > 8);
+
+-- 14. insert into backup
+INSERT INTO reviews_backup SELECT * FROM reviews;
+
+-- 15. safe delete
+DELETE FROM reviews WHERE review_id=1;
+
+-- 3.DQL QUERIES – reviews
+-- 1. select all
+SELECT * FROM reviews;
+
+-- 2. specific columns
+SELECT reviewer_name, rating, platform FROM reviews;
+
+-- 3. where clause
+SELECT * FROM reviews WHERE verified=1;
+
+-- 4. and operator
+SELECT * FROM reviews WHERE rating>8 AND verified=1;
+
+-- 5. or operator
+SELECT * FROM reviews WHERE platform='IMDb' OR platform='Metacritic';
+
+-- 6. between
+SELECT * FROM reviews WHERE rating BETWEEN 7 AND 9;
+
+-- 7. in
+SELECT * FROM reviews WHERE movie_id IN (1,2,3);
+
+-- 8. like
+SELECT * FROM reviews WHERE review_text LIKE '%Epic%';
+
+-- 9. order by
+SELECT * FROM reviews ORDER BY rating DESC;
+
+-- 10. limit
+SELECT * FROM reviews LIMIT 5;
+
+-- 11. aggregate count
+SELECT COUNT(*) FROM reviews;
+
+-- 12. max rating
+SELECT MAX(rating) FROM reviews;
+
+-- 13. min rating
+SELECT MIN(rating) FROM reviews;
+
+-- 14. average rating
+SELECT AVG(rating) FROM reviews;
+
+-- 15. group by platform
+SELECT platform, COUNT(*) FROM reviews GROUP BY platform;
+
+-- 16. having
+SELECT platform, COUNT(*) 
+FROM reviews 
+GROUP BY platform 
+HAVING COUNT(*) > 1;
+
+-- 17. subquery
+SELECT * FROM reviews
+WHERE rating > (SELECT AVG(rating) FROM reviews);
+
+-- 18. alias
+SELECT rating AS user_rating, platform AS review_platform FROM reviews;
+
+-- 19. distinct
+SELECT DISTINCT platform FROM reviews;
+
+-- 20. case
+SELECT reviewer_name,
+CASE
+ WHEN rating >= 8 THEN 'Excellent'
+ WHEN rating >= 6 THEN 'Good'
+ ELSE 'Average'
+END AS review_quality
+FROM reviews;
+
+-- 4. CASCADES DEMONSTRATION – reviews
+CREATE TABLE review_likes (
+  like_id INT AUTO_INCREMENT PRIMARY KEY,
+  review_id INT,
+  liked_by VARCHAR(100),
+  FOREIGN KEY (review_id) REFERENCES reviews(review_id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+
+-- 5. DOCUMENTATION & COMMENTS – reviews
+-- reviews table stores user & critic reviews of movies
+-- includes rating, sentiment, platform, likes & verification
+-- foreign key links reviews to movies
+-- constraints ensure valid rating values
+-- cascades maintain referential integrity
+-- covers ddl, dml, dql, aggregates, subqueries & transactions
+
+-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- 1. DDL QUERIES – tickets
+-- 1. add new column
+ALTER TABLE tickets ADD COLUMN discount_amount DECIMAL(6,2);
+
+-- 2. modify column
+ALTER TABLE tickets MODIFY seat_number VARCHAR(15);
+
+-- 3. rename column
+ALTER TABLE tickets RENAME COLUMN price TO ticket_price;
+
+-- 4. add default value
+ALTER TABLE tickets ALTER payment_status SET DEFAULT 'pending';
+
+-- 5. add check constraint
+ALTER TABLE tickets ADD CONSTRAINT chk_ticket_price CHECK (ticket_price > 0);
+
+-- 6. add unique constraint
+ALTER TABLE tickets ADD CONSTRAINT uq_show_seat UNIQUE (showtime_id, seat_number);
+
+-- 7. drop constraint
+ALTER TABLE tickets DROP CHECK chk_ticket_price;
+
+-- 8. create index
+CREATE INDEX idx_ticket_customer ON tickets(customer_id);
+
+-- 9. drop index
+DROP INDEX idx_ticket_customer ON tickets;
+
+-- 10. rename table
+ALTER TABLE tickets RENAME TO movie_tickets;
+
+-- 11. revert table name
+ALTER TABLE movie_tickets RENAME TO tickets;
+
+-- 12. truncate table
+TRUNCATE TABLE tickets;
+
+-- 13. drop table
+DROP TABLE tickets;
+
+-- 14. backup table
+CREATE TABLE tickets_backup LIKE tickets;
+
+-- 15. temporary table
+CREATE TEMPORARY TABLE temp_tickets SELECT * FROM tickets;
+
+-- 2. DML QUERIES – tickets
+-- 1. insert single ticket
+INSERT INTO tickets (showtime_id, seat_number, ticket_price, payment_status)
+VALUES (1,'K5',450,'paid');
+
+-- 2. insert multiple tickets
+INSERT INTO tickets (showtime_id, seat_number, ticket_price, payment_status)
+VALUES
+(2,'L3',500,'paid'),
+(3,'M8',550,'paid');
+
+-- 3. update ticket price
+UPDATE tickets SET ticket_price=600 WHERE ticket_id=1;
+
+-- 4. update multiple columns
+UPDATE tickets SET payment_status='refunded', ticket_price=0 WHERE ticket_id=2;
+
+-- 5. conditional update
+UPDATE tickets SET booking_source='online' WHERE booking_source IS NULL;
+
+-- 6. delete single record
+DELETE FROM tickets WHERE ticket_id=10;
+
+-- 7. delete by condition
+DELETE FROM tickets WHERE ticket_price < 450;
+
+-- 8. delete all records
+DELETE FROM tickets;
+
+-- 9. start transaction
+START TRANSACTION;
+
+-- 10. insert inside transaction
+INSERT INTO tickets (showtime_id, seat_number, ticket_price)
+VALUES (4,'Z1',500);
+
+-- 11. rollback
+ROLLBACK;
+
+-- 12. commit
+COMMIT;
+
+-- 13. update using subquery
+UPDATE tickets
+SET payment_status='paid'
+WHERE customer_id IN (SELECT customer_id FROM customers);
+
+-- 14. insert into backup
+INSERT INTO tickets_backup SELECT * FROM tickets;
+
+-- 15. safe delete
+DELETE FROM tickets WHERE ticket_id=1;
+
+-- 3. DQL QUERIES – tickets
+-- 1. select all
+SELECT * FROM tickets;
+
+-- 2. specific columns
+SELECT seat_number, ticket_price, payment_status FROM tickets;
+
+-- 3. where clause
+SELECT * FROM tickets WHERE payment_status='paid';
+
+-- 4. and operator
+SELECT * FROM tickets WHERE ticket_price>500 AND payment_status='paid';
+
+-- 5. or operator
+SELECT * FROM tickets WHERE booking_source='online' OR booking_source='app';
+
+-- 6. between
+SELECT * FROM tickets WHERE ticket_price BETWEEN 450 AND 650;
+
+-- 7. in
+SELECT * FROM tickets WHERE screen_number IN (1,2);
+
+-- 8. like
+SELECT * FROM tickets WHERE seat_number LIKE 'A%';
+
+-- 9. order by
+SELECT * FROM tickets ORDER BY booking_time DESC;
+
+-- 10. limit
+SELECT * FROM tickets LIMIT 5;
+
+-- 11. aggregate count
+SELECT COUNT(*) FROM tickets;
+
+-- 12. max price
+SELECT MAX(ticket_price) FROM tickets;
+
+-- 13. min price
+SELECT MIN(ticket_price) FROM tickets;
+
+-- 14. average price
+SELECT AVG(ticket_price) FROM tickets;
+
+-- 15. group by screen
+SELECT screen_number, COUNT(*) FROM tickets GROUP BY screen_number;
+
+-- 16. having
+SELECT screen_number, COUNT(*)
+FROM tickets
+GROUP BY screen_number
+HAVING COUNT(*) > 1;
+
+-- 17. subquery
+SELECT * FROM tickets
+WHERE ticket_price > (SELECT AVG(ticket_price) FROM tickets);
+
+-- 18. alias
+SELECT ticket_price AS price_paid, booking_source AS source FROM tickets;
+
+-- 19. distinct
+SELECT DISTINCT booking_source FROM tickets;
+
+-- 20. case
+SELECT seat_number,
+CASE
+ WHEN ticket_price >= 600 THEN 'Premium'
+ WHEN ticket_price >= 450 THEN 'Standard'
+ ELSE 'Budget'
+END AS ticket_type
+FROM tickets;
+
+-- 4.CASCADES DEMONSTRATION – tickets
+CREATE TABLE ticket_payments (
+  payment_id INT AUTO_INCREMENT PRIMARY KEY,
+  ticket_id INT,
+  payment_mode VARCHAR(50),
+  amount DECIMAL(8,2),
+  FOREIGN KEY (ticket_id) REFERENCES tickets(ticket_id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+
+-- 5. DOCUMENTATION & COMMENTS – tickets
+-- tickets table stores movie ticket booking details
+-- includes seat, price, payment status, customer & showtime info
+-- constraints ensure valid pricing and unique seat per showtime
+-- cascading maintains payment-ticket relationship
+-- queries cover ddl, dml, dql, aggregates, subqueries & transactions
+
+
+-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- 1. DDL QUERIES – theaters
+-- 1. add new column
+ALTER TABLE theaters ADD COLUMN opening_year YEAR;
+
+-- 2. modify column
+ALTER TABLE theaters MODIFY contact_number VARCHAR(25);
+
+-- 3. rename column
+ALTER TABLE theaters RENAME COLUMN capacity TO seating_capacity;
+
+-- 4. add default value
+ALTER TABLE theaters ALTER country SET DEFAULT 'India';
+
+-- 5. add check constraint
+ALTER TABLE theaters ADD CONSTRAINT chk_screens CHECK (total_screens > 0);
+
+-- 6. add unique constraint
+ALTER TABLE theaters ADD CONSTRAINT uq_theater_location UNIQUE (name, location);
+
+-- 7. drop constraint
+ALTER TABLE theaters DROP CHECK chk_screens;
+
+-- 8. create index
+CREATE INDEX idx_city ON theaters(city);
+
+-- 9. drop index
+DROP INDEX idx_city ON theaters;
+
+-- 10. rename table
+ALTER TABLE theaters RENAME TO cinema_halls;
+
+-- 11. revert table name
+ALTER TABLE cinema_halls RENAME TO theaters;
+
+-- 12. truncate table
+TRUNCATE TABLE theaters;
+
+-- 13. drop table
+DROP TABLE theaters;
+
+-- 14. backup table
+CREATE TABLE theaters_backup LIKE theaters;
+
+-- 15. temporary table
+CREATE TEMPORARY TABLE temp_theaters SELECT * FROM theaters;
+
+-- 2. DML QUERIES – theaters
+-- 1. insert single theater
+INSERT INTO theaters (name, city, total_screens, seating_capacity)
+VALUES ('Miraj Cinemas','Mumbai',6,220);
+
+-- 2. insert multiple theaters
+INSERT INTO theaters (name, city, total_screens, seating_capacity)
+VALUES
+('Rajhans Cinemas','Pune',5,200),
+('City Pride','Nagpur',4,180);
+
+-- 3. update capacity
+UPDATE theaters SET seating_capacity=320 WHERE theater_id=1;
+
+-- 4. update multiple columns
+UPDATE theaters SET total_screens=11, owner_name='PVR INOX'
+WHERE theater_id=1;
+
+-- 5. conditional update
+UPDATE theaters SET state='Maharashtra' WHERE state IS NULL;
+
+-- 6. delete single record
+DELETE FROM theaters WHERE theater_id=10;
+
+-- 7. delete by condition
+DELETE FROM theaters WHERE total_screens < 6;
+
+-- 8. delete all records
+DELETE FROM theaters;
+
+-- 9. start transaction
+START TRANSACTION;
+
+-- 10. insert inside transaction
+INSERT INTO theaters (name, city, total_screens)
+VALUES ('Wave Cinemas','Delhi',7);
+
+-- 11. rollback
+ROLLBACK;
+
+-- 12. commit
+COMMIT;
+
+-- 13. update using subquery
+UPDATE theaters
+SET owner_name='Premium Group'
+WHERE city IN (SELECT city FROM theaters WHERE total_screens > 8);
+
+-- 14. insert into backup
+INSERT INTO theaters_backup SELECT * FROM theaters;
+
+-- 15. safe delete
+DELETE FROM theaters WHERE theater_id=1;
+
+-- 3. DQL QUERIES – theaters
+-- 1. select all
+SELECT * FROM theaters;
+
+-- 2. specific columns
+SELECT name, city, total_screens FROM theaters;
+
+-- 3. where clause
+SELECT * FROM theaters WHERE city='Mumbai';
+
+-- 4. and operator
+SELECT * FROM theaters WHERE city='Mumbai' AND total_screens>8;
+
+-- 5. or operator
+SELECT * FROM theaters WHERE owner_name='PVR Group' OR owner_name='INOX Group';
+
+-- 6. between
+SELECT * FROM theaters WHERE total_screens BETWEEN 7 AND 10;
+
+-- 7. in
+SELECT * FROM theaters WHERE city IN ('Mumbai','Thane');
+
+-- 8. like
+SELECT * FROM theaters WHERE name LIKE '%Cinemas%';
+
+-- 9. order by
+SELECT * FROM theaters ORDER BY seating_capacity DESC;
+
+-- 10. limit
+SELECT * FROM theaters LIMIT 5;
+
+-- 11. count
+SELECT COUNT(*) FROM theaters;
+
+-- 12. max
+SELECT MAX(seating_capacity) FROM theaters;
+
+-- 13. min
+SELECT MIN(seating_capacity) FROM theaters;
+
+-- 14. avg
+SELECT AVG(seating_capacity) FROM theaters;
+
+-- 15. group by
+SELECT city, COUNT(*) FROM theaters GROUP BY city;
+
+-- 16. having
+SELECT city, COUNT(*)
+FROM theaters
+GROUP BY city
+HAVING COUNT(*) > 2;
+
+-- 17. subquery
+SELECT * FROM theaters
+WHERE seating_capacity >
+(SELECT AVG(seating_capacity) FROM theaters);
+
+-- 18. alias
+SELECT name AS theater_name, city AS theater_city FROM theaters;
+
+-- 19. distinct
+SELECT DISTINCT owner_name FROM theaters;
+
+-- 20. case
+SELECT name,
+CASE
+ WHEN total_screens >= 10 THEN 'Multiplex'
+ WHEN total_screens >= 6 THEN 'Mini Multiplex'
+ ELSE 'Single Screen'
+END AS theater_type
+FROM theaters;
+
+-- 4. CASCADES DEMONSTRATION – theaters
+CREATE TABLE theater_screens (
+  screen_id INT AUTO_INCREMENT PRIMARY KEY,
+  theater_id INT,
+  screen_number INT,
+  FOREIGN KEY (theater_id) REFERENCES theaters(theater_id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+
+
+-- 5. DOCUMENTATION & COMMENTS – theaters
+-- theaters table stores cinema hall details
+-- includes location, capacity, screens and ownership info
+-- constraints ensure valid screen counts
+-- cascading maintains theater and screen relationship
+-- queries demonstrate ddl, dml, dql, aggregates & transactions
+
+-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- 1.DDL QUERIES – showtimes
+-- 1. add new column
+ALTER TABLE showtimes ADD COLUMN ticket_price DECIMAL(8,2);
+
+-- 2. modify column
+ALTER TABLE showtimes MODIFY format VARCHAR(30);
+
+-- 3. rename column
+ALTER TABLE showtimes RENAME COLUMN date TO show_date;
+
+-- 4. add default value
+ALTER TABLE showtimes ALTER is_premiere SET DEFAULT FALSE;
+
+-- 5. add check constraint
+ALTER TABLE showtimes ADD CONSTRAINT chk_time
+CHECK (start_time < end_time);
+
+-- 6. add unique constraint
+ALTER TABLE showtimes ADD CONSTRAINT uq_show
+UNIQUE (theater_id, screen_number, show_date, start_time);
+
+-- 7. drop constraint
+ALTER TABLE showtimes DROP CHECK chk_time;
+
+-- 8. create index
+CREATE INDEX idx_movie_show ON showtimes(movie_id);
+
+-- 9. create composite index
+CREATE INDEX idx_theater_date ON showtimes(theater_id, show_date);
+
+-- 10. drop index
+DROP INDEX idx_movie_show ON showtimes;
+
+-- 11. rename table
+ALTER TABLE showtimes RENAME TO movie_showtimes;
+
+-- 12. revert table name
+ALTER TABLE movie_showtimes RENAME TO showtimes;
+
+-- 13. truncate table
+TRUNCATE TABLE showtimes;
+
+-- 14. drop table
+DROP TABLE showtimes;
+
+-- 15. backup table
+CREATE TABLE showtimes_backup LIKE showtimes;
+
+-- 16. temporary table
+CREATE TEMPORARY TABLE temp_showtimes SELECT * FROM showtimes;
+
+-- 2. DML QUERIES – showtimes
+-- 1. insert single showtime
+INSERT INTO showtimes (movie_id, theater_id, screen_number, start_time, end_time, show_date)
+VALUES (1,1,1,'09:00:00','11:40:00','2023-12-11');
+
+-- 2. insert multiple showtimes
+INSERT INTO showtimes (movie_id, theater_id, screen_number, start_time, end_time, show_date)
+VALUES
+(2,2,2,'10:00:00','12:50:00','2023-12-12'),
+(3,3,1,'18:00:00','20:45:00','2023-12-12');
+
+-- 3. update show format
+UPDATE showtimes SET format='IMAX' WHERE showtime_id=5;
+
+-- 4. update multiple columns
+UPDATE showtimes
+SET language='hindi', is_premiere=TRUE
+WHERE showtime_id=8;
+
+-- 5. conditional update
+UPDATE showtimes SET format='2D' WHERE format IS NULL;
+
+-- 6. delete single record
+DELETE FROM showtimes WHERE showtime_id=10;
+
+-- 7. delete by condition
+DELETE FROM showtimes WHERE show_date < '2023-12-05';
+
+-- 8. delete all records
+DELETE FROM showtimes;
+
+-- 9. start transaction
+START TRANSACTION;
+
+-- 10. insert inside transaction
+INSERT INTO showtimes (movie_id, theater_id, screen_number, start_time, end_time, show_date)
+VALUES (4,2,1,'22:00:00','00:30:00','2023-12-15');
+
+-- 11. rollback
+ROLLBACK;
+
+-- 12. commit
+COMMIT;
+
+-- 13. update time
+UPDATE showtimes SET start_time='16:00:00' WHERE showtime_id=3;
+
+-- 14. insert into backup
+INSERT INTO showtimes_backup SELECT * FROM showtimes;
+
+-- 15. safe delete
+DELETE FROM showtimes WHERE showtime_id=1;
+
+-- 3. DQL QUERIES – showtimes
+-- 1. select all
+SELECT * FROM showtimes;
+
+-- 2. specific columns
+SELECT movie_id, theater_id, start_time FROM showtimes;
+
+-- 3. where clause
+SELECT * FROM showtimes WHERE is_premiere=TRUE;
+
+-- 4. and operator
+SELECT * FROM showtimes WHERE format='IMAX' AND language='telugu';
+
+-- 5. or operator
+SELECT * FROM showtimes WHERE format='3D' OR format='IMAX';
+
+-- 6. between
+SELECT * FROM showtimes
+WHERE show_date BETWEEN '2023-12-03' AND '2023-12-08';
+
+-- 7. in
+SELECT * FROM showtimes WHERE theater_id IN (1,2,3);
+
+-- 8. like
+SELECT * FROM showtimes WHERE format LIKE '%D%';
+
+-- 9. order by
+SELECT * FROM showtimes ORDER BY show_date DESC;
+
+-- 10. limit
+SELECT * FROM showtimes LIMIT 5;
+
+-- 11. count
+SELECT COUNT(*) FROM showtimes;
+
+-- 12. min
+SELECT MIN(start_time) FROM showtimes;
+
+-- 13. max
+SELECT MAX(end_time) FROM showtimes;
+
+-- 14. group by
+SELECT theater_id, COUNT(*) FROM showtimes GROUP BY theater_id;
+
+-- 15. having
+SELECT theater_id, COUNT(*)
+FROM showtimes
+GROUP BY theater_id
+HAVING COUNT(*) > 2;
+
+-- 16. subquery
+SELECT * FROM showtimes
+WHERE movie_id =
+(SELECT movie_id FROM movies WHERE title='dangal');
+
+-- 17. alias
+SELECT show_date AS date, start_time AS timing FROM showtimes;
+
+-- 18. distinct
+SELECT DISTINCT format FROM showtimes;
+
+-- 19. avg (via time diff)
+SELECT AVG(TIMESTAMPDIFF(MINUTE,start_time,end_time))
+FROM showtimes;
+
+-- 20. case
+SELECT showtime_id,
+CASE
+ WHEN is_premiere=TRUE THEN 'Premiere Show'
+ ELSE 'Regular Show'
+END AS show_type
+FROM showtimes;
+
+-- 4. CASCADES DEMONSTRATION – showtimes
+CREATE TABLE showtime_tickets (
+  show_ticket_id INT AUTO_INCREMENT PRIMARY KEY,
+  showtime_id INT,
+  total_seats INT,
+  FOREIGN KEY (showtime_id) REFERENCES showtimes(showtime_id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+
+-- 5. DOCUMENTATION & COMMENTS – showtimes
+-- showtimes table manages movie scheduling
+-- stores movie, theater, screen, timing & format
+-- constraints ensure valid time ranges
+-- cascade maintains dependency with ticket tables
+-- queries cover ddl, dml, dql, subqueries & transactions
+
+-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- 1. DDL QUERIES – music
+-- 1. add new column
+ALTER TABLE music ADD COLUMN album VARCHAR(100);
+
+-- 2. modify column size
+ALTER TABLE music MODIFY title VARCHAR(200);
+
+-- 3. rename column
+ALTER TABLE music RENAME COLUMN duration TO duration_seconds;
+
+-- 4. add default value
+ALTER TABLE music ALTER platform SET DEFAULT 'Spotify';
+
+-- 5. add check constraint
+ALTER TABLE music ADD CONSTRAINT chk_duration
+CHECK (duration_seconds > 30);
+
+-- 6. add unique constraint
+ALTER TABLE music ADD CONSTRAINT uq_track
+UNIQUE (movie_id, title);
+
+-- 7. drop constraint
+ALTER TABLE music DROP CHECK chk_duration;
+
+-- 8. create index
+CREATE INDEX idx_music_movie ON music(movie_id);
+
+-- 9. create index on genre
+CREATE INDEX idx_music_genre ON music(genre);
+
+-- 10. drop index
+DROP INDEX idx_music_movie ON music;
+
+-- 11. rename table
+ALTER TABLE music RENAME TO movie_music;
+
+-- 12. revert table name
+ALTER TABLE movie_music RENAME TO music;
+
+-- 13. truncate table
+TRUNCATE TABLE music;
+
+-- 14. drop table
+DROP TABLE music;
+
+-- 15. backup table
+CREATE TABLE music_backup LIKE music;
+
+-- 16. temporary table
+CREATE TEMPORARY TABLE temp_music SELECT * FROM music;
+
+-- 2. DML QUERIES – music
+-- 1. insert single record
+INSERT INTO music
+(movie_id, title, duration_seconds, singer, composer, lyricist, genre, release_date, platform)
+VALUES
+(1,'Haanikaarak Bapu',195,'Sarwar','Pritam','Amitabh','Sports','2015-12-05','Spotify');
+
+-- 2. insert multiple records
+INSERT INTO music
+(movie_id, title, duration_seconds, singer, composer, lyricist, genre, release_date, platform)
+VALUES
+(2,'Zoobi Doobi',210,'Sonu Nigam','Shantanu','Swanand','Comedy','2009-11-15','YouTube'),
+(3,'Salaam Rocky Bhai',205,'Vijay','Ravi Basrur','Prashanth','Action','2018-01-01','Spotify');
+
+-- 3. update platform
+UPDATE music SET platform='YouTube' WHERE track_id=1;
+
+-- 4. update multiple columns
+UPDATE music
+SET genre='Motivational', singer='Various Artists'
+WHERE track_id=5;
+
+-- 5. conditional update
+UPDATE music SET platform='Spotify'
+WHERE platform IS NULL;
+
+-- 6. delete single record
+DELETE FROM music WHERE track_id=10;
+
+-- 7. delete by condition
+DELETE FROM music WHERE release_date < '2000-01-01';
+
+-- 8. delete all records
+DELETE FROM music;
+
+-- 9. start transaction
+START TRANSACTION;
+
+-- 10. insert inside transaction
+INSERT INTO music
+(movie_id, title, duration_seconds, singer, composer, lyricist, genre, release_date, platform)
+VALUES
+(4,'Jhoome Jo Pathaan',230,'Arijit Singh','Vishal-Shekhar','Kumaar','Action','2021-12-20','Spotify');
+
+-- 11. rollback
+ROLLBACK;
+
+-- 12. commit
+COMMIT;
+
+-- 13. update duration
+UPDATE music SET duration_seconds=260 WHERE track_id=5;
+
+-- 14. copy to backup
+INSERT INTO music_backup SELECT * FROM music;
+
+-- 15. safe delete
+DELETE FROM music WHERE track_id=2;
+
+-- 3. DQL QUERIES – music
+-- 1. select all
+SELECT * FROM music;
+
+-- 2. specific columns
+SELECT title, singer, composer FROM music;
+
+-- 3. where clause
+SELECT * FROM music WHERE genre='Action';
+
+-- 4. and operator
+SELECT * FROM music
+WHERE genre='Action' AND platform='YouTube';
+
+-- 5. or operator
+SELECT * FROM music
+WHERE platform='Spotify' OR platform='YouTube';
+
+-- 6. between
+SELECT * FROM music
+WHERE release_date BETWEEN '2015-01-01' AND '2020-12-31';
+
+-- 7. in
+SELECT * FROM music
+WHERE genre IN ('Action','Drama');
+
+-- 8. like
+SELECT * FROM music
+WHERE title LIKE '%Theme%';
+
+-- 9. order by
+SELECT * FROM music ORDER BY release_date DESC;
+
+-- 10. limit
+SELECT * FROM music LIMIT 5;
+
+-- 11. count
+SELECT COUNT(*) FROM music;
+
+-- 12. min duration
+SELECT MIN(duration_seconds) FROM music;
+
+-- 13. max duration
+SELECT MAX(duration_seconds) FROM music;
+
+-- 14. group by
+SELECT genre, COUNT(*) FROM music GROUP BY genre;
+
+-- 15. having
+SELECT genre, COUNT(*)
+FROM music
+GROUP BY genre
+HAVING COUNT(*) > 1;
+
+-- 16. subquery
+SELECT * FROM music
+WHERE movie_id =
+(SELECT movie_id FROM movies WHERE title='dangal');
+
+-- 17. alias
+SELECT title AS song_name, singer AS artist FROM music;
+
+-- 18. distinct
+SELECT DISTINCT platform FROM music;
+
+-- 19. avg duration
+SELECT AVG(duration_seconds) FROM music;
+
+-- 20. case
+SELECT title,
+CASE
+ WHEN duration_seconds > 220 THEN 'Long Track'
+ ELSE 'Normal Track'
+END AS track_type
+FROM music;
+
+-- 4. CASCADES DEMONSTRATION – music
+CREATE TABLE music_streams (
+  stream_id INT AUTO_INCREMENT PRIMARY KEY,
+  track_id INT,
+  stream_count INT,
+  FOREIGN KEY (track_id) REFERENCES music(track_id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+
+-- 5. DOCUMENTATION & COMMENTS – music
+-- music table stores movie soundtrack details
+-- linked with movies using foreign key
+-- includes singer, composer, genre & platform
+-- constraints ensure valid duration
+-- queries demonstrate ddl, dml, dql & cascades
+
+-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- 1. DDL QUERIES – singers
+-- 1. add new column
+ALTER TABLE singers ADD COLUMN instagram_handle VARCHAR(100);
+
+-- 2. modify column size
+ALTER TABLE singers MODIFY full_name VARCHAR(150);
+
+-- 3. rename column
+ALTER TABLE singers RENAME COLUMN awards TO awards_count;
+
+-- 4. set default value
+ALTER TABLE singers ALTER active_status SET DEFAULT 1;
+
+-- 5. add check constraint
+ALTER TABLE singers ADD CONSTRAINT chk_debut
+CHECK (debut_year >= 1950);
+
+-- 6. add unique constraint
+ALTER TABLE singers ADD CONSTRAINT uq_email UNIQUE (contact_email);
+
+-- 7. drop check constraint
+ALTER TABLE singers DROP CHECK chk_debut;
+
+-- 8. create index
+CREATE INDEX idx_singer_genre ON singers(genre);
+
+-- 9. create index on nationality
+CREATE INDEX idx_singer_country ON singers(nationality);
+
+-- 10. drop index
+DROP INDEX idx_singer_genre ON singers;
+
+-- 11. rename table
+ALTER TABLE singers RENAME TO playback_singers;
+
+-- 12. revert table name
+ALTER TABLE playback_singers RENAME TO singers;
+
+-- 13. truncate table
+TRUNCATE TABLE singers;
+
+-- 14. drop table
+DROP TABLE singers;
+
+-- 15. backup table
+CREATE TABLE singers_backup LIKE singers;
+
+-- 16. temporary table
+CREATE TEMPORARY TABLE temp_singers SELECT * FROM singers;
+
+-- 2. DML QUERIES – singers
+-- 1. insert single record
+INSERT INTO singers
+(full_name, nationality, date_of_birth, gender, contact_email, genre, awards_count, debut_year, active_status)
+VALUES
+('Udit Narayan','Indian','1955-12-01','male','udit@gmail.com','Romantic',34,1988,1);
+
+-- 2. insert multiple records
+INSERT INTO singers
+(full_name, nationality, date_of_birth, gender, contact_email, genre, awards_count, debut_year, active_status)
+VALUES
+('Neha Kakkar','Indian','1988-06-06','female','neha@gmail.com','Pop',20,2008,1),
+('KK','Indian','1968-08-23','male','kk@gmail.com','Melody',25,1996,0);
+
+-- 3. update genre
+UPDATE singers SET genre='Soulful' WHERE singer_id=1;
+
+-- 4. update multiple columns
+UPDATE singers
+SET awards_count=55, genre='Legendary'
+WHERE full_name='A.R. Rahman';
+
+-- 5. conditional update
+UPDATE singers SET active_status=0
+WHERE debut_year < 1960;
+
+-- 6. delete single record
+DELETE FROM singers WHERE singer_id=9;
+
+-- 7. delete by condition
+DELETE FROM singers WHERE awards_count < 15;
+
+-- 8. delete all records
+DELETE FROM singers;
+
+-- 9. start transaction
+START TRANSACTION;
+
+-- 10. insert inside transaction
+INSERT INTO singers
+(full_name, nationality, date_of_birth, gender, contact_email, genre, awards_count, debut_year, active_status)
+VALUES
+('Jubin Nautiyal','Indian','1989-06-14','male','jubin@gmail.com','Romantic',12,2014,1);
+
+-- 11. rollback
+ROLLBACK;
+
+-- 12. commit
+COMMIT;
+
+-- 13. update debut year
+UPDATE singers SET debut_year=2000 WHERE singer_id=10;
+
+-- 14. copy data to backup
+INSERT INTO singers_backup SELECT * FROM singers;
+
+-- 15. safe delete
+DELETE FROM singers WHERE contact_email='sonu@gmail.com';
+
+-- 3. DQL QUERIES – singers
+-- 1. select all
+SELECT * FROM singers;
+
+-- 2. specific columns
+SELECT full_name, genre, awards_count FROM singers;
+
+-- 3. where clause
+SELECT * FROM singers WHERE gender='female';
+
+-- 4. and operator
+SELECT * FROM singers
+WHERE nationality='Indian' AND active_status=1;
+
+-- 5. or operator
+SELECT * FROM singers
+WHERE genre='Romantic' OR genre='Pop';
+
+-- 6. between
+SELECT * FROM singers
+WHERE debut_year BETWEEN 1990 AND 2010;
+
+-- 7. in
+SELECT * FROM singers
+WHERE genre IN ('Bollywood','Classical');
+
+-- 8. like
+SELECT * FROM singers
+WHERE full_name LIKE '%Singh%';
+
+-- 9. order by
+SELECT * FROM singers ORDER BY awards_count DESC;
+
+-- 10. limit
+SELECT * FROM singers LIMIT 5;
+
+-- 11. count
+SELECT COUNT(*) FROM singers;
+
+-- 12. min awards
+SELECT MIN(awards_count) FROM singers;
+
+-- 13. max awards
+SELECT MAX(awards_count) FROM singers;
+
+-- 14. group by
+SELECT genre, COUNT(*) FROM singers GROUP BY genre;
+
+-- 15. having
+SELECT genre, COUNT(*)
+FROM singers
+GROUP BY genre
+HAVING COUNT(*) > 1;
+
+-- 16. subquery
+SELECT * FROM singers
+WHERE awards_count >
+(SELECT AVG(awards_count) FROM singers);
+
+-- 17. alias
+SELECT full_name AS singer_name, genre AS music_type FROM singers;
+
+-- 18. distinct
+SELECT DISTINCT nationality FROM singers;
+
+-- 19. avg awards
+SELECT AVG(awards_count) FROM singers;
+
+-- 20. case
+SELECT full_name,
+CASE
+ WHEN awards_count >= 40 THEN 'Legend'
+ WHEN awards_count >= 20 THEN 'Star'
+ ELSE 'Rising Artist'
+END AS singer_level
+FROM singers;
+
+-- 4.CASCADES DEMONSTRATION – singers
+CREATE TABLE singer_socials (
+  social_id INT AUTO_INCREMENT PRIMARY KEY,
+  singer_id INT,
+  platform VARCHAR(50),
+  followers BIGINT,
+  FOREIGN KEY (singer_id) REFERENCES singers(singer_id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+
+
+-- 5. DOCUMENTATION & COMMENTS – singers
+-- singers table stores playback singer information
+-- includes personal details, genre & awards
+-- used for linking with music tracks
+-- ddl, dml, dql, constraints & cascades demonstrated
+-- designed as per phase-2 evaluation
+
+-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- 1. DDL QUERIES – singers
+-- 1. add new column
+ALTER TABLE singers ADD COLUMN instagram_handle VARCHAR(100);
+
+-- 2. modify column size
+ALTER TABLE singers MODIFY full_name VARCHAR(150);
+
+-- 3. rename column
+ALTER TABLE singers RENAME COLUMN awards TO awards_count;
+
+-- 4. set default value
+ALTER TABLE singers ALTER active_status SET DEFAULT 1;
+
+-- 5. add check constraint
+ALTER TABLE singers ADD CONSTRAINT chk_debut
+CHECK (debut_year >= 1950);
+
+-- 6. add unique constraint
+ALTER TABLE singers ADD CONSTRAINT uq_email UNIQUE (contact_email);
+
+-- 7. drop check constraint
+ALTER TABLE singers DROP CHECK chk_debut;
+
+-- 8. create index
+CREATE INDEX idx_singer_genre ON singers(genre);
+
+-- 9. create index on nationality
+CREATE INDEX idx_singer_country ON singers(nationality);
+
+-- 10. drop index
+DROP INDEX idx_singer_genre ON singers;
+
+-- 11. rename table
+ALTER TABLE singers RENAME TO playback_singers;
+
+-- 12. revert table name
+ALTER TABLE playback_singers RENAME TO singers;
+
+-- 13. truncate table
+TRUNCATE TABLE singers;
+
+-- 14. drop table
+DROP TABLE singers;
+
+-- 15. backup table
+CREATE TABLE singers_backup LIKE singers;
+
+-- 16. temporary table
+CREATE TEMPORARY TABLE temp_singers SELECT * FROM singers;
+
+-- 2. DML QUERIES – singers
+-- 1. insert single record
+INSERT INTO singers
+(full_name, nationality, date_of_birth, gender, contact_email, genre, awards_count, debut_year, active_status)
+VALUES
+('Udit Narayan','Indian','1955-12-01','male','udit@gmail.com','Romantic',34,1988,1);
+
+-- 2. insert multiple records
+INSERT INTO singers
+(full_name, nationality, date_of_birth, gender, contact_email, genre, awards_count, debut_year, active_status)
+VALUES
+('Neha Kakkar','Indian','1988-06-06','female','neha@gmail.com','Pop',20,2008,1),
+('KK','Indian','1968-08-23','male','kk@gmail.com','Melody',25,1996,0);
+
+-- 3. update genre
+UPDATE singers SET genre='Soulful' WHERE singer_id=1;
+
+-- 4. update multiple columns
+UPDATE singers
+SET awards_count=55, genre='Legendary'
+WHERE full_name='A.R. Rahman';
+
+-- 5. conditional update
+UPDATE singers SET active_status=0
+WHERE debut_year < 1960;
+
+-- 6. delete single record
+DELETE FROM singers WHERE singer_id=9;
+
+-- 7. delete by condition
+DELETE FROM singers WHERE awards_count < 15;
+
+-- 8. delete all records
+DELETE FROM singers;
+
+-- 9. start transaction
+START TRANSACTION;
+
+-- 10. insert inside transaction
+INSERT INTO singers
+(full_name, nationality, date_of_birth, gender, contact_email, genre, awards_count, debut_year, active_status)
+VALUES
+('Jubin Nautiyal','Indian','1989-06-14','male','jubin@gmail.com','Romantic',12,2014,1);
+
+-- 11. rollback
+ROLLBACK;
+
+-- 12. commit
+COMMIT;
+
+-- 13. update debut year
+UPDATE singers SET debut_year=2000 WHERE singer_id=10;
+
+-- 14. copy data to backup
+INSERT INTO singers_backup SELECT * FROM singers;
+
+-- 15. safe delete
+DELETE FROM singers WHERE contact_email='sonu@gmail.com';
+
+-- 3. DQL QUERIES – singers
+-- 1. select all
+SELECT * FROM singers;
+
+-- 2. specific columns
+SELECT full_name, genre, awards_count FROM singers;
+
+-- 3. where clause
+SELECT * FROM singers WHERE gender='female';
+
+-- 4. and operator
+SELECT * FROM singers
+WHERE nationality='Indian' AND active_status=1;
+
+-- 5. or operator
+SELECT * FROM singers
+WHERE genre='Romantic' OR genre='Pop';
+
+-- 6. between
+SELECT * FROM singers
+WHERE debut_year BETWEEN 1990 AND 2010;
+
+-- 7. in
+SELECT * FROM singers
+WHERE genre IN ('Bollywood','Classical');
+
+-- 8. like
+SELECT * FROM singers
+WHERE full_name LIKE '%Singh%';
+
+-- 9. order by
+SELECT * FROM singers ORDER BY awards_count DESC;
+
+-- 10. limit
+SELECT * FROM singers LIMIT 5;
+
+-- 11. count
+SELECT COUNT(*) FROM singers;
+
+-- 12. min awards
+SELECT MIN(awards_count) FROM singers;
+
+-- 13. max awards
+SELECT MAX(awards_count) FROM singers;
+
+-- 14. group by
+SELECT genre, COUNT(*) FROM singers GROUP BY genre;
+
+-- 15. having
+SELECT genre, COUNT(*)
+FROM singers
+GROUP BY genre
+HAVING COUNT(*) > 1;
+
+-- 16. subquery
+SELECT * FROM singers
+WHERE awards_count >
+(SELECT AVG(awards_count) FROM singers);
+
+-- 17. alias
+SELECT full_name AS singer_name, genre AS music_type FROM singers;
+
+-- 18. distinct
+SELECT DISTINCT nationality FROM singers;
+
+-- 19. avg awards
+SELECT AVG(awards_count) FROM singers;
+
+-- 20. case
+SELECT full_name,
+CASE
+ WHEN awards_count >= 40 THEN 'Legend'
+ WHEN awards_count >= 20 THEN 'Star'
+ ELSE 'Rising Artist'
+END AS singer_level
+FROM singers;
+
+-- 4. CASCADES DEMONSTRATION – singers
+CREATE TABLE singer_socials (
+  social_id INT AUTO_INCREMENT PRIMARY KEY,
+  singer_id INT,
+  platform VARCHAR(50),
+  followers BIGINT,
+  FOREIGN KEY (singer_id) REFERENCES singers(singer_id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+
+
+-- 5. DOCUMENTATION & COMMENTS – singers
+-- singers table stores playback singer information
+-- includes personal details, genre & awards
+-- used for linking with music tracks
+-- ddl, dml, dql, constraints & cascades demonstrated
+-- designed as per phase-2 evaluation
+
+-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- 1. DDL QUERIES – streaming_platforms
+-- 1. add new column
+ALTER TABLE streaming_platforms ADD COLUMN mobile_users BIGINT;
+
+-- 2. modify column size
+ALTER TABLE streaming_platforms MODIFY website VARCHAR(200);
+
+-- 3. rename column
+ALTER TABLE streaming_platforms RENAME COLUMN monthly_views TO total_monthly_views;
+
+-- 4. set default value
+ALTER TABLE streaming_platforms ALTER subscription_fee SET DEFAULT 0.00;
+
+-- 5. add check constraint
+ALTER TABLE streaming_platforms ADD CONSTRAINT chk_fee
+CHECK (subscription_fee >= 0);
+
+-- 6. add unique constraint
+ALTER TABLE streaming_platforms ADD CONSTRAINT uq_platform UNIQUE (name);
+
+-- 7. drop check constraint
+ALTER TABLE streaming_platforms DROP CHECK chk_fee;
+
+-- 8. create index
+CREATE INDEX idx_platform_country ON streaming_platforms(country);
+
+-- 9. create index on views
+CREATE INDEX idx_platform_views ON streaming_platforms(total_monthly_views);
+
+-- 10. drop index
+DROP INDEX idx_platform_country ON streaming_platforms;
+
+-- 11. rename table
+ALTER TABLE streaming_platforms RENAME TO ott_platforms;
+
+-- 12. revert table name
+ALTER TABLE ott_platforms RENAME TO streaming_platforms;
+
+-- 13. truncate table
+TRUNCATE TABLE streaming_platforms;
+
+-- 14. drop table
+DROP TABLE streaming_platforms;
+
+-- 15. backup table
+CREATE TABLE streaming_platforms_backup LIKE streaming_platforms;
+
+-- 16. temporary table
+CREATE TEMPORARY TABLE temp_streaming_platforms
+SELECT * FROM streaming_platforms;
+
+-- 2.DML QUERIES – streaming_platforms
+-- 1. insert single record
+INSERT INTO streaming_platforms
+(name, website, country, total_monthly_views, app_available,
+ subscription_fee, founded_year, contact_email, active_status)
+VALUES
+('Apple TV+','tv.apple.com','India',9000000,1,99,2019,'support@apple.com',1);
+
+-- 2. insert multiple records
+INSERT INTO streaming_platforms
+(name, website, country, total_monthly_views, app_available,
+ subscription_fee, founded_year, contact_email, active_status)
+VALUES
+('Discovery+','discoveryplus.com','India',7000000,1,199,2020,'support@discovery.com',1),
+('ALT Balaji','altbalaji.com','India',6000000,1,149,2017,'support@alt.com',1);
+
+-- 3. update subscription fee
+UPDATE streaming_platforms
+SET subscription_fee=349
+WHERE name='Amazon Prime';
+
+-- 4. update multiple columns
+UPDATE streaming_platforms
+SET country='Global', subscription_fee=0
+WHERE name='YouTube';
+
+-- 5. conditional update
+UPDATE streaming_platforms
+SET active_status=0
+WHERE total_monthly_views < 9000000;
+
+-- 6. delete single record
+DELETE FROM streaming_platforms WHERE platform_id=7;
+
+-- 7. delete by condition
+DELETE FROM streaming_platforms
+WHERE subscription_fee > 400;
+
+-- 8. delete all records
+DELETE FROM streaming_platforms;
+
+-- 9. transaction start
+START TRANSACTION;
+
+-- 10. insert inside transaction
+INSERT INTO streaming_platforms
+(name, website, country, total_monthly_views, app_available,
+ subscription_fee, founded_year, contact_email, active_status)
+VALUES
+('Hulu','hulu.com','USA',15000000,1,499,2007,'support@hulu.com',1);
+
+-- 11. rollback
+ROLLBACK;
+
+-- 12. commit
+COMMIT;
+
+-- 13. update views
+UPDATE streaming_platforms
+SET total_monthly_views = total_monthly_views + 500000
+WHERE country='India';
+
+-- 14. copy data to backup
+INSERT INTO streaming_platforms_backup
+SELECT * FROM streaming_platforms;
+
+-- 15. safe delete
+DELETE FROM streaming_platforms WHERE name='Voot';
+
+-- 3. DQL QUERIES – streaming_platforms
+-- 1. select all
+SELECT * FROM streaming_platforms;
+
+-- 2. specific columns
+SELECT name, country, subscription_fee FROM streaming_platforms;
+
+-- 3. where clause
+SELECT * FROM streaming_platforms WHERE country='India';
+
+-- 4. and operator
+SELECT * FROM streaming_platforms
+WHERE country='India' AND subscription_fee > 199;
+
+-- 5. or operator
+SELECT * FROM streaming_platforms
+WHERE name='Netflix' OR name='Amazon Prime';
+
+-- 6. between
+SELECT * FROM streaming_platforms
+WHERE subscription_fee BETWEEN 100 AND 400;
+
+-- 7. in
+SELECT * FROM streaming_platforms
+WHERE name IN ('Netflix','Disney+','Hotstar');
+
+-- 8. like
+SELECT * FROM streaming_platforms
+WHERE name LIKE '%Play%';
+
+-- 9. order by
+SELECT * FROM streaming_platforms
+ORDER BY total_monthly_views DESC;
+
+-- 10. limit
+SELECT * FROM streaming_platforms LIMIT 5;
+
+-- 11. count
+SELECT COUNT(*) FROM streaming_platforms;
+
+-- 12. max views
+SELECT MAX(total_monthly_views) FROM streaming_platforms;
+
+-- 13. min fee
+SELECT MIN(subscription_fee) FROM streaming_platforms;
+
+-- 14. group by
+SELECT country, COUNT(*)
+FROM streaming_platforms
+GROUP BY country;
+
+-- 15. having
+SELECT country, AVG(subscription_fee)
+FROM streaming_platforms
+GROUP BY country
+HAVING AVG(subscription_fee) > 200;
+
+-- 16. subquery
+SELECT * FROM streaming_platforms
+WHERE total_monthly_views >
+(SELECT AVG(total_monthly_views) FROM streaming_platforms);
+
+-- 17. alias
+SELECT name AS platform_name,
+subscription_fee AS monthly_cost
+FROM streaming_platforms;
+
+-- 18. distinct
+SELECT DISTINCT country FROM streaming_platforms;
+
+-- 19. avg fee
+SELECT AVG(subscription_fee) FROM streaming_platforms;
+
+-- 20. case
+SELECT name,
+CASE
+ WHEN subscription_fee = 0 THEN 'Free Platform'
+ WHEN subscription_fee <= 199 THEN 'Budget Platform'
+ ELSE 'Premium Platform'
+END AS platform_type
+FROM streaming_platforms;
+
+-- 4. CASCADES DEMONSTRATION – streaming_platforms
+CREATE TABLE platform_streams (
+  stream_id INT AUTO_INCREMENT PRIMARY KEY,
+  platform_id INT,
+  movie_id INT,
+  total_views BIGINT,
+  FOREIGN KEY (platform_id)
+  REFERENCES streaming_platforms(platform_id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+
+
+-- 5. DOCUMENTATION & COMMENTS – streaming_platforms
+-- streaming_platforms table stores OTT / digital platforms data
+-- includes subscription fee, views, country & status
+-- ddl, dml, dql, constraints & cascades covered
+-- designed for film industry sql final project (phase-2)
+
+-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- 1.DDL QUERIES – movie_availability
+-- 1. add new column
+ALTER TABLE movie_availability ADD COLUMN subtitle_available BOOLEAN;
+
+-- 2. modify column
+ALTER TABLE movie_availability MODIFY format VARCHAR(30);
+
+-- 3. rename column
+ALTER TABLE movie_availability RENAME COLUMN views TO total_views;
+
+-- 4. add default value
+ALTER TABLE movie_availability ALTER rating SET DEFAULT 0.0;
+
+-- 5. add check constraint
+ALTER TABLE movie_availability ADD CONSTRAINT chk_rating
+CHECK (rating BETWEEN 0 AND 10);
+
+-- 6. add unique constraint
+ALTER TABLE movie_availability
+ADD CONSTRAINT uq_movie_platform UNIQUE (movie_id, platform_id);
+
+-- 7. drop check constraint
+ALTER TABLE movie_availability DROP CHECK chk_rating;
+
+-- 8. create index
+CREATE INDEX idx_platform_id
+ON movie_availability(platform_id);
+
+-- 9. create composite index
+CREATE INDEX idx_movie_platform
+ON movie_availability(movie_id, platform_id);
+
+-- 10. drop index
+DROP INDEX idx_platform_id ON movie_availability;
+
+-- 11. rename table
+ALTER TABLE movie_availability RENAME TO movie_streaming;
+
+-- 12. revert table name
+ALTER TABLE movie_streaming RENAME TO movie_availability;
+
+-- 13. truncate table
+TRUNCATE TABLE movie_availability;
+
+-- 14. drop table
+DROP TABLE movie_availability;
+
+-- 15. backup table
+CREATE TABLE movie_availability_backup
+LIKE movie_availability;
+
+-- 16. temporary table
+CREATE TEMPORARY TABLE temp_movie_availability
+SELECT * FROM movie_availability;
+
+-- 2.DML QUERIES – movie_availability
+-- 1. insert single record
+
+INSERT INTO movie_availability
+(movie_id, platform_id, release_date, expiry_date,
+ language, format, resolution, total_views, rating)
+VALUES
+(1,8,'2016-02-01','2026-12-31',
+ 'Hindi','HD','1080p',3000000,8.4);
+
+-- 2. insert multiple records
+INSERT INTO movie_availability
+(movie_id, platform_id, release_date, expiry_date,
+ language, format, resolution, total_views, rating)
+VALUES
+(2,1,'2010-01-01','2026-12-31','Hindi','HD','1080p',3500000,8.6),
+(3,2,'2018-02-01','2026-12-31','Hindi','4K','2160p',3800000,8.3);
+
+-- 3. update views
+UPDATE movie_availability
+SET total_views = total_views + 500000
+WHERE availability_id = 1;
+
+-- 4. update multiple columns
+UPDATE movie_availability
+SET format='Full HD', resolution='1080p'
+WHERE platform_id = 2;
+
+-- 5. conditional update
+UPDATE movie_availability
+SET rating = 8.0
+WHERE rating IS NULL;
+
+-- 6. delete single record
+DELETE FROM movie_availability
+WHERE availability_id = 10;
+
+-- 7. delete by condition
+DELETE FROM movie_availability
+WHERE expiry_date < '2024-01-01';
+
+-- 8. delete all records
+DELETE FROM movie_availability;
+
+-- 9. transaction start
+START TRANSACTION;
+
+-- 10. insert inside transaction
+INSERT INTO movie_availability
+(movie_id, platform_id, release_date, expiry_date,
+ language, format, resolution, total_views, rating)
+VALUES
+(5,3,'2023-01-01','2026-12-31',
+ 'Telugu','4K','2160p',2000000,8.1);
+
+-- 11. rollback
+ROLLBACK;
+
+-- 12. commit
+COMMIT;
+
+-- 13. update expiry date
+UPDATE movie_availability
+SET expiry_date='2027-12-31'
+WHERE platform_id=1;
+
+-- 14. copy to backup
+INSERT INTO movie_availability_backup
+SELECT * FROM movie_availability;
+
+-- 15. safe delete
+DELETE FROM movie_availability
+WHERE movie_id = 7;
+
+-- 3.DQL QUERIES – movie_availability
+-- 1. select all
+SELECT * FROM movie_availability;
+
+-- 2. specific columns
+SELECT movie_id, platform_id, rating
+FROM movie_availability;
+
+-- 3. where clause
+SELECT * FROM movie_availability
+WHERE language='Hindi';
+
+-- 4. and operator
+SELECT * FROM movie_availability
+WHERE format='4K' AND rating > 8.0;
+
+-- 5. or operator
+SELECT * FROM movie_availability
+WHERE platform_id=1 OR platform_id=2;
+
+-- 6. between
+SELECT * FROM movie_availability
+WHERE rating BETWEEN 8.0 AND 9.0;
+
+-- 7. in
+SELECT * FROM movie_availability
+WHERE platform_id IN (1,3,5);
+
+-- 8. like
+SELECT * FROM movie_availability
+WHERE resolution LIKE '%1080%';
+
+-- 9. order by
+SELECT * FROM movie_availability
+ORDER BY total_views DESC;
+
+-- 10. limit
+SELECT * FROM movie_availability LIMIT 5;
+
+-- 11. count
+SELECT COUNT(*) FROM movie_availability;
+
+-- 12. max views
+SELECT MAX(total_views) FROM movie_availability;
+
+-- 13. min rating
+SELECT MIN(rating) FROM movie_availability;
+
+-- 14. group by
+SELECT platform_id, COUNT(*)
+FROM movie_availability
+GROUP BY platform_id;
+
+-- 15. having
+SELECT platform_id, AVG(rating)
+FROM movie_availability
+GROUP BY platform_id
+HAVING AVG(rating) > 8.2;
+
+-- 16. subquery
+SELECT * FROM movie_availability
+WHERE total_views >
+(SELECT AVG(total_views) FROM movie_availability);
+
+-- 17. alias
+SELECT movie_id AS film_id,
+platform_id AS ott_platform
+FROM movie_availability;
+
+-- 18. distinct
+SELECT DISTINCT language FROM movie_availability;
+
+-- 19. avg rating
+SELECT AVG(rating) FROM movie_availability;
+
+-- 20. case
+SELECT movie_id,
+CASE
+ WHEN rating >= 8.5 THEN 'Excellent'
+ WHEN rating >= 7.5 THEN 'Good'
+ ELSE 'Average'
+END AS performance
+FROM movie_availability;
+
+-- 4. CASCADES DEMONSTRATION – movie_availability
+
+CREATE TABLE availability_logs (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  availability_id INT,
+  action_type VARCHAR(50),
+  action_date DATE,
+  FOREIGN KEY (availability_id)
+  REFERENCES movie_availability(availability_id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+
+-- 5.DOCUMENTATION & COMMENTS – movie_availability
+-- movie_availability table stores OTT platform availability of movies
+-- tracks platform, resolution, format, views & ratings
+-- constraints ensure valid ratings and uniqueness
+-- cascades maintain referential integrity
+-- complete coverage of DDL, DML, DQL for phase-2 SQL project
+
+-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- 1. DDL QUERIES – box_office_collections
+-- 1. add new column
+ALTER TABLE box_office_collections ADD COLUMN tax DECIMAL(10,2);
+
+-- 2. modify column
+ALTER TABLE box_office_collections MODIFY revenue DECIMAL(15,2);
+
+-- 3. rename column
+ALTER TABLE box_office_collections RENAME COLUMN tickets_sold TO sold_tickets;
+
+-- 4. add default value
+ALTER TABLE box_office_collections ALTER currency SET DEFAULT 'INR';
+
+-- 5. add check constraint
+ALTER TABLE box_office_collections ADD CONSTRAINT chk_revenue CHECK (revenue >= 0);
+
+-- 6. add unique constraint
+ALTER TABLE box_office_collections
+ADD CONSTRAINT uq_movie_region UNIQUE (movie_id, region, date);
+
+-- 7. drop check constraint
+ALTER TABLE box_office_collections DROP CHECK chk_revenue;
+
+-- 8. create index
+CREATE INDEX idx_movie_id ON box_office_collections(movie_id);
+
+-- 9. create composite index
+CREATE INDEX idx_movie_region ON box_office_collections(movie_id, region);
+
+-- 10. drop index
+DROP INDEX idx_movie_id ON box_office_collections;
+
+-- 11. rename table
+ALTER TABLE box_office_collections RENAME TO box_office;
+
+-- 12. revert table name
+ALTER TABLE box_office RENAME TO box_office_collections;
+
+-- 13. truncate table
+TRUNCATE TABLE box_office_collections;
+
+-- 14. drop table
+DROP TABLE box_office_collections;
+
+-- 15. backup table
+CREATE TABLE box_office_collections_backup LIKE box_office_collections;
+
+-- 16. temporary table
+CREATE TEMPORARY TABLE temp_box_office
+SELECT * FROM box_office_collections;
+
+-- 2. DML QUERIES – box_office_collections
+-- 1. insert single record
+INSERT INTO box_office_collections
+(movie_id, date, region, sold_tickets, revenue, currency, platform, show_count, source)
+VALUES
+(1,'2025-01-01','India',1300000,65000000,'INR','Theater',130,'BoxOfficeIndia');
+
+-- 2. insert multiple records
+INSERT INTO box_office_collections
+(movie_id, date, region, sold_tickets, revenue, currency, platform, show_count, source)
+VALUES
+(2,'2025-02-01','India',1200000,60000000,'INR','Theater',120,'BollywoodHungama'),
+(3,'2025-03-01','India',900000,45000000,'INR','Theater',90,'BoxOfficeIndia');
+
+-- 3. update revenue
+UPDATE box_office_collections
+SET revenue = revenue + 5000000
+WHERE collection_id = 1;
+
+-- 4. update multiple columns
+UPDATE box_office_collections
+SET sold_tickets= sold_tickets+10000, show_count=show_count+5
+WHERE region='India';
+
+-- 5. conditional update
+UPDATE box_office_collections
+SET revenue=50000000
+WHERE revenue IS NULL;
+
+-- 6. delete single record
+DELETE FROM box_office_collections
+WHERE collection_id=10;
+
+-- 7. delete by condition
+DELETE FROM box_office_collections
+WHERE date < '2000-01-01';
+
+-- 8. delete all records
+DELETE FROM box_office_collections;
+
+-- 9. transaction start
+START TRANSACTION;
+
+-- 10. insert inside transaction
+INSERT INTO box_office_collections
+(movie_id, date, region, sold_tickets, revenue, currency, platform, show_count, source)
+VALUES
+(5,'2025-04-01','India',2000000,100000000,'INR','Theater',200,'BollywoodHungama');
+
+-- 11. rollback
+ROLLBACK;
+
+-- 12. commit
+COMMIT;
+
+-- 13. update show_count
+UPDATE box_office_collections
+SET show_count = show_count + 5
+WHERE movie_id = 1;
+
+-- 14. copy to backup
+INSERT INTO box_office_collections_backup
+SELECT * FROM box_office_collections;
+
+-- 15. safe delete
+DELETE FROM box_office_collections
+WHERE movie_id = 7;
+
+-- 3. DQL QUERIES – box_office_collections
+-- 1. select all
+SELECT * FROM box_office_collections;
+
+-- 2. specific columns
+SELECT movie_id, revenue, sold_tickets FROM box_office_collections;
+
+-- 3. where clause
+SELECT * FROM box_office_collections
+WHERE region='India';
+
+-- 4. and operator
+SELECT * FROM box_office_collections
+WHERE revenue>50000000 AND sold_tickets>1000000;
+
+-- 5. or operator
+SELECT * FROM box_office_collections
+WHERE region='India' OR region='USA';
+
+-- 6. between
+SELECT * FROM box_office_collections
+WHERE revenue BETWEEN 40000000 AND 70000000;
+
+-- 7. in
+SELECT * FROM box_office_collections
+WHERE movie_id IN (1,3,5);
+
+-- 8. like
+SELECT * FROM box_office_collections
+WHERE source LIKE '%BoxOffice%';
+
+-- 9. order by
+SELECT * FROM box_office_collections
+ORDER BY revenue DESC;
+
+-- 10. limit
+SELECT * FROM box_office_collections LIMIT 5;
+
+-- 11. count
+SELECT COUNT(*) FROM box_office_collections;
+
+-- 12. max revenue
+SELECT MAX(revenue) FROM box_office_collections;
+
+-- 13. min tickets sold
+SELECT MIN(sold_tickets) FROM box_office_collections;
+
+-- 14. group by
+SELECT region, COUNT(*) FROM box_office_collections
+GROUP BY region;
+
+-- 15. having
+SELECT region, AVG(revenue) FROM box_office_collections
+GROUP BY region
+HAVING AVG(revenue) > 50000000;
+
+-- 16. subquery
+SELECT * FROM box_office_collections
+WHERE revenue > (SELECT AVG(revenue) FROM box_office_collections);
+
+-- 17. alias
+SELECT movie_id AS film_id, revenue AS box_office_income
+FROM box_office_collections;
+
+-- 18. distinct
+SELECT DISTINCT region FROM box_office_collections;
+
+-- 19. avg revenue
+SELECT AVG(revenue) FROM box_office_collections;
+
+-- 20. case
+SELECT movie_id,
+CASE
+ WHEN revenue>=70000000 THEN 'Blockbuster'
+ WHEN revenue>=50000000 THEN 'Hit'
+ ELSE 'Flop'
+END AS performance
+FROM box_office_collections;
+
+-- 4. CASCADES DEMONSTRATION – box_office_collections
+CREATE TABLE box_office_logs (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  collection_id INT,
+  action_type VARCHAR(50),
+  action_date DATE,
+  FOREIGN KEY (collection_id)
+  REFERENCES box_office_collections(collection_id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+-- 5. DOCUMENTATION & COMMENTS – box_office_collections
+-- box_office_collections table stores daily/region-wise movie box office revenue
+-- tracks tickets sold, revenue, region, platform & source
+-- constraints ensure revenue >=0 and unique movie-region-date entries
+-- indexes improve query performance
+-- cascades maintain referential integrity with logs
+-- covers full DDL, DML, DQL for Phase-2 SQL project
+-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- 22. merchandise – Phase 2 Queries
+-- 1. DDL QUERIES – merchandise
+-- 1. add new column
+ALTER TABLE merchandise ADD COLUMN discount DECIMAL(5,2);
+
+-- 2. modify column
+ALTER TABLE merchandise MODIFY price DECIMAL(10,2);
+
+-- 3. rename column
+ALTER TABLE merchandise RENAME COLUMN available_stock TO stock_available;
+
+-- 4. add default value
+ALTER TABLE merchandise ALTER rating SET DEFAULT 0.0;
+
+-- 5. add check constraint
+ALTER TABLE merchandise ADD CONSTRAINT chk_price CHECK (price >= 0);
+
+-- 6. add unique constraint
+ALTER TABLE merchandise
+ADD CONSTRAINT uq_movie_item UNIQUE (movie_id, item_name);
+
+-- 7. drop check constraint
+ALTER TABLE merchandise DROP CHECK chk_price;
+
+-- 8. create index
+CREATE INDEX idx_movie_id ON merchandise(movie_id);
+
+-- 9. create composite index
+CREATE INDEX idx_movie_item ON merchandise(movie_id, item_name);
+
+-- 10. drop index
+DROP INDEX idx_movie_id ON merchandise;
+
+-- 11. rename table
+ALTER TABLE merchandise RENAME TO movie_merchandise;
+
+-- 12. revert table name
+ALTER TABLE movie_merchandise RENAME TO merchandise;
+
+-- 13. truncate table
+TRUNCATE TABLE merchandise;
+
+-- 14. drop table
+DROP TABLE merchandise;
+
+-- 15. backup table
+CREATE TABLE merchandise_backup LIKE merchandise;
+
+-- 16. temporary table
+CREATE TEMPORARY TABLE temp_merchandise
+SELECT * FROM merchandise;
+
+-- 2. DML QUERIES – merchandise
+-- 1. insert single record
+INSERT INTO merchandise
+(movie_id, item_name, category, price, stock_available, sold_quantity, vendor, launch_date, rating)
+VALUES
+(1,'Dangal Cap','Apparel',399,200,150,'Amazon','2016-02-01',8.4);
+
+-- 2. insert multiple records
+INSERT INTO merchandise
+(movie_id, item_name, category, price, stock_available, sold_quantity, vendor, launch_date, rating)
+VALUES
+(2,'3 Idiots T-Shirt','Apparel',499,250,200,'Flipkart','2010-01-01',8.6),
+(3,'KGF Mug','Accessories',299,150,120,'Amazon','2018-02-01',8.3);
+
+-- 3. update price
+UPDATE merchandise
+SET price = price + 50
+WHERE item_id = 1;
+
+-- 4. update multiple columns
+UPDATE merchandise
+SET stock_available = stock_available - 10, sold_quantity = sold_quantity + 10
+WHERE vendor='Amazon';
+
+-- 5. conditional update
+UPDATE merchandise
+SET rating = 7.5
+WHERE rating IS NULL;
+
+-- 6. delete single record
+DELETE FROM merchandise
+WHERE item_id = 10;
+
+-- 7. delete by condition
+DELETE FROM merchandise
+WHERE launch_date < '2000-01-01';
+
+-- 8. delete all records
+DELETE FROM merchandise;
+
+-- 9. transaction start
+START TRANSACTION;
+
+-- 10. insert inside transaction
+INSERT INTO merchandise
+(movie_id, item_name, category, price, stock_available, sold_quantity, vendor, launch_date, rating)
+VALUES
+(5,'RRR Mug','Accessories',349,100,80,'Amazon','2022-03-01',8.0);
+
+-- 11. rollback
+ROLLBACK;
+
+-- 12. commit
+COMMIT;
+
+-- 13. update stock
+UPDATE merchandise
+SET stock_available = stock_available + 50
+WHERE movie_id = 1;
+
+-- 14. copy to backup
+INSERT INTO merchandise_backup
+SELECT * FROM merchandise;
+
+-- 15. safe delete
+DELETE FROM merchandise
+WHERE movie_id = 7;
+
+-- 3. DQL QUERIES – merchandise
+-- 1. select all
+SELECT * FROM merchandise;
+
+-- 2. specific columns
+SELECT item_name, price, rating FROM merchandise;
+
+-- 3. where clause
+SELECT * FROM merchandise
+WHERE category='Apparel';
+
+-- 4. and operator
+SELECT * FROM merchandise
+WHERE price > 300 AND stock_available > 100;
+
+-- 5. or operator
+SELECT * FROM merchandise
+WHERE vendor='Amazon' OR vendor='Flipkart';
+
+-- 6. between
+SELECT * FROM merchandise
+WHERE price BETWEEN 300 AND 500;
+
+-- 7. in
+SELECT * FROM merchandise
+WHERE movie_id IN (1,3,5);
+
+-- 8. like
+SELECT * FROM merchandise
+WHERE item_name LIKE '%T-Shirt%';
+
+-- 9. order by
+SELECT * FROM merchandise
+ORDER BY rating DESC;
+
+-- 10. limit
+SELECT * FROM merchandise LIMIT 5;
+
+-- 11. count
+SELECT COUNT(*) FROM merchandise;
+
+-- 12. max price
+SELECT MAX(price) FROM merchandise;
+
+-- 13. min rating
+SELECT MIN(rating) FROM merchandise;
+
+-- 14. group by
+SELECT category, COUNT(*) FROM merchandise
+GROUP BY category;
+
+-- 15. having
+SELECT category, AVG(rating) FROM merchandise
+GROUP BY category
+HAVING AVG(rating) > 8.0;
+
+-- 16. subquery
+SELECT * FROM merchandise
+WHERE price > (SELECT AVG(price) FROM merchandise);
+
+-- 17. alias
+SELECT item_name AS product_name, price AS cost
+FROM merchandise;
+
+-- 18. distinct
+SELECT DISTINCT category FROM merchandise;
+
+-- 19. avg price
+SELECT AVG(price) FROM merchandise;
+
+-- 20. case
+SELECT item_name,
+CASE
+ WHEN rating >= 8.5 THEN 'Top Rated'
+ WHEN rating >= 7.5 THEN 'Good'
+ ELSE 'Average'
+END AS performance
+FROM merchandise;
+
+-- 4. CASCADES DEMONSTRATION – merchandise
+CREATE TABLE merchandise_logs (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  item_id INT,
+  action_type VARCHAR(50),
+  action_date DATE,
+  FOREIGN KEY (item_id)
+  REFERENCES merchandise(item_id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+-- 5. DOCUMENTATION & COMMENTS – merchandise
+-- merchandise table stores all movie-related products and merchandise
+-- tracks item name, category, price, stock, sold quantity, vendor & rating
+-- constraints ensure price >= 0 and uniqueness of movie-item
+-- indexes improve query performance
+-- cascades maintain referential integrity with logs
+-- complete DDL, DML, DQL coverage for Phase-2 SQL project
+
+
+-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- 1. DDL QUERIES – promotions
+-- 1. add new column
+ALTER TABLE promotions ADD COLUMN promo_code VARCHAR(50);
+
+-- 2. modify column
+ALTER TABLE promotions MODIFY campaign_name VARCHAR(150);
+
+-- 3. rename column
+ALTER TABLE promotions RENAME COLUMN impressions TO total_impressions;
+
+-- 4. add default value
+ALTER TABLE promotions ALTER status SET DEFAULT 'Planned';
+
+-- 5. add check constraint
+ALTER TABLE promotions ADD CONSTRAINT chk_budget CHECK (budget >= 0);
+
+-- 6. add unique constraint
+ALTER TABLE promotions
+ADD CONSTRAINT uq_movie_platform UNIQUE (movie_id, platform, campaign_name);
+
+-- 7. drop check constraint
+ALTER TABLE promotions DROP CHECK chk_budget;
+
+-- 8. create index
+CREATE INDEX idx_movie_id ON promotions(movie_id);
+
+-- 9. create composite index
+CREATE INDEX idx_movie_platform ON promotions(movie_id, platform);
+
+-- 10. drop index
+DROP INDEX idx_movie_id ON promotions;
+
+-- 11. rename table
+ALTER TABLE promotions RENAME TO movie_promotions;
+
+-- 12. revert table name
+ALTER TABLE movie_promotions RENAME TO promotions;
+
+-- 13. truncate table
+TRUNCATE TABLE promotions;
+
+-- 14. drop table
+DROP TABLE promotions;
+
+-- 15. backup table
+CREATE TABLE promotions_backup LIKE promotions;
+
+-- 16. temporary table
+CREATE TEMPORARY TABLE temp_promotions
+SELECT * FROM promotions;
+
+-- 2. DML QUERIES – promotions
+-- 1. insert single record
+INSERT INTO promotions
+(movie_id, platform, campaign_name, start_date, end_date, budget, reach, total_impressions, status)
+VALUES
+(1,'Twitter','Dangal Campaign', '2015-12-05','2016-01-15',120000,600000,2200000,'Active');
+
+-- 2. insert multiple records
+INSERT INTO promotions
+(movie_id, platform, campaign_name, start_date, end_date, budget, reach, total_impressions, status)
+VALUES
+(2,'Instagram','3 Idiots Promo','2009-11-05','2009-12-20',130000,650000,2700000,'Ended'),
+(3,'Facebook','KGF Campaign','2017-12-05','2018-01-20',160000,750000,3100000,'Ended');
+
+-- 3. update budget
+UPDATE promotions
+SET budget = budget + 5000
+WHERE promo_id = 1;
+
+-- 4. update multiple columns
+UPDATE promotions
+SET reach = reach + 10000, total_impressions = total_impressions + 50000
+WHERE platform='Instagram';
+
+-- 5. conditional update
+UPDATE promotions
+SET status = 'Completed'
+WHERE end_date < '2023-01-01';
+
+-- 6. delete single record
+DELETE FROM promotions
+WHERE promo_id = 10;
+
+-- 7. delete by condition
+DELETE FROM promotions
+WHERE end_date < '2000-01-01';
+
+-- 8. delete all records
+DELETE FROM promotions;
+
+-- 9. transaction start
+START TRANSACTION;
+
+-- 10. insert inside transaction
+INSERT INTO promotions
+(movie_id, platform, campaign_name, start_date, end_date, budget, reach, total_impressions, status)
+VALUES
+(5,'LinkedIn','RRR Campaign','2022-12-05','2023-01-15',185000,760000,3600000,'Active');
+
+-- 11. rollback
+ROLLBACK;
+
+-- 12. commit
+COMMIT;
+
+-- 13. update reach
+UPDATE promotions
+SET reach = reach + 5000
+WHERE platform='YouTube';
+
+-- 14. copy to backup
+INSERT INTO promotions_backup
+SELECT * FROM promotions;
+
+-- 15. safe delete
+DELETE FROM promotions
+WHERE movie_id = 7;
+
+-- 3. DQL QUERIES – promotions
+-- 1. select all
+SELECT * FROM promotions;
+
+-- 2. specific columns
+SELECT campaign_name, platform, budget FROM promotions;
+
+-- 3. where clause
+SELECT * FROM promotions
+WHERE status='Active';
+
+-- 4. and operator
+SELECT * FROM promotions
+WHERE budget > 150000 AND reach > 700000;
+
+-- 5. or operator
+SELECT * FROM promotions
+WHERE platform='Instagram' OR platform='YouTube';
+
+-- 6. between
+SELECT * FROM promotions
+WHERE start_date BETWEEN '2015-01-01' AND '2020-12-31';
+
+-- 7. in
+SELECT * FROM promotions
+WHERE movie_id IN (1,3,5);
+
+-- 8. like
+SELECT * FROM promotions
+WHERE campaign_name LIKE '%Promo%';
+
+-- 9. order by
+SELECT * FROM promotions
+ORDER BY budget DESC;
+
+-- 10. limit
+SELECT * FROM promotions LIMIT 5;
+
+-- 11. count
+SELECT COUNT(*) FROM promotions;
+
+-- 12. max budget
+SELECT MAX(budget) FROM promotions;
+
+-- 13. min reach
+SELECT MIN(reach) FROM promotions;
+
+-- 14. group by
+SELECT platform, COUNT(*) FROM promotions
+GROUP BY platform;
+
+-- 15. having
+SELECT platform, AVG(budget) FROM promotions
+GROUP BY platform
+HAVING AVG(budget) > 150000;
+
+-- 16. subquery
+SELECT * FROM promotions
+WHERE budget > (SELECT AVG(budget) FROM promotions);
+
+-- 17. alias
+SELECT campaign_name AS promo_name, platform AS promo_platform
+FROM promotions;
+
+-- 18. distinct
+SELECT DISTINCT platform FROM promotions;
+
+-- 19. avg budget
+SELECT AVG(budget) FROM promotions;
+
+-- 20. case
+SELECT campaign_name,
+CASE
+ WHEN budget >= 180000 THEN 'High Budget'
+ WHEN budget >= 120000 THEN 'Medium Budget'
+ ELSE 'Low Budget'
+END AS budget_category
+FROM promotions;
+
+-- 4. CASCADES DEMONSTRATION – promotions
+CREATE TABLE promotions_logs (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  promo_id INT,
+  action_type VARCHAR(50),
+  action_date DATE,
+  FOREIGN KEY (promo_id)
+  REFERENCES promotions(promo_id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+-- 5. DOCUMENTATION & COMMENTS – promotions
+-- promotions table stores all marketing campaigns for movies
+-- tracks platform, campaign, dates, budget, reach, impressions, and status
+-- constraints ensure valid budget and uniqueness per movie-platform-campaign
+-- indexes improve query performance
+-- cascades maintain referential integrity with logs
+-- complete DDL, DML, DQL coverage for Phase-2 SQL project
+
+-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- 24. crew_members – Phase 2 Queries
+-- 1. DDL QUERIES – crew_members
+-- 1. add new column
+ALTER TABLE crew_members ADD COLUMN shift VARCHAR(50);
+
+-- 2. modify column
+ALTER TABLE crew_members MODIFY role VARCHAR(150);
+
+-- 3. rename column
+ALTER TABLE crew_members RENAME COLUMN availability TO is_available;
+
+-- 4. add default value
+ALTER TABLE crew_members ALTER awards SET DEFAULT 0;
+
+-- 5. add check constraint
+ALTER TABLE crew_members ADD CONSTRAINT chk_experience CHECK (experience_years >= 0);
+
+-- 6. add unique constraint
+ALTER TABLE crew_members
+ADD CONSTRAINT uq_movie_crew UNIQUE (movie_id, full_name, role);
+
+-- 7. drop check constraint
+ALTER TABLE crew_members DROP CHECK chk_experience;
+
+-- 8. create index
+CREATE INDEX idx_movie_id ON crew_members(movie_id);
+
+-- 9. create composite index
+CREATE INDEX idx_movie_role ON crew_members(movie_id, role);
+
+-- 10. drop index
+DROP INDEX idx_movie_id ON crew_members;
+
+-- 11. rename table
+ALTER TABLE crew_members RENAME TO movie_crew;
+
+-- 12. revert table name
+ALTER TABLE movie_crew RENAME TO crew_members;
+
+-- 13. truncate table
+TRUNCATE TABLE crew_members;
+
+-- 14. drop table
+DROP TABLE crew_members;
+
+-- 15. backup table
+CREATE TABLE crew_members_backup LIKE crew_members;
+
+-- 16. temporary table
+CREATE TEMPORARY TABLE temp_crew_members
+SELECT * FROM crew_members;
+
+-- 2. DML QUERIES – crew_members
+-- 1. insert single record
+INSERT INTO crew_members
+(movie_id, full_name, role, department, contact, nationality, experience_years, awards, is_available)
+VALUES
+(1,'Ritu Verma','Assistant Cinematographer','Camera','ritu@gmail.com','Indian',5,1,1);
+
+-- 2. insert multiple records
+INSERT INTO crew_members
+(movie_id, full_name, role, department, contact, nationality, experience_years, awards, is_available)
+VALUES
+(2,'Manish Kapoor','Sound Designer','Sound','manish@gmail.com','Indian',8,2,1),
+(3,'Neha Singh','Costume Assistant','Costume','neha@gmail.com','Indian',3,0,1);
+
+-- 3. update experience
+UPDATE crew_members
+SET experience_years = experience_years + 1
+WHERE crew_id = 1;
+
+-- 4. update multiple columns
+UPDATE crew_members
+SET awards = awards + 1, is_available = 0
+WHERE department='Editing';
+
+-- 5. conditional update
+UPDATE crew_members
+SET is_available = 1
+WHERE experience_years > 10;
+
+-- 6. delete single record
+DELETE FROM crew_members
+WHERE crew_id = 10;
+
+-- 7. delete by condition
+DELETE FROM crew_members
+WHERE experience_years < 3;
+
+-- 8. delete all records
+DELETE FROM crew_members;
+
+-- 9. transaction start
+START TRANSACTION;
+
+-- 10. insert inside transaction
+INSERT INTO crew_members
+(movie_id, full_name, role, department, contact, nationality, experience_years, awards, is_available)
+VALUES
+(5,'Raghav Mehra','VFX Assistant','VFX','raghav@gmail.com','Indian',2,0,1);
+
+-- 11. rollback
+ROLLBACK;
+
+-- 12. commit
+COMMIT;
+
+-- 13. update awards
+UPDATE crew_members
+SET awards = awards + 1
+WHERE department='Camera';
+
+-- 14. copy to backup
+INSERT INTO crew_members_backup
+SELECT * FROM crew_members;
+
+-- 15. safe delete
+DELETE FROM crew_members
+WHERE movie_id = 7;
+
+-- 3. DQL QUERIES – crew_members
+-- 1. select all
+SELECT * FROM crew_members;
+
+-- 2. specific columns
+SELECT full_name, role, department FROM crew_members;
+
+-- 3. where clause
+SELECT * FROM crew_members
+WHERE is_available = 1;
+
+-- 4. and operator
+SELECT * FROM crew_members
+WHERE department='Camera' AND experience_years > 5;
+
+-- 5. or operator
+SELECT * FROM crew_members
+WHERE department='VFX' OR department='Sound';
+
+-- 6. between
+SELECT * FROM crew_members
+WHERE awards BETWEEN 1 AND 5;
+
+-- 7. in
+SELECT * FROM crew_members
+WHERE movie_id IN (1,3,5);
+
+-- 8. like
+SELECT * FROM crew_members
+WHERE role LIKE '%Designer%';
+
+-- 9. order by
+SELECT * FROM crew_members
+ORDER BY experience_years DESC;
+
+-- 10. limit
+SELECT * FROM crew_members LIMIT 5;
+
+-- 11. count
+SELECT COUNT(*) FROM crew_members;
+
+-- 12. max experience
+SELECT MAX(experience_years) FROM crew_members;
+
+-- 13. min awards
+SELECT MIN(awards) FROM crew_members;
+
+-- 14. group by
+SELECT department, COUNT(*) FROM crew_members
+GROUP BY department;
+
+-- 15. having
+SELECT department, AVG(experience_years) FROM crew_members
+GROUP BY department
+HAVING AVG(experience_years) > 8;
+
+-- 16. subquery
+SELECT * FROM crew_members
+WHERE experience_years >
+(SELECT AVG(experience_years) FROM crew_members);
+
+-- 17. alias
+SELECT full_name AS crew_member, role AS job_role
+FROM crew_members;
+
+-- 18. distinct
+SELECT DISTINCT department FROM crew_members;
+
+-- 19. avg experience
+SELECT AVG(experience_years) FROM crew_members;
+
+-- 20. case
+SELECT full_name,
+CASE
+ WHEN experience_years >= 10 THEN 'Senior'
+ WHEN experience_years >= 5 THEN 'Mid-Level'
+ ELSE 'Junior'
+END AS experience_level
+FROM crew_members;
+
+-- 4. CASCADES DEMONSTRATION – crew_members
+CREATE TABLE crew_logs (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  crew_id INT,
+  action_type VARCHAR(50),
+  action_date DATE,
+  FOREIGN KEY (crew_id)
+  REFERENCES crew_members(crew_id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+-- 5. DOCUMENTATION & COMMENTS – crew_members
+-- crew_members table stores all crew involved in each movie
+-- tracks role, department, experience, awards, availability, and contact
+-- constraints ensure uniqueness and valid experience years
+-- indexes improve query performance
+-- cascades maintain referential integrity with logs
+-- complete DDL, DML, DQL coverage for Phase-2 SQL project
+
+
+-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+25. movie_statistics – Phase 2 Queries
+1. DDL QUERIES – movie_statistics
+-- 1. add new column
+ALTER TABLE movie_statistics ADD COLUMN sentiment_score DECIMAL(4,2);
+
+-- 2. modify column
+ALTER TABLE movie_statistics MODIFY trending_rank INT;
+
+-- 3. rename column
+ALTER TABLE movie_statistics RENAME COLUMN average_rating TO avg_rating;
+
+-- 4. add default value
+ALTER TABLE movie_statistics ALTER reviews_count SET DEFAULT 0;
+
+-- 5. add check constraint
+ALTER TABLE movie_statistics ADD CONSTRAINT chk_avg_rating
+CHECK (avg_rating BETWEEN 0 AND 10);
+
+-- 6. add unique constraint
+ALTER TABLE movie_statistics
+ADD CONSTRAINT uq_movie_stat UNIQUE (movie_id);
+
+-- 7. drop check constraint
+ALTER TABLE movie_statistics DROP CHECK chk_avg_rating;
+
+-- 8. create index
+CREATE INDEX idx_movie_id ON movie_statistics(movie_id);
+
+-- 9. create composite index
+CREATE INDEX idx_views_likes ON movie_statistics(views, likes);
+
+-- 10. drop index
+DROP INDEX idx_movie_id ON movie_statistics;
+
+-- 11. rename table
+ALTER TABLE movie_statistics RENAME TO movie_stats;
+
+-- 12. revert table name
+ALTER TABLE movie_stats RENAME TO movie_statistics;
+
+-- 13. truncate table
+TRUNCATE TABLE movie_statistics;
+
+-- 14. drop table
+DROP TABLE movie_statistics;
+
+-- 15. backup table
+CREATE TABLE movie_statistics_backup LIKE movie_statistics;
+
+-- 16. temporary table
+CREATE TEMPORARY TABLE temp_movie_statistics
+SELECT * FROM movie_statistics;
+
+-- 2. DML QUERIES – movie_statistics
+-- 1. insert single record
+INSERT INTO movie_statistics
+(movie_id, views, likes, dislikes, reviews_count, avg_rating, social_mentions, trending_rank, last_updated)
+VALUES
+(11,1000000,80000,5000,50,7.8,20000,15,'2025-12-01');
+
+-- 2. insert multiple records
+INSERT INTO movie_statistics
+(movie_id, views, likes, dislikes, reviews_count, avg_rating, social_mentions, trending_rank, last_updated)
+VALUES
+(12,1500000,120000,7000,60,8.0,30000,12,'2025-12-01'),
+(13,2000000,150000,10000,80,8.2,40000,10,'2025-12-01');
+
+-- 3. update views
+UPDATE movie_statistics
+SET views = views + 50000
+WHERE stat_id = 1;
+
+-- 4. update multiple columns
+UPDATE movie_statistics
+SET likes = likes + 1000, dislikes = dislikes + 100
+WHERE trending_rank < 5;
+
+-- 5. conditional update
+UPDATE movie_statistics
+SET avg_rating = 8.0
+WHERE avg_rating IS NULL;
+
+-- 6. delete single record
+DELETE FROM movie_statistics
+WHERE stat_id = 10;
+
+-- 7. delete by condition
+DELETE FROM movie_statistics
+WHERE last_updated < '2024-01-01';
+
+-- 8. delete all records
+DELETE FROM movie_statistics;
+
+-- 9. transaction start
+START TRANSACTION;
+
+-- 10. insert inside transaction
+INSERT INTO movie_statistics
+(movie_id, views, likes, dislikes, reviews_count, avg_rating, social_mentions, trending_rank, last_updated)
+VALUES
+(5,7000000,600000,18000,220,8.0,300000,1,'2023-12-01');
+
+-- 11. rollback
+ROLLBACK;
+
+-- 12. commit
+COMMIT;
+
+-- 13. update last_updated
+UPDATE movie_statistics
+SET last_updated='2026-01-01'
+WHERE movie_id=1;
+
+-- 14. copy to backup
+INSERT INTO movie_statistics_backup
+SELECT * FROM movie_statistics;
+
+-- 15. safe delete
+DELETE FROM movie_statistics
+WHERE movie_id = 7;
+
+-- 3. DQL QUERIES – movie_statistics
+-- 1. select all
+SELECT * FROM movie_statistics;
+
+-- 2. specific columns
+SELECT movie_id, views, avg_rating FROM movie_statistics;
+
+-- 3. where clause
+SELECT * FROM movie_statistics
+WHERE avg_rating > 8.0;
+
+-- 4. and operator
+SELECT * FROM movie_statistics
+WHERE views > 4000000 AND avg_rating > 8.0;
+
+-- 5. or operator
+SELECT * FROM movie_statistics
+WHERE trending_rank <= 3 OR avg_rating >= 8.5;
+
+-- 6. between
+SELECT * FROM movie_statistics
+WHERE views BETWEEN 3000000 AND 7000000;
+
+-- 7. in
+SELECT * FROM movie_statistics
+WHERE movie_id IN (1,5,9);
+
+-- 8. like
+SELECT * FROM movie_statistics
+WHERE stat_id LIKE '1%';
+
+-- 9. order by
+SELECT * FROM movie_statistics
+ORDER BY views DESC;
+
+-- 10. limit
+SELECT * FROM movie_statistics LIMIT 5;
+
+-- 11. count
+SELECT COUNT(*) FROM movie_statistics;
+
+-- 12. max views
+SELECT MAX(views) FROM movie_statistics;
+
+-- 13. min avg_rating
+SELECT MIN(avg_rating) FROM movie_statistics;
+
+-- 14. group by
+SELECT trending_rank, COUNT(*) FROM movie_statistics
+GROUP BY trending_rank;
+
+-- 15. having
+SELECT trending_rank, AVG(avg_rating) FROM movie_statistics
+GROUP BY trending_rank
+HAVING AVG(avg_rating) > 8.0;
+
+-- 16. subquery
+SELECT * FROM movie_statistics
+WHERE views > (SELECT AVG(views) FROM movie_statistics);
+
+-- 17. alias
+SELECT movie_id AS film_id, views AS total_views
+FROM movie_statistics;
+
+-- 18. distinct
+SELECT DISTINCT trending_rank FROM movie_statistics;
+
+-- 19. avg avg_rating
+SELECT AVG(avg_rating) FROM movie_statistics;
+
+-- 20. case
+SELECT movie_id,
+CASE
+ WHEN avg_rating >= 8.5 THEN 'Excellent'
+ WHEN avg_rating >= 7.5 THEN 'Good'
+ ELSE 'Average'
+END AS performance
+FROM movie_statistics;
+
+-- 4. CASCADES DEMONSTRATION – movie_statistics
+CREATE TABLE statistics_logs (
+  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  stat_id INT,
+  action_type VARCHAR(50),
+  action_date DATE,
+  FOREIGN KEY (stat_id)
+  REFERENCES movie_statistics(stat_id)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+-- 5. DOCUMENTATION & COMMENTS – movie_statistics
+-- movie_statistics table stores performance metrics of movies
+-- tracks views, likes, dislikes, reviews, ratings, social mentions, and trending rank
+-- constraints ensure valid ratings and uniqueness
+-- indexes improve query performance
+-- cascades maintain referential integrity with logs
+-- complete coverage of DDL, DML, DQL for Phase-2 SQL project
+
+-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
