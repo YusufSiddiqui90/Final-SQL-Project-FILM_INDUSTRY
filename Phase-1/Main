@@ -1,1 +1,698 @@
+Create database Films;
+Use Films;
 
+
+-- movies
+
+CREATE TABLE movies (
+  movie_id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(200),
+  genre VARCHAR(100),
+  language VARCHAR(50),
+  release_year YEAR,
+  duration_minutes INT,
+  budget DECIMAL(12,2),
+  box_office DECIMAL(12,2),
+  rating DECIMAL(3,1),
+  director_id INT
+);
+
+INSERT INTO movies 
+(title, genre, language, release_year, duration_minutes, budget, box_office, rating, director_id)
+VALUES
+('dangal','sports','hindi',2016,161,70000000,200000000,8.4,1),
+('3 idiots','drama','hindi',2009,170,55000000,180000000,8.6,2),
+('kgf chapter 1','action','hindi',2018,155,80000000,250000000,8.2,3),
+('pathaan','action','hindi',2023,146,250000000,1050000000,7.1,4),
+('rrr','epic','telugu',2022,182,550000000,1200000000,8.0,5),
+('lagaan','drama','hindi',2001,224,25000000,65000000,8.1,6),
+('sholay','action','hindi',1975,210,3000000,35000000,8.2,7),
+('pk','comedy','hindi',2014,153,85000000,850000000,7.9,2),
+('bahubali','fantasy','telugu',2015,159,180000000,650000000,8.0,5),
+('andhadhun','thriller','hindi',2018,139,32000000,456000000,8.3,8);
+
+-- 2.actors
+CREATE TABLE actors (
+  actor_id INT AUTO_INCREMENT PRIMARY KEY,
+  full_name VARCHAR(150),
+  gender VARCHAR(10),
+  date_of_birth DATE,
+  nationality VARCHAR(50),
+  debut_year YEAR,
+  awards_won INT,
+  contact_email VARCHAR(150),
+  phone_number VARCHAR(20),
+  active_status BOOLEAN
+);
+
+INSERT INTO actors VALUES
+(1,'aamir khan','male','1965-03-14','indian',1988,30,'aamir@gmail.com','900000001',1),
+(2,'shah rukh khan','male','1965-11-02','indian',1992,40,'srk@gmail.com','900000002',1),
+(3,'salman khan','male','1965-12-27','indian',1989,25,'salman@gmail.com','900000003',1),
+(4,'ranbir kapoor','male','1982-09-28','indian',2007,15,'ranbir@gmail.com','900000004',1),
+(5,'ranveer singh','male','1985-07-06','indian',2010,18,'ranveer@gmail.com','900000005',1),
+(6,'deepika padukone','female','1986-01-05','indian',2006,20,'deepika@gmail.com','900000006',1),
+(7,'alia bhatt','female','1993-03-15','indian',2012,12,'alia@gmail.com','900000007',1),
+(8,'ajay devgn','male','1969-04-02','indian',1991,22,'ajay@gmail.com','900000008',1),
+(9,'akshay kumar','male','1967-09-09','indian',1991,28,'akshay@gmail.com','900000009',1),
+(10,'vicky kaushal','male','1988-05-16','indian',2015,10,'vicky@gmail.com','900000010',1);
+
+-- 3.directors
+CREATE TABLE directors (
+  director_id INT AUTO_INCREMENT PRIMARY KEY,
+  full_name VARCHAR(150),
+  gender VARCHAR(10),
+  date_of_birth DATE,
+  nationality VARCHAR(50),
+  debut_year YEAR,
+  awards_won INT,
+  contact_email VARCHAR(150),
+  phone_number VARCHAR(20),
+  active_status BOOLEAN
+);
+
+INSERT INTO directors VALUES
+(1,'nitesh tiwari','male','1973-05-22','indian',2014,5,'nitesh@gmail.com','910000001',1),
+(2,'rajkumar hirani','male','1962-11-20','indian',2003,12,'hirani@gmail.com','910000002',1),
+(3,'prashanth neel','male','1980-08-04','indian',2014,6,'neel@gmail.com','910000003',1),
+(4,'siddharth anand','male','1983-04-16','indian',2011,4,'sid@gmail.com','910000004',1),
+(5,'ss rajamouli','male','1973-10-10','indian',2001,25,'rajamouli@gmail.com','910000005',1),
+(6,'ashutosh gowariker','male','1964-02-15','indian',1993,10,'ashu@gmail.com','910000006',1),
+(7,'ramesh sippy','male','1947-01-23','indian',1971,15,'sippy@gmail.com','910000007',0),
+(8,'sriram raghavan','male','1963-06-22','indian',2004,8,'sriram@gmail.com','910000008',1),
+(9,'rohit shetty','male','1974-03-14','indian',2006,7,'rohit@gmail.com','910000009',1),
+(10,'imtiaz ali','male','1971-06-16','indian',2005,6,'imtiaz@gmail.com','910000010',1);
+
+-- 4.cast
+CREATE TABLE cast (
+  cast_id INT AUTO_INCREMENT PRIMARY KEY,
+  movie_id INT,
+  actor_id INT,
+  role_name VARCHAR(100),
+  screen_time INT,
+  is_lead BOOLEAN,
+  award_won VARCHAR(100),
+  contract_amount DECIMAL(12,2),
+  contract_start DATE,
+  contract_end DATE,
+  FOREIGN KEY (movie_id) REFERENCES movies(movie_id),
+  FOREIGN KEY (actor_id) REFERENCES actors(actor_id)
+);
+
+INSERT INTO cast VALUES
+(1,1,1,'mahavir phogat',140,1,'filmfare',50000000,'2015-01-01','2016-01-01'),
+(2,2,1,'rancho',150,1,'filmfare',45000000,'2008-01-01','2009-01-01'),
+(3,4,2,'pathaan',130,1,'none',70000000,'2022-01-01','2023-01-01'),
+(4,8,4,'pk',145,1,'filmfare',60000000,'2013-01-01','2014-01-01'),
+(5,10,9,'blind pianist',120,1,'national award',40000000,'2017-01-01','2018-01-01'),
+(6,3,10,'villain',80,0,'none',15000000,'2017-01-01','2018-01-01'),
+(7,6,1,'bhuvan',160,1,'none',30000000,'2000-01-01','2001-01-01'),
+(8,5,5,'ram',140,1,'international',65000000,'2021-01-01','2022-01-01'),
+(9,9,6,'devasena',120,1,'none',55000000,'2014-01-01','2015-01-01'),
+(10,7,8,'veeru',150,1,'none',5000000,'1974-01-01','1975-01-01');
+
+-- 5.scripts 
+
+CREATE TABLE scripts (
+  script_id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(200) NOT NULL,
+  writer_id INT NOT NULL,
+  language VARCHAR(50),
+  genre VARCHAR(100),
+  pages INT,
+  created_date DATE,
+  approved_by VARCHAR(150),
+  version VARCHAR(20),
+  movie_id INT,
+  FOREIGN KEY (writer_id) REFERENCES writers(writer_id),
+  FOREIGN KEY (movie_id) REFERENCES movies(movie_id)
+);
+
+INSERT INTO scripts 
+(script_id, title, writer_id, language, genre, pages, created_date, approved_by, version, movie_id)
+VALUES
+(1,'dangal screenplay',1,'hindi','sports',180,'2015-01-10','aamir khan','v1',1),
+(2,'3 idiots screenplay',2,'hindi','drama',200,'2008-02-15','vidhu vinod chopra','v2',2),
+(3,'kgf chapter 1 screenplay',3,'hindi','action',210,'2017-03-20','hombale films','v1',3),
+(4,'pathaan screenplay',4,'hindi','action',190,'2021-04-18','yash raj films','v3',4),
+(5,'rrr screenplay',5,'telugu','epic',250,'2020-05-11','ss rajamouli','final',5),
+(6,'lagaan screenplay',6,'hindi','drama',260,'1999-01-01','aamir khan','final',6),
+(7,'sholay screenplay',7,'hindi','action',300,'1973-01-01','ramesh sippy','final',7),
+(8,'pk screenplay',2,'hindi','comedy',180,'2012-01-01','rajkumar hirani','final',8),
+(9,'bahubali screenplay',5,'telugu','fantasy',240,'2013-01-01','ss rajamouli','final',9),
+(10,'andhadhun screenplay',8,'hindi','thriller',170,'2017-01-01','sriram raghavan','final',10);
+
+-- 6.producers
+
+CREATE TABLE producers (
+  producer_id INT AUTO_INCREMENT PRIMARY KEY,
+  full_name VARCHAR(150),
+  company_name VARCHAR(150),
+  contact_email VARCHAR(150),
+  phone_number VARCHAR(20),
+  nationality VARCHAR(50),
+  projects_done INT,
+  active_status BOOLEAN,
+  date_of_birth DATE,
+  address TEXT
+);
+
+INSERT INTO producers VALUES
+(1,'aamir khan','aamir khan productions','aamir@prod.com','800001','indian',15,1,'1965-03-14','mumbai'),
+(2,'karan johar','dharma productions','karan@prod.com','800002','indian',40,1,'1972-05-25','mumbai'),
+(3,'farhan akhtar','excel entertainment','farhan@prod.com','800003','indian',30,1,'1974-01-09','mumbai'),
+(4,'adi chopra','yash raj films','adi@prod.com','800004','indian',60,1,'1971-05-21','mumbai'),
+(5,'sajid nadiadwala','nadiadwala grandson','sajid@prod.com','800005','indian',55,1,'1966-02-18','mumbai'),
+(6,'ronnie screwvala','utv motion pictures','ronnie@prod.com','800006','indian',45,1,'1956-09-08','mumbai'),
+(7,'bhushan kumar','t-series','bhushan@prod.com','800007','indian',50,1,'1980-11-27','delhi'),
+(8,'ekta kapoor','balaji motion','ekta@prod.com','800008','indian',35,1,'1975-06-07','mumbai'),
+(9,'dinesh vijan','maddock films','dinesh@prod.com','800009','indian',25,1,'1977-01-01','mumbai'),
+(10,'ramesh taurani','tips industries','ramesh@prod.com','800010','indian',45,1,'1964-07-01','mumbai');
+
+-- 7.production_companies
+CREATE TABLE production_companies (
+  company_id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(200),
+  founded_year YEAR,
+  founder_name VARCHAR(150),
+  location VARCHAR(100),
+  website VARCHAR(200),
+  email VARCHAR(150),
+  phone VARCHAR(20),
+  total_movies INT,
+  active_status BOOLEAN
+);
+
+INSERT INTO production_companies VALUES
+(1,'dharma productions',1979,'yash johar','mumbai','dharma.com','info@dharma.com','700001',60,1),
+(2,'yash raj films',1970,'yash chopra','mumbai','yrf.com','info@yrf.com','700002',80,1),
+(3,'t-series',1983,'gulshan kumar','delhi','tseries.com','info@tseries.com','700003',150,1),
+(4,'utv motion pictures',1995,'ronnie screwvala','mumbai','utv.com','info@utv.com','700004',45,0),
+(5,'excel entertainment',1999,'farhan akhtar','mumbai','excel.com','info@excel.com','700005',40,1),
+(6,'balaji motion',2001,'ekta kapoor','mumbai','balaji.com','info@balaji.com','700006',55,1),
+(7,'aamir khan productions',1999,'aamir khan','mumbai','akp.com','info@akp.com','700007',20,1),
+(8,'nadiadwala grandson',1955,'abdul karim','mumbai','ngl.com','info@ngl.com','700008',65,1),
+(9,'maddock films',2005,'dinesh vijan','mumbai','maddock.com','info@maddock.com','700009',35,1),
+(10,'tips industries',1975,'kumar taurani','mumbai','tips.com','info@tips.com','700010',70,1);
+
+-- 8.roles
+
+CREATE TABLE roles (
+  role_id INT AUTO_INCREMENT PRIMARY KEY,
+  role_name VARCHAR(100),
+  description TEXT,
+  importance_level VARCHAR(20),
+  gender_required VARCHAR(10),
+  age_range VARCHAR(20),
+  is_lead BOOLEAN,
+  is_villain BOOLEAN,
+  screen_time INT,
+  stunt_required BOOLEAN
+);
+
+INSERT INTO roles VALUES
+(1,'hero','main protagonist','high','male','30-50',1,0,150,1),
+(2,'heroine','female lead','high','female','25-40',1,0,120,0),
+(3,'villain','antagonist','high','male','35-55',0,1,90,1),
+(4,'friend','supporting role','medium','any','20-40',0,0,60,0),
+(5,'father','parent role','medium','male','45-65',0,0,40,0),
+(6,'mother','parent role','medium','female','40-60',0,0,35,0),
+(7,'police','law role','medium','male','30-50',0,0,50,1),
+(8,'comedian','comic relief','low','any','25-45',0,0,45,0),
+(9,'villain assistant','support villain','low','male','25-40',0,1,30,1),
+(10,'coach','mentor role','medium','male','40-60',0,0,55,0);
+
+-- 9.Writers
+
+CREATE TABLE writers (
+  writer_id INT AUTO_INCREMENT PRIMARY KEY,
+  full_name VARCHAR(150),
+  nationality VARCHAR(50),
+  date_of_birth DATE,
+  genres VARCHAR(200),
+  projects_done INT,
+  awards INT,
+  contact_email VARCHAR(150),
+  phone VARCHAR(20),
+  active_status BOOLEAN
+);
+
+INSERT INTO writers VALUES
+(1,'nitesh tiwari','indian','1973-05-22','sports,drama',5,2,'nitesh@gmail.com','910001',1),
+(2,'rajkumar hirani','indian','1962-11-20','comedy,drama',12,10,'hirani@gmail.com','910002',1),
+(3,'prashanth neel','indian','1980-08-04','action,thriller',6,3,'neel@gmail.com','910003',1),
+(4,'siddharth anand','indian','1983-04-16','action,romance',4,1,'sid@gmail.com','910004',1),
+(5,'ss rajamouli','indian','1973-10-10','epic,action',25,15,'rajamouli@gmail.com','910005',1),
+(6,'ashutosh gowariker','indian','1964-02-15','drama,history',10,8,'ashu@gmail.com','910006',1),
+(7,'ramesh sippy','indian','1947-01-23','action,drama',15,12,'sippy@gmail.com','910007',0),
+(8,'sriram raghavan','indian','1963-06-22','thriller,mystery',8,5,'sriram@gmail.com','910008',1),
+(9,'rohit shetty','indian','1974-03-14','action,comedy',7,4,'rohit@gmail.com','910009',1),
+(10,'imtiaz ali','indian','1971-06-16','romance,drama',6,3,'imtiaz@gmail.com','910010',1);
+
+-- 10.awards
+
+CREATE TABLE awards (
+  award_id INT AUTO_INCREMENT PRIMARY KEY,
+  award_name VARCHAR(150),
+  year YEAR,
+  category VARCHAR(100),
+  recipient_type VARCHAR(50),
+  recipient_id INT,
+  movie_id INT,
+  is_won BOOLEAN,
+  nomination_date DATE,
+  ceremony_location VARCHAR(100),
+  FOREIGN KEY (movie_id) REFERENCES movies(movie_id)
+);
+
+INSERT INTO awards VALUES
+(1,'Filmfare Best Actor',2016,'Best Actor','actor',1,1,1,'2016-01-10','Mumbai'),
+(2,'National Award',2009,'Best Film','movie',2,2,1,'2009-02-12','Delhi'),
+(3,'Filmfare Best Director',2018,'Best Director','director',3,3,1,'2018-03-10','Mumbai'),
+(4,'IIFA Best Film',2023,'Best Film','movie',4,4,1,'2023-04-15','Dubai'),
+(5,'Oscar Nominee',2022,'Best Foreign Film','movie',5,5,0,'2022-05-01','Los Angeles'),
+(6,'Filmfare Best Film',2001,'Best Film','movie',6,6,1,'2001-06-10','Mumbai'),
+(7,'National Award',1975,'Best Cinematography','movie',7,7,1,'1975-07-12','Delhi'),
+(8,'Filmfare Best Actor',2014,'Best Actor','actor',1,8,1,'2014-08-20','Mumbai'),
+(9,'IIFA Best Visual Effects',2015,'Best VFX','movie',9,9,1,'2015-09-25','Singapore'),
+(10,'Filmfare Best Screenplay',2018,'Best Screenplay','writer',8,10,1,'2018-10-05','Mumbai');
+
+-- 11.trailers
+
+CREATE TABLE trailers (
+  trailer_id INT AUTO_INCREMENT PRIMARY KEY,
+  movie_id INT,
+  release_date DATE,
+  duration INT,
+  views BIGINT,
+  likes BIGINT,
+  dislikes BIGINT,
+  published_on VARCHAR(50),
+  youtube_link VARCHAR(200),
+  language VARCHAR(50),
+  FOREIGN KEY (movie_id) REFERENCES movies(movie_id)
+);
+
+INSERT INTO trailers VALUES
+(1,1,'2015-12-01',180,5000000,450000,10000,'YouTube','https://youtu.be/dangal','hindi'),
+(2,2,'2009-11-01',150,8000000,600000,15000,'YouTube','https://youtu.be/3idiots','hindi'),
+(3,3,'2017-12-20',160,7000000,500000,12000,'YouTube','https://youtu.be/kgf1','hindi'),
+(4,4,'2021-12-10',140,10000000,800000,20000,'YouTube','https://youtu.be/pathaan','hindi'),
+(5,5,'2020-12-15',200,9000000,750000,18000,'YouTube','https://youtu.be/rrr','telugu'),
+(6,6,'1999-05-01',220,3000000,200000,5000,'YouTube','https://youtu.be/lagaan','hindi'),
+(7,7,'1973-07-01',180,1500000,100000,2000,'YouTube','https://youtu.be/sholay','hindi'),
+(8,8,'2014-12-01',170,8000000,600000,15000,'YouTube','https://youtu.be/pk','hindi'),
+(9,9,'2015-04-01',190,6000000,500000,10000,'YouTube','https://youtu.be/bahubali','telugu'),
+(10,10,'2018-10-01',160,7000000,550000,12000,'YouTube','https://youtu.be/andhadhun','hindi');
+
+-- 12. reviews
+
+CREATE TABLE reviews (
+  review_id INT AUTO_INCREMENT PRIMARY KEY,
+  movie_id INT,
+  reviewer_name VARCHAR(100),
+  review_date DATE,
+  rating DECIMAL(3,1),
+  review_text TEXT,
+  platform VARCHAR(50),
+  sentiment VARCHAR(20),
+  likes INT,
+  verified BOOLEAN,
+  FOREIGN KEY (movie_id) REFERENCES movies(movie_id)
+);
+
+INSERT INTO reviews VALUES
+(1,1,'Raj Sharma','2016-01-15',8.5,'Great sports drama','IMDb','positive',500,1),
+(2,2,'Priya Verma','2009-12-20',8.7,'Inspirational film','Rotten Tomatoes','positive',450,1),
+(3,3,'Amit Singh','2018-01-05',8.2,'Action packed','IMDb','positive',400,1),
+(4,4,'Sneha Kapoor','2023-01-20',7.5,'High octane action','Metacritic','positive',350,1),
+(5,5,'Ravi Iyer','2022-03-10',8.0,'Epic movie','IMDb','positive',600,1),
+(6,6,'Neha Joshi','2001-07-15',8.1,'Historical drama','Rotten Tomatoes','positive',300,1),
+(7,7,'Anil Mehta','1975-08-01',8.2,'Classic action','IMDb','positive',250,1),
+(8,8,'Pooja Nair','2014-12-12',7.9,'Heartwarming comedy','Metacritic','positive',400,1),
+(9,9,'Vikram Rao','2015-05-20',8.0,'Epic fantasy','IMDb','positive',350,1),
+(10,10,'Sonia Khanna','2018-11-01',8.3,'Thrilling mystery','Rotten Tomatoes','positive',450,1);
+
+-- 13.tickets
+
+CREATE TABLE tickets (
+  ticket_id INT AUTO_INCREMENT PRIMARY KEY,
+  showtime_id INT,
+  seat_number VARCHAR(10),
+  booking_time DATETIME,
+  price DECIMAL(8,2),
+  payment_status VARCHAR(20),
+  customer_id INT,
+  screen_number INT,
+  theater_id INT,
+  booking_source VARCHAR(50),
+  FOREIGN KEY (showtime_id) REFERENCES showtimes(showtime_id)
+);
+
+INSERT INTO tickets VALUES
+(1,1,'A1','2023-01-01 10:00:00',500,'paid',101,1,1,'online'),
+(2,2,'B5','2023-01-02 12:30:00',450,'paid',102,2,1,'boxoffice'),
+(3,3,'C3','2023-01-03 15:00:00',600,'paid',103,1,2,'online'),
+(4,4,'D7','2023-01-04 18:00:00',550,'paid',104,3,2,'app'),
+(5,5,'E10','2023-01-05 20:00:00',650,'paid',105,1,3,'online'),
+(6,6,'F2','2023-01-06 11:00:00',400,'paid',106,2,3,'boxoffice'),
+(7,7,'G6','2023-01-07 14:00:00',700,'paid',107,1,4,'online'),
+(8,8,'H8','2023-01-08 17:00:00',500,'paid',108,3,4,'app'),
+(9,9,'I4','2023-01-09 19:00:00',550,'paid',109,1,5,'online'),
+(10,10,'J1','2023-01-10 21:00:00',600,'paid',110,2,5,'boxoffice');
+
+-- 14.theaters
+
+CREATE TABLE theaters (
+  theater_id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(150),
+  location VARCHAR(100),
+  city VARCHAR(50),
+  state VARCHAR(50),
+  country VARCHAR(50),
+  total_screens INT,
+  capacity INT,
+  contact_number VARCHAR(20),
+  owner_name VARCHAR(100)
+);
+
+INSERT INTO theaters VALUES
+(1,'PVR Cinemas','Andheri','Mumbai','Maharashtra','India',10,300,'900000001','PVR Group'),
+(2,'INOX','Vashi','Navi Mumbai','Maharashtra','India',8,250,'900000002','INOX Group'),
+(3,'Cinepolis','Bandra','Mumbai','Maharashtra','India',12,350,'900000003','Cinepolis Group'),
+(4,'Carnival Cinemas','Dadar','Mumbai','Maharashtra','India',7,200,'900000004','Carnival Group'),
+(5,'Fun Cinemas','Malad','Mumbai','Maharashtra','India',9,280,'900000005','Fun Group'),
+(6,'Big Cinemas','Chembur','Mumbai','Maharashtra','India',6,220,'900000006','Big Group'),
+(7,'PVR Cinemas','Thane','Thane','Maharashtra','India',8,260,'900000007','PVR Group'),
+(8,'INOX','Borivali','Mumbai','Maharashtra','India',10,300,'900000008','INOX Group'),
+(9,'Cinepolis','Kurla','Mumbai','Maharashtra','India',7,240,'900000009','Cinepolis Group'),
+(10,'Carnival Cinemas','Goregaon','Mumbai','Maharashtra','India',9,290,'900000010','Carnival Group');
+
+-- 15.showtimes
+
+CREATE TABLE showtimes (
+  showtime_id INT AUTO_INCREMENT PRIMARY KEY,
+  movie_id INT,
+  theater_id INT,
+  screen_number INT,
+  start_time TIME,
+  end_time TIME,
+  date DATE,
+  format VARCHAR(20),
+  language VARCHAR(20),
+  is_premiere BOOLEAN,
+  FOREIGN KEY (movie_id) REFERENCES movies(movie_id),
+  FOREIGN KEY (theater_id) REFERENCES theaters(theater_id)
+);
+
+INSERT INTO showtimes VALUES
+(1,1,1,1,'10:00:00','12:40:00','2023-12-01','2D','hindi',1),
+(2,2,1,2,'12:30:00','15:20:00','2023-12-02','2D','hindi',0),
+(3,3,2,1,'15:00:00','17:35:00','2023-12-03','3D','hindi',1),
+(4,4,2,3,'18:00:00','20:26:00','2023-12-04','2D','hindi',0),
+(5,5,3,1,'20:00:00','23:02:00','2023-12-05','IMAX','telugu',1),
+(6,6,3,2,'11:00:00','15:40:00','2023-12-06','2D','hindi',0),
+(7,7,4,1,'14:00:00','17:30:00','2023-12-07','2D','hindi',0),
+(8,8,4,3,'17:00:00','19:33:00','2023-12-08','3D','hindi',1),
+(9,9,5,1,'19:00:00','22:10:00','2023-12-09','IMAX','telugu',1),
+(10,10,5,2,'21:00:00','23:19:00','2023-12-10','2D','hindi',0);
+
+-- 16.music
+
+CREATE TABLE music (
+  track_id INT AUTO_INCREMENT PRIMARY KEY,
+  movie_id INT,
+  title VARCHAR(150),
+  duration INT,
+  singer VARCHAR(100),
+  composer VARCHAR(100),
+  lyricist VARCHAR(100),
+  genre VARCHAR(50),
+  release_date DATE,
+  platform VARCHAR(100),
+  FOREIGN KEY (movie_id) REFERENCES movies(movie_id)
+);
+
+INSERT INTO music VALUES
+(1,1,'Dangal Theme',180,'Pritam','Pritam','Amitabh','Sports','2015-12-01','Spotify'),
+(2,2,'All Is Well',210,'Shankar Mahadevan','Shantanu','Rajkumar','Comedy','2009-11-10','Spotify'),
+(3,3,'KGF Anthem',200,'Vijay Prakash','Ravi Basrur','Prashanth','Action','2017-12-20','YouTube'),
+(4,4,'Pathaan Title Track',220,'Arijit Singh','Vishal-Shekhar','Irshad','Action','2021-12-10','YouTube'),
+(5,5,'RRR Naatu Naatu',250,'Vishal','M.M. Keeravani','Chaitanya','Epic','2020-12-15','Spotify'),
+(6,6,'Mitwa',230,'Shankar Mahadevan','A.R. Rahman','Javed','Drama','2001-05-01','Spotify'),
+(7,7,'Yeh Dosti',180,'Kishore Kumar','R.D. Burman','Anand','Classic','1973-07-01','YouTube'),
+(8,8,'Tharki Chokro',200,'Sonu Nigam','Shankar-Ehsaan','Javed','Comedy','2014-12-01','Spotify'),
+(9,9,'Bahubali Theme',240,'M.M. Keeravani','M.M. Keeravani','Kirat','Fantasy','2015-04-01','YouTube'),
+(10,10,'Andhadhun Theme',190,'Prashant','Daniel','Sriram','Thriller','2018-10-01','Spotify');
+
+-- 17.singers
+
+CREATE TABLE singers (
+  singer_id INT AUTO_INCREMENT PRIMARY KEY,
+  full_name VARCHAR(100),
+  nationality VARCHAR(50),
+  date_of_birth DATE,
+  gender VARCHAR(10),
+  contact_email VARCHAR(150),
+  genre VARCHAR(50),
+  awards INT,
+  debut_year YEAR,
+  active_status BOOLEAN
+);
+
+INSERT INTO singers VALUES
+(1,'Arijit Singh','Indian','1987-04-25','male','arijit@gmail.com','Romantic',30,2007,1),
+(2,'Shankar Mahadevan','Indian','1967-03-03','male','shankar@gmail.com','Classical',25,1990,1),
+(3,'Sonu Nigam','Indian','1973-07-30','male','sonu@gmail.com','Bollywood',40,1990,1),
+(4,'Vishal','Indian','1980-01-15','male','vishal@gmail.com','Fusion',15,2005,1),
+(5,'Pritam','Indian','1971-06-14','male','pritam@gmail.com','Pop',35,1998,1),
+(6,'M.M. Keeravani','Indian','1961-02-04','male','keeravani@gmail.com','Film Score',20,1985,1),
+(7,'Vijay Prakash','Indian','1976-10-05','male','vijay@gmail.com','Playback',18,1995,1),
+(8,'A.R. Rahman','Indian','1967-01-06','male','rahman@gmail.com','Film Score',50,1992,1),
+(9,'Kishore Kumar','Indian','1929-08-04','male','kishore@gmail.com','Classic',40,1950,0),
+(10,'Shreya Ghosal','Indian','1984-03-12','female','shreya@gmail.com','Bollywood',45,1998,1);
+
+-- 18.soundtracks
+
+CREATE TABLE soundtracks (
+  soundtrack_id INT AUTO_INCREMENT PRIMARY KEY,
+  movie_id INT,
+  composer_id INT,
+  total_tracks INT,
+  release_date DATE,
+  label_name VARCHAR(100),
+  album_name VARCHAR(100),
+  language VARCHAR(50),
+  rating DECIMAL(3,1),
+  platform VARCHAR(100),
+  FOREIGN KEY (movie_id) REFERENCES movies(movie_id),
+  FOREIGN KEY (composer_id) REFERENCES singers(singer_id)
+);
+
+INSERT INTO soundtracks VALUES
+(1,1,5,10,'2015-12-01','T-Series','Dangal OST','Hindi',8.5,'Spotify'),
+(2,2,2,12,'2009-11-10','Sony Music','3 Idiots OST','Hindi',8.7,'Spotify'),
+(3,3,7,8,'2017-12-20','Hombale Music','KGF OST','Hindi',8.2,'YouTube'),
+(4,4,4,9,'2021-12-10','YRF Music','Pathaan OST','Hindi',7.5,'YouTube'),
+(5,5,6,11,'2020-12-15','MMK Music','RRR OST','Telugu',8.0,'Spotify'),
+(6,6,8,13,'2001-05-01','UTV Music','Lagaan OST','Hindi',8.1,'Spotify'),
+(7,7,9,7,'1973-07-01','Sippy Music','Sholay OST','Hindi',8.2,'YouTube'),
+(8,8,2,10,'2014-12-01','Sony Music','PK OST','Hindi',7.9,'Spotify'),
+(9,9,6,12,'2015-04-01','MMK Music','Bahubali OST','Telugu',8.0,'YouTube'),
+(10,10,8,9,'2018-10-01','Tips Music','Andhadhun OST','Hindi',8.3,'Spotify');
+
+-- 19.streaming_platforms
+
+CREATE TABLE streaming_platforms (
+  platform_id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100),
+  website VARCHAR(150),
+  country VARCHAR(50),
+  monthly_views BIGINT,
+  app_available BOOLEAN,
+  subscription_fee DECIMAL(6,2),
+  founded_year YEAR,
+  contact_email VARCHAR(150),
+  active_status BOOLEAN
+);
+
+INSERT INTO streaming_platforms VALUES
+(1,'Netflix','netflix.com','India',50000000,1,499,'1997','support@netflix.com',1),
+(2,'Amazon Prime','primevideo.com','India',40000000,1,299,'2006','support@primevideo.com',1),
+(3,'Disney+','disneyplus.com','India',30000000,1,399,'2019','support@disney.com',1),
+(4,'Hotstar','hotstar.com','India',35000000,1,299,'2015','support@hotstar.com',1),
+(5,'Zee5','zee5.com','India',15000000,1,199,'2018','support@zee5.com',1),
+(6,'SonyLIV','sonyliv.com','India',10000000,1,149,'2013','support@sonyliv.com',1),
+(7,'Voot','voot.com','India',8000000,1,99,'2016','support@voot.com',1),
+(8,'YouTube','youtube.com','Global',1000000000,1,0,'2005','support@youtube.com',1),
+(9,'JioCinema','jiocinema.com','India',12000000,1,0,'2020','support@jiocinema.com',1),
+(10,'MX Player','mxplayer.com','India',10000000,1,0,'2011','support@mxplayer.com',1);
+
+-- 20.movie_availability
+
+CREATE TABLE movie_availability (
+  availability_id INT AUTO_INCREMENT PRIMARY KEY,
+  movie_id INT,
+  platform_id INT,
+  release_date DATE,
+  expiry_date DATE,
+  language VARCHAR(50),
+  format VARCHAR(20),
+  resolution VARCHAR(20),
+  views BIGINT,
+  rating DECIMAL(3,1),
+  FOREIGN KEY (movie_id) REFERENCES movies(movie_id),
+  FOREIGN KEY (platform_id) REFERENCES streaming_platforms(platform_id)
+);
+
+INSERT INTO movie_availability VALUES
+(1,1,1,'2016-01-01','2025-12-31','Hindi','HD','1080p',5000000,8.5),
+(2,2,2,'2009-12-01','2025-12-31','Hindi','Full HD','1080p',4000000,8.7),
+(3,3,3,'2018-01-01','2025-12-31','Hindi','4K','2160p',3500000,8.2),
+(4,4,4,'2023-01-01','2025-12-31','Hindi','HD','1080p',6000000,7.5),
+(5,5,1,'2022-12-01','2025-12-31','Telugu','4K','2160p',7000000,8.0),
+(6,6,2,'2001-06-01','2025-12-31','Hindi','HD','1080p',3000000,8.1),
+(7,7,5,'1973-08-01','2025-12-31','Hindi','HD','1080p',2000000,8.2),
+(8,8,3,'2014-12-01','2025-12-31','Hindi','Full HD','1080p',4000000,7.9),
+(9,9,6,'2015-05-01','2025-12-31','Telugu','4K','2160p',3500000,8.0),
+(10,10,1,'2018-11-01','2025-12-31','Hindi','HD','1080p',4500000,8.3);
+
+-- 21.box_office_collections
+
+CREATE TABLE box_office_collections (
+  collection_id INT AUTO_INCREMENT PRIMARY KEY,
+  movie_id INT,
+  date DATE,
+  region VARCHAR(50),
+  tickets_sold INT,
+  revenue DECIMAL(12,2),
+  currency VARCHAR(10),
+  platform VARCHAR(50),
+  show_count INT,
+  source VARCHAR(100),
+  FOREIGN KEY (movie_id) REFERENCES movies(movie_id)
+);
+
+INSERT INTO box_office_collections VALUES
+(1,1,'2016-01-15','India',1000000,50000000,'INR','Theater',100,'BoxOfficeIndia'),
+(2,2,'2009-12-20','India',1200000,60000000,'INR','Theater',120,'BoxOfficeIndia'),
+(3,3,'2018-01-05','India',900000,45000000,'INR','Theater',90,'BollywoodHungama'),
+(4,4,'2023-01-20','India',1500000,75000000,'INR','Theater',150,'BoxOfficeIndia'),
+(5,5,'2022-03-10','India',2000000,100000000,'INR','Theater',200,'BollywoodHungama'),
+(6,6,'2001-07-15','India',800000,40000000,'INR','Theater',80,'BoxOfficeIndia'),
+(7,7,'1975-08-01','India',500000,25000000,'INR','Theater',50,'BoxOfficeIndia'),
+(8,8,'2014-12-12','India',1000000,50000000,'INR','Theater',100,'BollywoodHungama'),
+(9,9,'2015-05-20','India',1200000,60000000,'INR','Theater',120,'BollywoodHungama'),
+(10,10,'2018-11-01','India',1100000,55000000,'INR','Theater',110,'BoxOfficeIndia');
+
+-- 22.merchandise
+
+CREATE TABLE merchandise (
+  item_id INT AUTO_INCREMENT PRIMARY KEY,
+  movie_id INT,
+  item_name VARCHAR(100),
+  category VARCHAR(50),
+  price DECIMAL(8,2),
+  available_stock INT,
+  sold_quantity INT,
+  vendor VARCHAR(100),
+  launch_date DATE,
+  rating DECIMAL(3,1),
+  FOREIGN KEY (movie_id) REFERENCES movies(movie_id)
+);
+
+INSERT INTO merchandise VALUES
+(1,1,'Dangal T-Shirt','Apparel',499,500,350,'Amazon','2016-01-01',8.5),
+(2,2,'3 Idiots Mug','Accessories',299,300,250,'Flipkart','2009-12-01',8.7),
+(3,3,'KGF Poster','Poster',199,200,180,'Amazon','2018-01-01',8.2),
+(4,4,'Pathaan Cap','Apparel',399,400,350,'Flipkart','2023-01-01',7.5),
+(5,5,'RRR Figurine','Toys',999,100,90,'Amazon','2022-03-01',8.0),
+(6,6,'Lagaan DVD','Media',499,150,120,'Flipkart','2001-06-01',8.1),
+(7,7,'Sholay Poster','Poster',299,100,90,'Amazon','1975-08-01',8.2),
+(8,8,'PK T-Shirt','Apparel',399,200,150,'Flipkart','2014-12-01',7.9),
+(9,9,'Bahubali Mug','Accessories',349,150,120,'Amazon','2015-05-01',8.0),
+(10,10,'Andhadhun DVD','Media',499,100,80,'Flipkart','2018-11-01',8.3);
+
+-- 23.promotions
+
+CREATE TABLE promotions (
+  promo_id INT AUTO_INCREMENT PRIMARY KEY,
+  movie_id INT,
+  platform VARCHAR(50),
+  campaign_name VARCHAR(100),
+  start_date DATE,
+  end_date DATE,
+  budget DECIMAL(12,2),
+  reach BIGINT,
+  impressions BIGINT,
+  status VARCHAR(50),
+  FOREIGN KEY (movie_id) REFERENCES movies(movie_id)
+);
+
+INSERT INTO promotions VALUES
+(1,1,'Instagram','Dangal Promo','2015-12-01','2016-01-10',100000,500000,2000000,'Active'),
+(2,2,'Facebook','3 Idiots Campaign','2009-11-01','2009-12-15',120000,600000,2500000,'Ended'),
+(3,3,'YouTube','KGF Promo','2017-12-01','2018-01-15',150000,700000,3000000,'Ended'),
+(4,4,'Instagram','Pathaan Campaign','2021-12-01','2022-01-10',200000,800000,4000000,'Active'),
+(5,5,'YouTube','RRR Promo','2022-12-01','2023-01-10',180000,750000,3500000,'Active'),
+(6,6,'Facebook','Lagaan Promo','2001-05-01','2001-06-01',90000,300000,1500000,'Ended'),
+(7,7,'Instagram','Sholay Campaign','1973-06-01','1973-07-01',80000,200000,1000000,'Ended'),
+(8,8,'Twitter','PK Promo','2014-12-01','2015-01-01',110000,400000,2000000,'Ended'),
+(9,9,'Instagram','Bahubali Promo','2015-04-01','2015-05-01',160000,500000,2500000,'Ended'),
+(10,10,'YouTube','Andhadhun Promo','2018-10-01','2018-11-01',120000,450000,2200000,'Ended');
+
+-- 24.crew_members
+
+CREATE TABLE crew_members (
+  crew_id INT AUTO_INCREMENT PRIMARY KEY,
+  movie_id INT,
+  full_name VARCHAR(150),
+  role VARCHAR(100),
+  department VARCHAR(50),
+  contact VARCHAR(50),
+  nationality VARCHAR(50),
+  experience_years INT,
+  awards INT,
+  availability BOOLEAN,
+  FOREIGN KEY (movie_id) REFERENCES movies(movie_id)
+);
+
+INSERT INTO crew_members VALUES
+(1,1,'Rahul Sharma','Cinematographer','Camera','rahul@gmail.com','Indian',10,2,1),
+(2,2,'Anjali Mehta','Editor','Editing','anjali@gmail.com','Indian',8,1,1),
+(3,3,'Vikram Singh','Stunt Coordinator','Stunts','vikram@gmail.com','Indian',12,3,1),
+(4,4,'Pooja Kapoor','Production Designer','Art','pooja@gmail.com','Indian',7,1,1),
+(5,5,'Ramesh Rao','VFX Supervisor','VFX','ramesh@gmail.com','Indian',15,5,1),
+(6,6,'Sunil Joshi','Costume Designer','Costume','sunil@gmail.com','Indian',10,2,1),
+(7,7,'Kiran Kumar','Makeup Artist','Makeup','kiran@gmail.com','Indian',12,2,1),
+(8,8,'Sana Patel','Sound Engineer','Sound','sana@gmail.com','Indian',8,1,1),
+(9,9,'Vikash Singh','Assistant Director','Direction','vikash@gmail.com','Indian',5,0,1),
+(10,10,'Reema Sharma','Line Producer','Production','reema@gmail.com','Indian',7,1,1);
+
+-- 25.movie_statistics
+
+CREATE TABLE movie_statistics (
+  stat_id INT AUTO_INCREMENT PRIMARY KEY,
+  movie_id INT,
+  views BIGINT,
+  likes BIGINT,
+  dislikes BIGINT,
+  reviews_count INT,
+  average_rating DECIMAL(3,1),
+  social_mentions BIGINT,
+  trending_rank INT,
+  last_updated DATE,
+  FOREIGN KEY (movie_id) REFERENCES movies(movie_id)
+);
+
+INSERT INTO movie_statistics VALUES
+(1,1,5000000,450000,10000,150,8.5,200000,5,'2023-12-01'),
+(2,2,4000000,350000,12000,180,8.7,180000,4,'2023-12-01'),
+(3,3,3500000,300000,10000,120,8.2,150000,6,'2023-12-01'),
+(4,4,6000000,500000,15000,200,7.5,250000,2,'2023-12-01'),
+(5,5,7000000,600000,18000,220,8.0,300000,1,'2023-12-01'),
+(6,6,3000000,250000,8000,100,8.1,100000,8,'2023-12-01'),
+(7,7,2000000,150000,5000,80,8.2,80000,10,'2023-12-01'),
+(8,8,4000000,350000,12000,160,7.9,150000,7,'2023-12-01'),
+(9,9,3500000,300000,10000,140,8.0,120000,5,'2023-12-01'),
+(10,10,4500000,400000,12000,180,8.3,160000,3,'2023-12-01');
