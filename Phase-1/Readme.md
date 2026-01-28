@@ -1,15 +1,25 @@
 🎬 Film Industry Database – Phase 1
 Project Overview
 
-This project is based on a real-world Film Industry Management System. It is designed to manage data related to movies, actors, directors, production houses, cinemas, tickets, payments, awards, and users using SQL.
------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Project Overview
+Real-world Film Industry Management System based project
+Manages movies, actors, directors, production houses, cinemas, tickets, payments, awards, and users
+Implemented using SQL
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Database Design & Data
-
-The database film_industry_db contains 25 interconnected tables. Each table has at least 10 attributes with proper constraints like PRIMARY KEY, FOREIGN KEY, NOT NULL, UNIQUE, CHECK, and DEFAULT. All tables are normalized and populated with minimum 20 realistic records with valid relationships.
------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Database name: film_industry_db
+Total 25 interconnected tables
+Each table has minimum 10 attributes
+Constraints used: PRIMARY KEY, FOREIGN KEY, NOT NULL, UNIQUE, CHECK, DEFAULT
+Normalized structure to avoid redundancy
+Minimum 20 realistic records in each table
+Proper foreign key relationships maintained
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 SQL Operations & Objective
 
-Basic SQL operations such as CREATE, INSERT, SELECT, TRUNCATE, and DROP are executed. The main objective of this project is to practice real-world database design, table relationships, and proper use of SQL constraints.
+SQL operations used: CREATE, INSERT, SELECT, TRUNCATE, DROP
+Focus on real-world database design practice
+Objective is to understand table relationships and use of SQL constraints
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
